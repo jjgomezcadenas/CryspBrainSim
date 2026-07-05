@@ -114,40 +114,48 @@ reference for the port, then retire.
 - (Later) `TOFParameters`, `tofbin_from_origin`, the TOF projectors.
 
 ### Write here
-1. **products.jl** — glob `lors_shard*.h5` under a config leaf, pool them, and verify the full
+
+Labelled **W1–W9** so they never collide with the build-order steps: "step N" always means the
+Build order at the bottom of this file; "WN" always means an inventory item. Each item carries its
+status and the build step that owns it.
+
+**W1 · products.jl — DONE (step 3).** Glob `lors_shard*.h5` under a config leaf, pool them, and verify the full
    provenance attr set on read (scenario, scanner, crystal, budget, dose_Gy, master_seed,
    realization, n_phi/n_z, windows, nevents, quantization scales), failing loudly if any is absent.
    Log the per-shard degenerate-drop count. Read `scanner_geometry.json`, the `phantom/` files, and
    the `truth/` bundle from the products tree — it is the self-describing interface. (The `truth/`
    bundle is delivered — contract and sanity numbers in `dev/upstream_response_truth_bundle.md`;
    the tree is the only input, with no reach into `ptcrysp-scenarios/`.)
-2. **qa.jl** — compute a shard's statistics as a struct the drivers assert on: nrows, truth
+**W2 · qa.jl — DONE (step 3).** Compute a shard's statistics as a struct the drivers assert on: nrows, truth
    fractions, acceptance = nrows/nevents, per-hit energy and radius ranges, DOI range (r − R_inner),
    Δt/τ occupancy, source bounding box. Turns "the shard looks fine" into an automatable gate; the
    3×3 figure is `tools/plot_shard.py`. Runs on a shard at full statistics (distinct from a thinned
    realization). Run first on every new shard.
-3. **characterize.jl** — read the `truth/` bundle and lock the reference before reconstruction:
+**W3 · characterize.jl — DONE (step 3).** Read the `truth/` bundle and lock the reference before
+   reconstruction:
    compose the true activity(z) from `activity_profile_<budget>.csv` (per-isotope + total; detector-
    independent), read dose(z) from `depth_dose.csv`, and compute **dose-R80** (distal 80%-of-max of
    the dose) and **true activity-R50** (half-height of the activity edge) and their **offset** — the
    ground-truth activity-to-range distance the reconstructed edge is scored against. Figures
    (activity, depth_dose, dose_activity, sobp_plateau) come from `tools/plot_truth.py`. The offset,
    the nominal activity edge, and the target-box depths feed the fixed distal window in `config/`.
-4. **mumap.jl** — build attenuation from the scenario files: `phantom_regions.csv` supplies the
+**W4 · mumap.jl — DONE (step 4).** Build attenuation from the scenario files: `phantom_regions.csv` supplies the
    solid, semi-axes, centre, and material; `material_*_meta.csv` supplies μ at 511 keV. For the
    uniform ellipsoid, call `ellipsoid_chord` with the scenario's axes, centre, and μ. Provide the
    voxel-μ-map route (`exp.(-joseph3d_fwd(...))`) as well — it is the path the multi-region head
    phantoms take later. Read μ and the ellipsoid centre from the files at runtime. Size the μ-map
    grid to cover the whole head (y down to −117 mm) while the activity grid covers the beam
    corridor plus margins — the two grids are independent and each is sized to its job.
-5. **sensitivity.jl** — build `ContinuousPET(diameter, afov)` from the ring (r_inner 387 mm →
+**W5 · sensitivity.jl — DONE (step 4; n_sens = 10⁹ set, base cached).** Build
+   `ContinuousPET(diameter, afov)` from the ring (r_inner 387 mm →
    D 774 mm, half_length 512 mm → afov 1024 mm) and accumulate the **unscaled** `base = Aᵀ(a_geom)`
    over chunked `sample_lors` draws (surface chords, per the recipe). Cache `base` to NPZ with a
    provenance record (RecoCrysp SHA, scanner geometry, μ/phantom params, n_sens, seed, grid). Apply
    the per-realization scale `n_events/n_sens` at reconstruction time — `base` is
    realization-independent and reused across the whole sweep, the scale rides on each realization's
    event count.
-6. **thinning.jl** — `thin_lm(shard_files, target_counts, realization_index)`: pool across all
+**W6 · thinning.jl — PLANNED (step 6, after the order reversal).**
+   `thin_lm(shard_files, target_counts, realization_index)`: pool across all
    shards, keep each event independently with probability `p = target/M_total` over the union, using
    an RNG seeded by the downstream realization index (its own namespace, operating purely on the
    produced LORs). Keeping events independently makes the realization count fluctuate as
@@ -156,19 +164,21 @@ reference for the port, then retire.
    dose, so scaling by the dose ratio anchors the count physically. (Confirm `p = dose/top_dose`
    against the recipe's `dose_to_counts`; adopt an explicit yield model there if the recipe intends
    one.)
-7. **profile.jl** — `depth_profile(image; voxsize, beam_axis, roi_radius, roi_centre, z_origin)`:
+**W7 · profile.jl — DONE (step 2).** `depth_profile(image; voxsize, beam_axis, roi_radius,
+   roi_centre, z_origin)`:
    integrate (sum) over a fixed transverse disc at each depth slice to preserve the counting
    statistics the endpoint fit rides on; centre the disc on the beam axis (0,0). `distal_window(
    z_edge_nominal, δ_prox, δ_dist)` brackets the falloff from the nominal edge (≈ z −5 mm for
    `uniform_headep`), fixed across arms and realizations.
-8. **endpoint.jl** — Julia port of `depth_profile.py`'s windowed, Poisson-weighted erfc fit
+**W8 · endpoint.jl — DONE (step 2).** Julia port of `depth_profile.py`'s windowed,
+   Poisson-weighted erfc fit
    (`LsqFit` + `SpecialFunctions`) returning R50/R80/R20 + z0_err, plus `sigma_R` (mean/std/sem over
    the finite endpoints, counting the dropped fits). Match the covariance convention to scipy's
    `absolute_sigma=True` with σ=√max(P,1): weight each point by √counts and confirm LsqFit's `vcov`
    returns inv(JᵀWJ) directly, so z0_err carries the counting-statistics scale.
-9. **dualhead_sampler.jl** — φ-gap partial-ring sensitivity sampler, feeding `sensitivity_image` the
-   same way the closed-ring sampler does. Build it when the upstream engine produces the dual-head
-   arm.
+**W9 · dualhead_sampler.jl — DEFERRED (waits on upstream).** φ-gap partial-ring sensitivity
+   sampler, feeding `sensitivity_image` the same way the closed-ring sampler does. Build it when
+   the upstream engine produces the dual-head arm.
 
 ---
 
@@ -185,7 +195,7 @@ differences purely geometric.
 | ROI radius / centre | ρ ≈ n·√(σ_spot²+σ_PSF²)+R_β⁺ ≈ 12–15 mm; centre (0,0) | single-shard stage |
 | distal fit window | (z_nom − δ_prox, z_nom + δ_dist), z_nom ≈ −5 mm | single-shard stage |
 | MLEM iteration count | on the R50-vs-iterations plateau | single-shard stage |
-| n_sens | 10⁹ (measured mottle 1.24% at the provisional grid; ~40 s to build) | set 2026-07-05 |
+| n_sens | 10⁹ (measured mottle 1.28% at the provisional corridor grid; ~37 s to build) | set 2026-07-05 |
 | truth selection | trues-only (truth==0), first pass | fixed |
 
 Run plain `mlem` at the fixed iteration count on the headline pass, starting from
@@ -197,17 +207,23 @@ Run plain `mlem` at the fixed iteration count on the headline pass, starting fro
 
 Each rung reuses the previous one; the chain grows without rebuilding.
 
-1. **Starting-point characterization** (`characterize.jl`) — read `truth/`, produce the four truth
+1. **Starting-point characterization** (`characterize.jl`) — **DONE**: dose-R80 −5.58 mm,
+   activity-R50 −16.45 mm, offset −10.87 mm (`out/characterize/truth_reference.toml`). Read
+   `truth/`, produce the four truth
    figures, and lock the reference: **true activity-R50**, **dose-R80**, and their offset. Runs
    before any reconstruction; it is the "check the starting point" gate and the reference every later
    R is scored against. Also feeds the fixed distal window (nominal edge, target-box depths).
-2. **Shard QA** (`qa.jl` + `tools/plot_shard.py`) — the statistics/sanity struct + 3×3 panel on each
+2. **Shard QA** (`qa.jl` + `tools/plot_shard.py`) — **DONE for shards 000–009** (all pass; the
+   gate stands for every new shard). The statistics/sanity struct + 3×3 panel on each
    stored shard: acceptance, truth fractions, energy/radius/DOI ranges, source fill, Δt/τ. The gate
    that clears a shard before it enters the pipeline.
-3. **Synthetic self-tests** — the Julia port reproduces the two `py` self-tests (erfc edge → R50)
+3. **Synthetic self-tests** — **DONE** (in `test/runtests.jl`, tolerances documented). The Julia
+   port reproduces the two `py` self-tests (erfc edge → R50)
    on shared input arrays (save the numpy-generated data and feed both implementations the same
    arrays). Compare with documented tolerances.
-4. **Reconstruction-free reference** — fit the endpoint on the truth-origin depth profile
+4. **Reconstruction-free reference** — **DONE on shard 0** (−14.76 ± 0.03 mm vs −14.32 mm on the
+   truth profile; the 0.4 mm gap is the attenuation tilt of the detected subset). Fit the endpoint
+   on the truth-origin depth profile
    (`c.origin`, no reconstruction). This isolates the estimator from the recon; being the detected
    subset, it cross-checks against — not replaces — the `truth/` activity-R50 from rung 1.
 5. **Single shard** (`one_shard.jl`) — the full chain on shard 0 at full statistics. Acceptance:
@@ -226,8 +242,8 @@ Each rung reuses the previous one; the chain grows without rebuilding.
 
 ## Stage checks that set the knobs (single-shard stage)
 
-- **Sensitivity noise at our grid.** n_sens = 10⁹ is set (two-seed mottle 1.24% per image at the
-  provisional 1.5 mm grid, exact 1/√n across 10⁸/5×10⁸/10⁹; the upstream 5×10⁸ certification was
+- **Sensitivity noise at our grid.** n_sens = 10⁹ is set (two-seed mottle 1.28% per image at the
+  provisional corridor grid, 1/√n-exact across 10⁸/5×10⁸/10⁹; the upstream 5×10⁸ certification was
   at 2.5 mm voxels, and the finer grid holds ~4.6× fewer LOR crossings per voxel). At the frozen
   grid, confirm R50 is stable between two `base` seeds before the sweep — `tools/make_sensitivity.jl
   --check` builds the pair in ~70 s on Metal.
@@ -268,19 +284,29 @@ Each rung reuses the previous one; the chain grows without rebuilding.
 edge z ≈ −5 mm; brain μ(511) = 0.009913 mm⁻¹.
 
 All ten BGO shards (000–009) and the `truth/` bundle are on disk; the `csi/` arm is a further
-production run into the same tree, adding no machinery here. Ladder rungs 1–2 have run (locked
-reference: dose-R80 −5.58 mm, activity-R50 −16.45 mm, offset −10.87 mm; all shards pass QA), and
-rungs 4–6 are unblocked.
+production run into the same tree, adding no machinery here. Ladder rungs 1–4 have run (locked
+reference: dose-R80 −5.58 mm, activity-R50 −16.45 mm, offset −10.87 mm; all shards pass QA;
+rung 4 read the detected-origin edge on shard 0), and rungs 5–6 are unblocked.
 
 ## Build order
 
-1. Scaffold `Project.toml` (pin the RecoCrysp SHA, confirm the URLs), the module, `test/runtests.jl`.
-2. Port the endpoint estimator (`endpoint.jl`, `profile.jl`) with the synthetic self-tests and the
-   Python cross-validation (ladder rungs 3–4). Independent of the products data.
-3. `products.jl`, `qa.jl`, `characterize.jl`; `tools/plot_shard.py`, `plot_truth.py`,
-   `shard_summary.py`, `origin_profile.py` — the statistics + starting-point gates (rungs 1–2).
-4. `mumap.jl`, `sensitivity.jl`.
-5. `thinning.jl`.
-6. `drivers/one_shard.jl` → freeze the knobs (ladder rung 5 and the stage checks above).
+Steps 1–4 are committed on `main`; per-step detail and measured numbers live in CLAUDE.md → Status.
+
+1. **DONE** — scaffold `Project.toml`, the module, `test/runtests.jl` (commit `5adb8b9`).
+2. **DONE** — port the endpoint estimator (W7 `profile.jl`, W8 `endpoint.jl`) with the synthetic
+   self-tests and the Python cross-validation, ladder rung 3 (commit `4dd3f0f`).
+3. **DONE** — W1 `products.jl`, W2 `qa.jl`, W3 `characterize.jl`; `tools/plot_shard.py`,
+   `plot_truth.py`, `shard_summary.py`, `origin_profile.py` — rungs 1–2 ran, reference locked,
+   rung-4 quick-look ran (commit `e0b96c0`).
+4. **DONE** — W4 `mumap.jl`, W5 `sensitivity.jl`; scale assessed, n_sens = 10⁹ set, base cached
+   (commit `535811b`).
+5. **NEXT** — `drivers/one_shard.jl` → freeze the knobs (ladder rung 5 and the stage checks
+   above). *Pulled ahead of thinning (order reversal, 2026-07-05): the single-shard chain and
+   thinning are independent, rung 5 freezes the grid/ROI/iteration knobs every thinned
+   reconstruction consumes, and its wall-clock measurement sizes the sweep — so the chain runs
+   first and thinning lands immediately before its only consumers (the crosscheck and sweep
+   drivers).*
+6. W6 `thinning.jl`; confirm the `p = dose/top_dose` anchor against the recipe's
+   `dose_to_counts`.
 7. `drivers/shard_crosscheck.jl` and `drivers/sweep.jl` (rungs 6–7) as the remaining data lands.
 8. Update `latex/depth_profile.tex` (code-map table → Julia; keep the single windowed estimator).

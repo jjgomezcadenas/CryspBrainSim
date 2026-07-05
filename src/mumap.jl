@@ -1,5 +1,5 @@
 # mumap.jl — attenuation from the scenario phantom files (dev/PLAN.md
-# write-item 4). Two routes to the per-LOR survival factor a = exp(−μ·chord):
+# W4). Two routes to the per-LOR survival factor a = exp(−μ·chord):
 #
 #   * analytic — `ellipsoid_chord` with the scenario's semi-axes, centre and
 #     μ(511). Exact for the uniform head; the headline route.

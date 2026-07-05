@@ -22,9 +22,13 @@ const CHECK = "--check" in ARGS
 
 const SCEN = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds",
                       "uniform_headep_sobp_1e8")
+# Provisional activity grid on the beam corridor: transverse voxel centres
+# ±47.25 mm about the beam axis, axial centres z ∈ [−119.25, +23.25] mm — the
+# corridor (decays run z ≈ −102…0, nominal edge −5) plus margins. A centered
+# z-grid would clip the proximal activity; the origin is the load-bearing part.
 const N = (64, 64, 96)
 const VS = (1.5f0, 1.5f0, 1.5f0)
-const ORG = centered_grid(N, VS)
+const ORG = (-47.25f0, -47.25f0, -119.25f0)
 const CHUNK = 20_000_000
 
 function main()
@@ -37,7 +41,10 @@ function main()
             "half_length $(geo.half_length_mm) mm; μ $(ph.mu_mm_inv) mm⁻¹; " *
             "n_sens $N_SENS; device $(dev === identity ? "CPU" : "Metal")")
 
-    name = "$(geo.name)_grid$(N[1])x$(N[2])x$(N[3])_$(VS[1])mm_n$(N_SENS)"
+    # The origin is stamped into the name: same-shape grids at different
+    # origins must never collide on one cache file.
+    org_tag = join(replace.(string.(round.(Float64.(ORG); digits=2)), "-" => "m"), "_")
+    name = "$(geo.name)_grid$(N[1])x$(N[2])x$(N[3])_$(VS[1])mm_org$(org_tag)_n$(N_SENS)"
     out = joinpath(dirname(@__DIR__), "out", "sensitivity", name)
 
     build(seed) = sensitivity_base(; r_inner_mm=geo.r_inner_mm,

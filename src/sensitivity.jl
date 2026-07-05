@@ -1,5 +1,5 @@
 # sensitivity.jl — the MLEM normalization deliverable (dev/PLAN.md
-# write-item 5): the UNSCALED base = Aᵀ(a_geom) accumulated over chunked
+# W5): the UNSCALED base = Aᵀ(a_geom) accumulated over chunked
 # draws of geometric surface LORs from `ContinuousPET`, cached to NPZ with a
 # provenance sidecar. `base` is realization-independent and reused across the
 # whole sweep; the per-realization factor `n_events / n_sens` rides on each
@@ -8,7 +8,8 @@
 # The project knob is n_sens = 10⁹ (dev/PLAN.md fixed-knobs table; the MC
 # studies certified 5×10⁸ at 2.5 mm voxels, and our finer 1.5 mm grid holds
 # ~4.6× fewer LOR crossings per voxel, so the sample is doubled — measured
-# two-seed mottle 1.24% per image at the provisional grid, ~40 s to build).
+# two-seed mottle 1.28% per image at the provisional corridor grid, ~37 s to
+# build).
 # Revalidate at the frozen grid before the sweep by comparing two seeds (the
 # stage check in dev/PLAN.md).
 

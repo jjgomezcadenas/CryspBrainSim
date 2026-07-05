@@ -75,9 +75,16 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   64×64×96 @1.5 mm grid (`tools/make_sensitivity.jl --check`): 3.92% per image at 10⁸, 1.76% at
   5×10⁸, 1.24% at 10⁹ (exact 1/√n). **Knob set: n_sens = 10⁹** (PLAN.md table; base cached under
   `out/sensitivity/`), with the R50-vs-seed stage check at rung 5 confirming it at the frozen grid.
-- **Step 5 — NEXT: thinning.jl** (`thin_lm`, pooled Bernoulli, own seed namespace); confirm the
-  `p = dose/top_dose` anchor against the recipe's `dose_to_counts`.
-- **Then** steps 6–8 in `dev/PLAN.md`.
+- **Step 5 — NEXT: the single-shard chain** (`drivers/one_shard.jl`, ladder rung 5), pulled ahead
+  of thinning by the 2026-07-05 order reversal (logic in PLAN.md → Build order): reconstruct
+  shard 0's trues (14.14 M events), fit R, freeze grid/ROI/iterations, measure wall-clock.
+  Sensitivity-grid catch fixed on the way: the first 10⁹ base was built on the CENTERED 64×64×96
+  grid (z ∈ ±71.25 mm), which clips the activity corridor (z ≈ −102…0); the corrected grid keeps
+  64×64×96 @ 1.5 mm with `img_origin = (−47.25, −47.25, −119.25)` (z ∈ −119.25…+23.25). Stale
+  centered-grid caches are deleted; the tools carry the corridor origin and stamp it in the cache
+  name. Corridor-grid base rebuilt and checked: mottle 1.28% at 10⁹, 36.7 s
+  (`out/sensitivity/crysp_ring_1m_grid64x64x96_1.5mm_orgm47.25_m47.25_m119.25_n1000000000.npz`).
+- **Step 6 — thinning.jl** (PLAN.md W6), then steps 7–8 in `dev/PLAN.md`.
 
 Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
 `dose_to_counts` (step 5). The `truth/` bundle is delivered

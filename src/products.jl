@@ -40,7 +40,7 @@ end
 # ---------------------------------------------------------------------------
 """
 The provenance attrs every `lors_shardNNN.h5` must carry (dev/PLAN.md,
-write-item 1): source identity (scenario, budget, dose, master_seed,
+W1): source identity (scenario, budget, dose, master_seed,
 realization = the shard index), detector identity (crystal, n_phi, n_z,
 windows, response), normalization (nevents, nrows), and the quantization
 scales. `shard_attrs` fails loudly when any is absent.

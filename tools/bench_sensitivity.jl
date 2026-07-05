@@ -24,10 +24,12 @@ const CENTRE = (0.0f0, -30.0f0, 0.0f0)
 const MU = 0.009913f0
 
 # Provisional activity grid (frozen at the single-shard stage): the beam
-# corridor ±48 mm transverse, z ∈ [-120, +22.5] mm, at 1.5 mm voxels.
+# corridor, transverse voxel centres ±47.25 mm, axial z ∈ [−119.25, +23.25] mm,
+# at 1.5 mm voxels. The offset origin covers the proximal activity a centered
+# z-grid would clip.
 const N = (64, 64, 96)
 const VS = (1.5f0, 1.5f0, 1.5f0)
-const ORG = centered_grid(N, VS)
+const ORG = (-47.25f0, -47.25f0, -119.25f0)
 
 const N_MASTER = 174_296_897        # the pooled BGO master (10 shards)
 
