@@ -11,9 +11,18 @@ reconstruction engine comes from `RecoCryspTools` (re-exports the RecoCrysp core
 module CryspBrainSim
 
 using RecoCryspTools
+using LsqFit: curve_fit, coef, vcov, PrecisionWeights
+using SpecialFunctions: erfc, erfcinv
+using Statistics: mean, median, std
+using LinearAlgebra: diag
 
-# The analysis surface is filled in over dev/PLAN.md build steps 2–6:
-#   endpoint.jl · profile.jl · products.jl · qa.jl · characterize.jl · mumap.jl
-#   sensitivity.jl · thinning.jl · dualhead_sampler.jl
+export depth_profile, distal_window, fit_endpoint, sigma_R
+
+include("profile.jl")
+include("endpoint.jl")
+
+# The remaining analysis surface arrives over dev/PLAN.md build steps 3–6:
+#   products.jl · qa.jl · characterize.jl · mumap.jl · sensitivity.jl
+#   thinning.jl · dualhead_sampler.jl
 
 end # module CryspBrainSim

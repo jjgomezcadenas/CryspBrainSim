@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "0375fa81a544ed8c5c28dbd08c718558d895c43c"
+project_hash = "72d51da0da6ab616ec2384e2eadabaaa72c072e7"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "d9aaef7c63466eee4de23b4d9dad03629df54bea"
@@ -221,7 +221,7 @@ uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 version = "4.1.1"
 
 [[deps.CryspBrainSim]]
-deps = ["HDF5", "LsqFit", "NPZ", "RecoCrysp", "RecoCryspTools", "SpecialFunctions", "TOML"]
+deps = ["HDF5", "LsqFit", "Metal", "NPZ", "RecoCrysp", "RecoCryspTools", "SpecialFunctions", "TOML"]
 path = "."
 uuid = "30bc28e3-b35c-4513-bb4b-1dc8306f00f4"
 version = "0.1.0"

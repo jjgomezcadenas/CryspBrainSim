@@ -21,6 +21,8 @@ __pycache__/
 # Analysis outputs (regenerable; not committed)
 /out/
 *.npz
+# The frozen cross-validation reference is committed (see test/make_reference.py)
+!/test/data/endpoint_reference.npz
 
 # OS
 .DS_Store
