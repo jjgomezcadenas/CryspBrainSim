@@ -119,9 +119,8 @@ reference for the port, then retire.
    realization, n_phi/n_z, windows, nevents, quantization scales), failing loudly if any is absent.
    Log the per-shard degenerate-drop count. Read `scanner_geometry.json`, the `phantom/` files, and
    the `truth/` bundle from the products tree — it is the self-describing interface. (The `truth/`
-   bundle is an upstream addition requested in `dev/upstream_request_truth_bundle.md`; until it
-   lands, `characterize.jl` reads the same files from `ptcrysp-scenarios/` and products.jl records
-   that fallback path.)
+   bundle is delivered — contract and sanity numbers in `dev/upstream_response_truth_bundle.md`;
+   the tree is the only input, with no reach into `ptcrysp-scenarios/`.)
 2. **qa.jl** — compute a shard's statistics as a struct the drivers assert on: nrows, truth
    fractions, acceptance = nrows/nevents, per-hit energy and radius ranges, DOI range (r − R_inner),
    Δt/τ occupancy, source bounding box. Turns "the shard looks fine" into an automatable gate; the
@@ -267,10 +266,10 @@ Each rung reuses the previous one; the chain grows without rebuilding.
 (semi-axes 72/87/102 mm) at centre (0, −30, 0); beam and target on the axis (0,0); nominal distal
 edge z ≈ −5 mm; brain μ(511) = 0.009913 mm⁻¹.
 
-Shard 0 (BGO) is present; shards 1–9 and the `csi/` arm are further production runs into the same
-tree, adding no machinery here. Ladder rungs 2–5 are unblocked now; rung 1 runs against
-`ptcrysp-scenarios/` until the `truth/` bundle lands in the products tree; rung 6 runs when the
-remaining shards land.
+All ten BGO shards (000–009) and the `truth/` bundle are on disk; the `csi/` arm is a further
+production run into the same tree, adding no machinery here. Ladder rungs 1–2 have run (locked
+reference: dose-R80 −5.58 mm, activity-R50 −16.45 mm, offset −10.87 mm; all shards pass QA), and
+rungs 4–6 are unblocked.
 
 ## Build order
 

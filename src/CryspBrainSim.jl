@@ -15,14 +15,24 @@ using LsqFit: curve_fit, coef, vcov, PrecisionWeights
 using SpecialFunctions: erfc, erfcinv
 using Statistics: mean, median, std
 using LinearAlgebra: diag
+using HDF5: h5open, read_attribute, attributes
+using JSON3
+using TOML
 
 export depth_profile, distal_window, fit_endpoint, sigma_R
+export read_csv_table, leaf_dir, shard_files, shard_attrs, read_shard,
+       pool_shards, scanner_geometry, phantom_region, material_mu, truth_dir
+export ShardQA, shard_qa
+export TruthReference, characterize, distal_crossing, read_depth_dose,
+       read_activity_profile, write_reference
 
 include("profile.jl")
 include("endpoint.jl")
+include("products.jl")
+include("qa.jl")
+include("characterize.jl")
 
-# The remaining analysis surface arrives over dev/PLAN.md build steps 3–6:
-#   products.jl · qa.jl · characterize.jl · mumap.jl · sensitivity.jl
-#   thinning.jl · dualhead_sampler.jl
+# The remaining analysis surface arrives over dev/PLAN.md build steps 4–6:
+#   mumap.jl · sensitivity.jl · thinning.jl · dualhead_sampler.jl
 
 end # module CryspBrainSim

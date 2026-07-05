@@ -1,8 +1,10 @@
 using CryspBrainSim
 using Test
 using NPZ
+using HDF5
+using TOML
 using LinearAlgebra: diag
-using SpecialFunctions: erfc
+using SpecialFunctions: erfc, erfcinv
 
 # Cross-validation reference (dev/PLAN.md validation ladder rung 3): shared
 # numpy-generated arrays plus the frozen Python fit outputs, produced once by
@@ -22,6 +24,82 @@ const RTOL_FIT = 1e-3
 const RTOL_PCOV = 1e-2
 
 erfc_truth(z; base, amp, z0, w) = @. base + amp * 0.5 * erfc((z - z0) / (sqrt(2.0) * w))
+
+# ---------------------------------------------------------------------------
+# Synthetic products fixtures (step-3 tests run without PtCryspProds on disk)
+# ---------------------------------------------------------------------------
+
+# A schema-faithful miniature lors_shardNNN.h5: 8 LORs on a 387 mm ring —
+# 5 true (row 1 degenerate: identical endpoints), 1 single scatter,
+# 1 multiple scatter, 1 random; one LOR (row 8) outside the ±3 ns window.
+function write_mini_shard(path; realization=0, crystal="BGO", nevents=40,
+                          scenario="mini_scen", drop_attr=nothing)
+    n = 8
+    q(v) = Int16.(round.(v ./ 0.1))                      # quantize mm → Int16
+    x1 = q([390.0, 390, 390, 390, 390, 390, 390, 390])
+    y1 = q(zeros(n))
+    z1 = q([10.0, 20, 30, 40, 50, 60, 70, 80])
+    x2 = q([390.0, -390, -390, -390, -390, -390, -390, -390])  # row 1 degenerate
+    y2 = q(zeros(n))
+    z2 = copy(z1); z2[1] = z1[1]                          # row 1: same endpoint
+    truth = Int8[0, 0, 0, 0, 1, 1, 2, 0]
+    nscat1 = Int8[0, 0, 0, 0, 1, 1, 0, 0]
+    nscat2 = Int8[0, 0, 0, 0, 0, 1, 0, 0]
+    e = Int16.(round.([511.0, 511, 500, 480, 460, 455, 470, 511] ./ 0.1))
+    t1 = Float32[1.0, 1, 1, 1, 1, 1, 1, 6]
+    t2 = Float32[0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5]  # row 8: Δt = 5.5 ns
+    x0 = q([0.0, 1, -1, 2, -2, 3, -3, 4])
+    y0 = q([0.0, -5, 5, -10, 10, -15, 15, -20])
+    z0 = q([-90.0, -60, -30, 0, 30, 60, 90, 95])
+    h5open(path, "w") do f
+        for (k, v) in (
+            "event" => Int32.(1:n), "truth" => truth,
+            "x1_mm" => x1, "y1_mm" => y1, "z1_mm" => z1,
+            "e1_keV" => e, "t1_ns" => t1,
+            "iz1" => Int16.(ones(n)), "iphi1" => Int16.(ones(n)), "nscat1" => nscat1,
+            "x2_mm" => x2, "y2_mm" => y2, "z2_mm" => z2,
+            "e2_keV" => reverse(e), "t2_ns" => t2,
+            "iz2" => Int16.(ones(n)), "iphi2" => Int16.(2 .* ones(n)), "nscat2" => nscat2,
+            "dt_ns" => Float32.(t1 .- t2), "x0_mm" => x0, "y0_mm" => y0, "z0_mm" => z0)
+            write(f, k, v)
+        end
+        a = Dict{String,Any}(
+            "scenario" => scenario, "crystal" => crystal, "budget" => "fast",
+            "dose_Gy" => 1.0, "master_seed" => 1, "realization" => realization,
+            "n_phi" => 48, "n_z" => 20, "tau_ns" => 3.0, "emin_keV" => 450.0,
+            "eres" => 0.1, "sigma_xyz_mm" => 1.7, "nevents" => nevents,
+            "nrows" => n, "xyz_scale_mm" => 0.1, "e_scale_keV" => 0.1)
+        drop_attr !== nothing && delete!(a, drop_attr)
+        for (k, v) in a
+            HDF5.attributes(f)[k] = v
+        end
+    end
+    return path
+end
+
+# A miniature truth/ bundle with analytic edges: dose erfc at 150 mm (w 2),
+# activity erfc at 140 mm (w 3) — activity-R50 = 140 exactly by construction.
+function write_mini_truth(scenario_dir; z_shift_activity=0.0)
+    tdir = joinpath(scenario_dir, "truth")
+    mkpath(tdir)
+    z = collect(0.0:1.0:200.0)
+    dose = @. 0.5 * erfc((z - 150.0) / (sqrt(2.0) * 2.0))
+    act = @. 1000.0 * 0.5 * erfc((z - 140.0) / (sqrt(2.0) * 3.0))
+    open(joinpath(tdir, "depth_dose.csv"), "w") do io
+        println(io, "z_mm,edep_total_MeV,edep_primary_MeV,edep_core_MeV,dose_core_Gy")
+        for i in eachindex(z)
+            println(io, "$(z[i]),$(1e6 * dose[i]),$(9e5 * dose[i]),$(1e3 * dose[i]),$(dose[i])")
+        end
+    end
+    open(joinpath(tdir, "activity_profile_fast.csv"), "w") do io
+        println(io, "z_mm,O15,C11,total")
+        for i in eachindex(z)
+            za = z[i] + z_shift_activity
+            println(io, "$(za),$(0.7 * act[i]),$(0.3 * act[i]),$(act[i])")
+        end
+    end
+    return scenario_dir
+end
 
 @testset "CryspBrainSim" begin
     @testset "package" begin
@@ -126,5 +204,143 @@ erfc_truth(z; base, amp, z0, w) = @. base + amp * 0.5 * erfc((z - z0) / (sqrt(2.
         @test few.n_ok == 1 && few.n_fail == 2
         @test isnan(few.mean) && isnan(few.sigma) && isnan(few.sem)
         @test few.offset === nothing
+    end
+
+    @testset "read_csv_table" begin
+        mktempdir() do dir
+            p = joinpath(dir, "t.csv")
+            write(p, "name,a,b\nfoo,1.5,2\nbar,-3e2,4\n")
+            t = read_csv_table(p)
+            @test t["name"] == ["foo", "bar"]
+            @test t["a"] == [1.5, -300.0]
+            @test t["b"] == [2.0, 4.0]
+            write(p, "a,b\n1,2\n3\n")
+            @test_throws ErrorException read_csv_table(p)
+        end
+    end
+
+    @testset "products — shards on a miniature tree" begin
+        mktempdir() do dir
+            leaf = joinpath(dir, "mini_scen", "ring", "bgo", "fast_1Gy")
+            mkpath(leaf)
+            s0 = write_mini_shard(joinpath(leaf, "lors_shard000.h5"); realization=0)
+            s1 = write_mini_shard(joinpath(leaf, "lors_shard001.h5"); realization=1)
+
+            @test leaf_dir(dir; scenario="mini_scen", scanner="ring",
+                           crystal="bgo", leaf="fast_1Gy") == leaf
+            @test_throws ErrorException leaf_dir(dir; scenario="mini_scen",
+                                                 scanner="ring", crystal="csi",
+                                                 leaf="fast_1Gy")
+            @test shard_files(leaf) == [s0, s1]
+
+            a = shard_attrs(s0)
+            @test a["realization"] == 0 && a["crystal"] == "BGO"
+            bad = write_mini_shard(joinpath(dir, "bad.h5"); drop_attr="master_seed")
+            @test_throws ErrorException shard_attrs(bad)
+
+            r = read_shard(s0)
+            @test r.n_dropped == 1                    # the degenerate row
+            @test length(r.coinc) == 7
+
+            pool = pool_shards([s0, s1])
+            @test length(pool.coinc) == 14
+            @test pool.n_dropped == 2
+            @test length(pool.shard_attrs) == 2
+
+            # Not one master: same realization index twice / common-mode drift.
+            @test_throws ErrorException pool_shards([s0, s0])
+            s2 = write_mini_shard(joinpath(leaf, "lors_shard002.h5");
+                                  realization=2, crystal="CsI")
+            @test_throws ErrorException pool_shards([s0, s1, s2])
+        end
+    end
+
+    @testset "products — geometry, phantom, truth_dir" begin
+        mktempdir() do dir
+            gj = joinpath(dir, "scanner_geometry.json")
+            write(gj, """{"scanner": {"name": "ring", "r_inner_cm": 38.7,
+                  "wall_thickness_cm": 3.7, "half_length_cm": 51.2,
+                  "n_phi": 48, "n_z": 20}}""")
+            g = scanner_geometry(dir)
+            @test g.name == "ring" && g.r_inner_mm == 387.0 && g.wall_mm == 37.0
+            @test g.half_length_mm == 512.0 && g.n_phi == 48 && g.n_z == 20
+
+            ph = joinpath(dir, "phantom"); mkpath(ph)
+            write(joinpath(ph, "phantom_regions.csv"),
+                  "region,priority,material,solid,a_mm,b_mm,c_mm,cx_mm,cy_mm,cz_mm," *
+                  "euler_x_deg,euler_y_deg,euler_z_deg\n" *
+                  "head,0,G4_BRAIN_ICRP,ellipsoid,72,87,102,0,-30,0,0,0,0\n")
+            write(joinpath(ph, "phantom_material_g4_brain_icrp_meta.csv"),
+                  "material,energy_keV,density_g_cm3,mean_excitation_eV,mu_rho_cm2_g," *
+                  "mu_cm_inv,mu_mm_inv,mean_free_path_cm,note\n" *
+                  "G4_BRAIN_ICRP,511.0,1.04,73.3,0.0953,0.0991,0.009913,10.09,note\n")
+            reg = phantom_region(dir)
+            @test reg.material == "G4_BRAIN_ICRP" && reg.solid == "ellipsoid"
+            @test reg.semi_axes == (72.0, 87.0, 102.0) && reg.centre == (0.0, -30.0, 0.0)
+            mu = material_mu(dir, "G4_BRAIN_ICRP")
+            @test mu.mu_mm_inv ≈ 0.009913 && mu.energy_keV == 511.0
+
+            @test_throws ErrorException truth_dir(dir)
+            mkpath(joinpath(dir, "truth"))
+            @test truth_dir(dir) == joinpath(dir, "truth")
+        end
+    end
+
+    @testset "qa — ShardQA on the miniature shard" begin
+        mktempdir() do dir
+            f = write_mini_shard(joinpath(dir, "lors_shard000.h5"); nevents=40)
+            q = shard_qa(f; r_inner_mm=387.0)
+            @test q.nrows == 8 && q.nevents == 40
+            @test q.acceptance ≈ 0.2
+            @test q.n_true == 5 && q.n_random == 1
+            @test q.n_scatter_single == 1 && q.n_scatter_multiple == 1
+            @test q.frac_true ≈ 5 / 8 && q.frac_scatter ≈ 2 / 8 && q.frac_random ≈ 1 / 8
+            @test q.n_degenerate == 1
+            @test q.e_range == (455.0, 511.0)
+            @test q.r_range == (390.0, 390.0)
+            @test q.doi_range == (3.0, 3.0)
+            @test q.dt_frac_in_tau ≈ 7 / 8       # row 8 sits outside ±3 ns
+            @test q.tau_ns == 3.0
+            @test q.src_min == (-3.0, -20.0, -90.0)
+            @test q.src_max == (4.0, 15.0, 95.0)
+        end
+    end
+
+    @testset "characterize — analytic truth bundle" begin
+        mktempdir() do dir
+            write_mini_truth(dir)
+
+            # Analytic expectations on the 1 mm grid: dose-R80 solves
+            # 0.5·erfc(u) = 0.8 at edge (150, w=2); activity-R50 is exactly
+            # the edge position 140 (erfc(0)/2 = 1/2). Linear interpolation on
+            # the grid reads them to a few 0.01 mm.
+            R80_exact = 150.0 + sqrt(2.0) * 2.0 * erfcinv(1.6)
+            ref = characterize(dir)
+            @test abs(ref.dose_R80 - R80_exact) < 0.05
+            @test abs(ref.activity_R50 - 140.0) < 0.05
+            @test abs(ref.activity_R50_fit - 140.0) < 0.05
+            @test abs(ref.activity_w_fit - 3.0) < 0.05
+            @test ref.offset ≈ ref.activity_R50 - ref.dose_R80
+            @test ref.window == (ref.activity_R50 - 20.0, ref.activity_R50 + 15.0)
+
+            path = write_reference(ref, joinpath(dir, "out", "truth_reference.toml"))
+            back = TOML.parsefile(path)
+            @test back["dose_R80_mm"] ≈ ref.dose_R80
+            @test back["activity_R50_mm"] ≈ ref.activity_R50
+            @test back["offset_mm"] ≈ ref.offset
+            @test back["window_mm"] ≈ collect(ref.window)
+        end
+
+        # Broken bundle: activity on a shifted z-frame errors.
+        mktempdir() do dir
+            write_mini_truth(dir; z_shift_activity=0.5)
+            @test_throws ErrorException characterize(dir)
+        end
+
+        # distal_crossing reads the LAST falling edge and NaNs when absent.
+        z = collect(0.0:1.0:10.0)
+        y = [0.0, 1, 0.2, 1, 1, 1, 1, 1, 0.5, 0.0, 0.0]  # dip + final edge
+        @test distal_crossing(z, y; level=0.5) ≈ 8.0
+        @test isnan(distal_crossing(z, fill(1.0, 11); level=0.5))
     end
 end
