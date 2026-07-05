@@ -15,21 +15,20 @@ using Metal
 using Printf
 using Statistics: mean, std
 
+const KNOBS = load_knobs()      # config/knobs.toml — grid, n_sens, chunk
 const N_SENS = let a = filter(!startswith("--"), ARGS)
-    isempty(a) ? 1_000_000_000 : parse(Int, a[1])       # the PLAN.md knob
+    isempty(a) ? KNOBS.n_sens : parse(Int, a[1])
 end
 const CHECK = "--check" in ARGS
 
 const SCEN = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds",
                       "uniform_headep_sobp_1e8")
-# Provisional activity grid on the beam corridor: transverse voxel centres
-# ±47.25 mm about the beam axis, axial centres z ∈ [−119.25, +23.25] mm — the
-# corridor (decays run z ≈ −102…0, nominal edge −5) plus margins. A centered
-# z-grid would clip the proximal activity; the origin is the load-bearing part.
-const N = (64, 64, 96)
-const VS = (1.5f0, 1.5f0, 1.5f0)
-const ORG = (-47.25f0, -47.25f0, -119.25f0)
-const CHUNK = 20_000_000
+# The frozen activity grid on the beam corridor (the offset z-origin covers
+# the proximal activity a centered grid would clip).
+const N = KNOBS.grid.n
+const VS = KNOBS.grid.voxsize
+const ORG = KNOBS.grid.img_origin
+const CHUNK = KNOBS.chunk
 
 function main()
     geo = scanner_geometry(joinpath(SCEN, "crysp_ring_1m"))

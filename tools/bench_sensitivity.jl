@@ -23,13 +23,12 @@ const AXES = (72.0f0, 87.0f0, 102.0f0)
 const CENTRE = (0.0f0, -30.0f0, 0.0f0)
 const MU = 0.009913f0
 
-# Provisional activity grid (frozen at the single-shard stage): the beam
-# corridor, transverse voxel centres ±47.25 mm, axial z ∈ [−119.25, +23.25] mm,
-# at 1.5 mm voxels. The offset origin covers the proximal activity a centered
-# z-grid would clip.
-const N = (64, 64, 96)
-const VS = (1.5f0, 1.5f0, 1.5f0)
-const ORG = (-47.25f0, -47.25f0, -119.25f0)
+# The frozen activity grid (config/knobs.toml): the beam corridor, offset
+# z-origin so the proximal activity is covered.
+const KNOBS = load_knobs()
+const N = KNOBS.grid.n
+const VS = KNOBS.grid.voxsize
+const ORG = KNOBS.grid.img_origin
 
 const N_MASTER = 174_296_897        # the pooled BGO master (10 shards)
 

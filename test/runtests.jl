@@ -382,6 +382,18 @@ end
         @test all(abs.(log.(av) .- log.(ae)) .< μ * 2 * maximum(vs))  # ≤ 2-voxel chord error
     end
 
+    @testset "config — the frozen knobs load typed" begin
+        k = load_knobs()
+        @test k.grid.n == (64, 64, 96)
+        @test k.grid.img_origin == (-47.25f0, -47.25f0, -119.25f0)
+        @test k.grid.voxsize == (1.5f0, 1.5f0, 1.5f0)
+        @test k.roi.radius_mm == 13.0 && k.roi.centre_mm == (0.0, 0.0)
+        @test k.window[1] < k.window[2] < 0
+        @test k.niter == 50
+        @test k.n_sens == 1_000_000_000
+        @test k.truth_selection == "trues-only"
+    end
+
     @testset "sensitivity — chunked base, scale, cache roundtrip" begin
         n = (16, 16, 16)
         vs = (8.0f0, 8.0f0, 8.0f0)

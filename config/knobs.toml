@@ -1,0 +1,30 @@
+# The frozen common-mode knobs (dev/PLAN.md → Fixed knobs), set at the
+# single-shard stage on shard 0 (ladder rung 5, 2026-07-05). Identical across
+# every scanner, crystal, dose, and realization — keeping them common-mode is
+# what makes σ_R differences purely geometric. A change here re-runs rung 5.
+
+[grid]                       # activity grid on the beam corridor
+n = [64, 64, 96]
+img_origin_mm = [-47.25, -47.25, -119.25]   # voxel-centre origin; z spans -119.25..+23.25
+voxsize_mm = [1.5, 1.5, 1.5]
+
+[roi]                        # fixed transverse disc, centred on the beam axis
+radius_mm = 13.0             # ρ ≈ 3·√(σ_spot² + σ_PSF²) + R_β⁺
+centre_mm = [0.0, 0.0]
+
+[window]                     # fixed distal fit window, from the truth activity edge
+z_lo_mm = -36.452
+z_hi_mm = -1.452
+nominal_edge_mm = -16.452    # truth activity-R50 (rung 1)
+proximal_margin_mm = 20.0
+distal_margin_mm = 15.0
+
+[mlem]
+niter = 50                   # on the R50-vs-iterations plateau (<0.01 mm / 10 iters past 40)
+
+[sensitivity]
+n_sens = 1000000000
+chunk = 20000000
+
+[selection]
+truth = "trues-only"         # truth == 0, first pass

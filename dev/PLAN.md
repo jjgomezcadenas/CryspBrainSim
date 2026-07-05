@@ -188,14 +188,17 @@ Identical across every scanner, crystal, dose, and realization; consumed unchang
 `sensitivity.jl`, `profile.jl`, and `sweep.jl`. Keeping them common-mode is what makes σ_R
 differences purely geometric.
 
-| Knob | Value | Set at |
+The frozen values live in **`config/knobs.toml`** (loaded via `load_knobs()`); this table mirrors
+them. All were set at the single-shard stage (rung 5, shard 0, 2026-07-05).
+
+| Knob | Frozen value | Note |
 |---|---|---|
-| voxel grid (activity) | TBD; z-sampling ~1.5–2 mm for the edge | single-shard stage |
-| μ-map grid | covers whole head (y to −117 mm) | single-shard stage |
-| ROI radius / centre | ρ ≈ n·√(σ_spot²+σ_PSF²)+R_β⁺ ≈ 12–15 mm; centre (0,0) | single-shard stage |
-| distal fit window | (z_nom − δ_prox, z_nom + δ_dist), z_nom ≈ −5 mm | single-shard stage |
-| MLEM iteration count | on the R50-vs-iterations plateau | single-shard stage |
-| n_sens | 10⁹ (measured mottle 1.28% at the provisional corridor grid; ~37 s to build) | set 2026-07-05 |
+| voxel grid (activity) | 64×64×96 @ 1.5 mm, origin (−47.25, −47.25, −119.25) | corridor grid; 0.06% of true origins outside |
+| attenuation | analytic ellipsoid route (`attenuation_ellipsoid`) | voxel μ-map route ready for multi-region phantoms |
+| ROI radius / centre | 13 mm; centre (0,0) | ρ ≈ 3·√(σ_spot²+σ_PSF²)+R_β⁺; spread 0.31 mm under 12/15 mm |
+| distal fit window | (−36.452, −1.452) mm | activity edge −16.452 (rung 1) ± 20/15 mm margins |
+| MLEM iteration count | 50 | plateau: <0.01 mm per 10 iters past 40 (re-verified to 100 each run) |
+| n_sens | 10⁹ (mottle 1.28%; ~37 s to build) | R50-vs-seed check re-runs on any grid change |
 | truth selection | trues-only (truth==0), first pass | fixed |
 
 Run plain `mlem` at the fixed iteration count on the headline pass, starting from
@@ -226,7 +229,10 @@ Each rung reuses the previous one; the chain grows without rebuilding.
    on the truth-origin depth profile
    (`c.origin`, no reconstruction). This isolates the estimator from the recon; being the detected
    subset, it cross-checks against — not replaces — the `truth/` activity-R50 from rung 1.
-5. **Single shard** (`one_shard.jl`) — the full chain on shard 0 at full statistics. Acceptance:
+5. **Single shard** (`one_shard.jl`) — **DONE on shard 0**: R50 fit −15.59 ± 0.15 mm / crossing
+   −16.10 mm at the frozen 50 iterations (truth fit −14.32 / crossing −16.45; both gaps
+   sub-voxel), stability spread 0.31 mm, 100 iters in 26 s on Metal — knobs frozen into
+   `config/knobs.toml`. The full chain on shard 0 at full statistics. Acceptance:
    (a) the reconstructed profile overlays sensibly on `depth_dose.csv` and its activity-R50 matches
    the rung-1 truth activity-R50; (b) the erfc fit converges with sub-voxel z0_err in the fixed
    window; (c) R50 holds under small ROI/window perturbations; (d) wall-clock per reconstruction is
@@ -300,13 +306,13 @@ Steps 1–4 are committed on `main`; per-step detail and measured numbers live i
    rung-4 quick-look ran (commit `e0b96c0`).
 4. **DONE** — W4 `mumap.jl`, W5 `sensitivity.jl`; scale assessed, n_sens = 10⁹ set, base cached
    (commit `535811b`).
-5. **NEXT** — `drivers/one_shard.jl` → freeze the knobs (ladder rung 5 and the stage checks
-   above). *Pulled ahead of thinning (order reversal, 2026-07-05): the single-shard chain and
-   thinning are independent, rung 5 freezes the grid/ROI/iteration knobs every thinned
-   reconstruction consumes, and its wall-clock measurement sizes the sweep — so the chain runs
-   first and thinning lands immediately before its only consumers (the crosscheck and sweep
-   drivers).*
-6. W6 `thinning.jl`; confirm the `p = dose/top_dose` anchor against the recipe's
+5. **DONE** — `drivers/one_shard.jl` ran the full chain on shard 0 and froze the knobs into
+   `config/knobs.toml` (ladder rung 5; numbers in the ladder and the knob table). *Pulled ahead
+   of thinning (order reversal, 2026-07-05): the single-shard chain and thinning are independent,
+   rung 5 freezes the grid/ROI/iteration knobs every thinned reconstruction consumes, and its
+   wall-clock measurement sizes the sweep — so the chain ran first and thinning lands immediately
+   before its only consumers (the crosscheck and sweep drivers).*
+6. **NEXT** — W6 `thinning.jl`; confirm the `p = dose/top_dose` anchor against the recipe's
    `dose_to_counts`.
 7. `drivers/shard_crosscheck.jl` and `drivers/sweep.jl` (rungs 6–7) as the remaining data lands.
 8. Update `latex/depth_profile.tex` (code-map table → Julia; keep the single windowed estimator).

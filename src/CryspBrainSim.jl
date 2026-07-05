@@ -31,7 +31,9 @@ export phantom_attenuation, attenuation_ellipsoid, centered_grid, build_mumap,
        attenuation_mumap
 export sensitivity_base, scaled_sensitivity, save_sensitivity,
        load_sensitivity, recocrysp_sha
+export load_knobs
 
+include("config.jl")
 include("profile.jl")
 include("endpoint.jl")
 include("products.jl")
