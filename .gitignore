@@ -1,0 +1,26 @@
+# LaTeX build artifacts (keep .tex and .pdf)
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+
+# Python
+__pycache__/
+*.pyc
+
+# Julia
+/docs/build/
+*.jl.cov
+*.jl.mem
+
+# Analysis outputs (regenerable; not committed)
+/out/
+*.npz
+
+# OS
+.DS_Store

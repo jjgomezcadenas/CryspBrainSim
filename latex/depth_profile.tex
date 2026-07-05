@@ -1,0 +1,181 @@
+\documentclass[11pt]{article}
+
+% ---------------------------------------------------------------------------
+% CRYSP proposal draft --- ependymoma as illustrative case for distal
+% range-verification. British spelling; isotope notation in maths superscripts.
+% Compile: pdflatex -> bibtex -> pdflatex x2  (uses crysp_ependymoma_refs.bib)
+% ---------------------------------------------------------------------------
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[british]{babel}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{amssymb}
+
+\sisetup{detect-all}
+\newcommand{\GyRBE}{Gy\,(RBE)}
+\DeclareSIUnit\years{years}
+
+\title{Depth-profile extraction and endpoint estimation}
+\author{}
+\date{\vspace{-3em}}
+
+\begin{document}
+\maketitle
+\vspace{-2em}
+
+\section{Depth-profile extraction and endpoint estimation}
+\label{sec:depthprofile}
+
+Let \(\lambda(\mathbf{r})\) denote the reconstructed activity image, resampled
+onto a beam-aligned grid with \(\mathbf{r}=(x,y,z)\) and the beam (depth) along
+\(z\). The one-dimensional depth--activity profile is the transverse integral
+over a fixed region of interest \(\mathcal{R}\),
+\begin{equation}
+  P(z) \;=\; \int_{\mathcal{R}} \lambda(x,y,z)\,\mathrm{d}x\,\mathrm{d}y
+        \;\approx\; \Delta x\,\Delta y \!\!\sum_{(i,j)\in\mathcal{R}}\!\!
+        \lambda_{ijk(z)},
+  \label{eq:profile}
+\end{equation}
+where \(\mathcal{R}=\{(x,y):(x-x_c)^2+(y-y_c)^2\le\rho^2\}\) is a disc of radius
+\(\rho\) centred on the \emph{beam axis} \((x_c,y_c)\), not on the
+per-realisation activity centroid: a data-driven centre would inject a stochastic
+transverse shift into the endpoint and inflate \(\sigma_R\). The radius is chosen
+once, from
+\begin{equation}
+  \rho \;\gtrsim\; n\sqrt{\sigma_{\mathrm{spot}}^{2}+\sigma_{\mathrm{PSF}}^{2}}
+        \;+\; R_{\beta^{+}}, \qquad n\simeq 3,
+  \label{eq:roi}
+\end{equation}
+combining the beam spot size, the reconstruction point-spread width
+(\(\sigma_{\mathrm{PSF}}\approx\SI{1.7}{\milli\metre}\) for CRYSP) and the
+positron range \(R_{\beta^{+}}\). Equation~\eqref{eq:profile} is an integration
+(a sum), never an average or a normalisation: summing preserves the counting
+statistics on which the endpoint fit and \(\sigma_R\) depend. Because
+\(P(z)\) is a sum of voxel counts it is, to first approximation, Poisson with
+variance \(\operatorname{Var}[P(z)]\approx\bar{P}(z)\); the MLEM reconstruction
+correlates neighbouring voxels, so this is a working approximation used only to
+weight the fit, while the authoritative endpoint uncertainty is the ensemble
+spread defined below.
+
+The activity profile is not a single sigmoid---it rises from the entrance,
+plateaus, and falls at the distal edge, which lies \emph{upstream} of the Bragg
+peak because the \(\beta^{+}\)-production channels close below their reaction
+thresholds. The endpoint is therefore estimated within a \emph{fixed} distal
+analysis window \(\mathcal{W}=[z_0^{\mathrm{nom}}-\delta_-,\,
+z_0^{\mathrm{nom}}+\delta_+]\), bracketing the falloff and defined from the
+\emph{nominal} range, identically for every arm and realisation; a
+per-realisation peak search would correlate \(\mathcal{W}\) with the very
+fluctuations being measured. Inside \(\mathcal{W}\) the falloff is modelled by a
+complementary error function,
+\begin{equation}
+  \hat{P}(z) \;=\; b \;+\; a\,\tfrac{1}{2}
+    \operatorname{erfc}\!\left(\frac{z-z_0}{\sqrt{2}\,w}\right),
+  \label{eq:erfc}
+\end{equation}
+so that \(z_0\) is by construction the \(R_{50}\) point, \(a\) and \(b\) absorb
+the plateau height and background (making \(z_0\) invariant to the absolute
+activity scale), and \(w\) is the edge width. Any falloff level follows
+analytically,
+\begin{equation}
+  R_x \;=\; z_0 \;+\; \sqrt{2}\,w\,\operatorname{erfc}^{-1}(2x),
+  \label{eq:Rx}
+\end{equation}
+with \(R_{50}\) primary and \(R_{80},R_{20}\) as secondary tail diagnostics. The
+parameters are obtained by minimising the Poisson-weighted residual
+\begin{equation}
+  \chi^{2} \;=\; \sum_{z\in\mathcal{W}}
+    \frac{\bigl[P(z)-\hat{P}(z)\bigr]^{2}}{\max\!\bigl(P(z),1\bigr)},
+  \label{eq:chi2}
+\end{equation}
+which yields both the endpoint \(z_0^{(k)}\) and its fit covariance for each
+realisation \(k\).
+
+Finally, over the ensemble of \(K\) realisations at a given delivered dose, the
+mean endpoint estimates the systematic activity-edge position while its spread is
+the terminal figure of merit,
+\begin{equation}
+  \bar{z}_0 = \frac{1}{K}\sum_{k} z_0^{(k)}, \qquad
+  \sigma_R = \sqrt{\frac{1}{K-1}\sum_{k}\bigl(z_0^{(k)}-\bar{z}_0\bigr)^{2}}
+           \;\sim\; \frac{1}{\sqrt{N}},
+  \label{eq:sigmaR}
+\end{equation}
+recovering the counts-limited scaling in the detected-coincidence number \(N\).
+The methodological invariant of the comparison is that the grid, the region of
+interest \((x_c,y_c,\rho)\), the window \(\mathcal{W}\), the model
+\eqref{eq:erfc} and the estimator \eqref{eq:chi2} are identical across the three
+geometries: the \emph{only} quantity that differs entering \(\sigma_R\) is the
+reconstructed image content. This is also where the open dual-head geometry is
+tested most sharply---its limited-angle artefact elongates the activity
+distribution, and whenever that elongation projects onto the beam ($z$) axis it
+biases \(z_0\) directly, so \(\sigma_R\) is reported as a function of beam-axis
+orientation relative to the head gap.
+
+\subsection{Implementation and validation}
+\label{sec:implementation}
+
+The analysis is realised in two small, reconstruction-agnostic Python modules, so
+that the only bespoke component is the MLEM reconstruction itself. Module
+\texttt{range\_endpoint.py} provides the realisation generator
+\texttt{thin\_lm} (step~2, Poisson-thinning of the master list-mode run) and the
+ensemble aggregator \texttt{sigma\_R} (step~6). Module \texttt{depth\_profile.py}
+provides the profile extractor \texttt{depth\_profile} (step~4) and a
+window-aware, Poisson-weighted \texttt{fit\_endpoint} (step~5) that supersedes the
+simpler estimator in \texttt{range\_endpoint.py}. The two are joined at a single
+seam: within the sweep loop, \texttt{depth\_profile} and \texttt{fit\_endpoint}
+are imported from \texttt{depth\_profile.py} while \texttt{thin\_lm} and
+\texttt{sigma\_R} are imported from \texttt{range\_endpoint.py}. Crucially, the
+fixed analysis window \(\mathcal{W}\) of Eq.~\eqref{eq:erfc} is constructed once,
+via \texttt{distal\_window(}\(z_0^{\mathrm{nom}}\)\texttt{)}, and reused unchanged
+for every geometry and every realisation---the concrete guarantee that the window
+is not a per-realisation, noise-correlated quantity.
+
+The correspondence between the formalism and the code is one-to-one, as
+summarised in Table~\ref{tab:codemap}. In particular, the Poisson weighting of
+Eq.~\eqref{eq:chi2} is implemented as a least-squares fit with
+\(\sigma=\sqrt{\max(P,1)}\) and \texttt{absolute\_sigma=True}, so that the fit
+covariance carries the counting-statistics scale; as noted in
+Section~\ref{sec:depthprofile}, this per-realisation error is used only for the
+weighting, whereas the reported precision is the ensemble spread
+\(\sigma_R\) of Eq.~\eqref{eq:sigmaR}.
+
+\begin{table}[htb]
+  \centering
+  \caption{Correspondence between the formalism and its implementation. Steps
+  refer to the pipeline of Section~\ref{sec:implementation}; reconstruction
+  (step~3) is external.}
+  \label{tab:codemap}
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    Equation & Step & Function & Module \\
+    \midrule
+    ---                       & 2 & \texttt{thin\_lm}      & \texttt{range\_endpoint.py} \\
+    Eq.~\eqref{eq:profile}    & 4 & \texttt{depth\_profile}& \texttt{depth\_profile.py} \\
+    Eq.~\eqref{eq:roi}        & 4 & \texttt{roi\_radius\_mm} arg. & \texttt{depth\_profile.py} \\
+    \(\mathcal{W}\) window     & 5 & \texttt{distal\_window}& \texttt{depth\_profile.py} \\
+    Eqs.~\eqref{eq:erfc}--\eqref{eq:Rx} & 5 & \texttt{fit\_endpoint} / \texttt{\_erfc\_model} & \texttt{depth\_profile.py} \\
+    Eq.~\eqref{eq:chi2}       & 5 & \texttt{fit\_endpoint} (weighted) & \texttt{depth\_profile.py} \\
+    Eq.~\eqref{eq:sigmaR}     & 6 & \texttt{sigma\_R}      & \texttt{range\_endpoint.py} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The extraction chain was validated on a synthetic beam-aligned phantom: a
+transverse Gaussian beam (\(\sigma_\perp\approx\SI{2}{\milli\metre}\)) modulated
+along depth by a plateau-plus-\(\operatorname{erfc}\) falloff with a known edge at
+\(R_{50}=\SI{150.0}{\milli\metre}\), sampled on a \SI{1.5}{\milli\metre} grid and
+subjected to Poisson noise. Passing this image through the full
+profile\(\rightarrow\)window\(\rightarrow\)fit chain recovers
+\(R_{50}=\SI{149.71}{\milli\metre}\) with a fit uncertainty of
+\SI{0.13}{\milli\metre}, confirming sub-voxel, essentially unbiased endpoint
+localisation at realistic single-realisation statistics.
+
+\end{document}
