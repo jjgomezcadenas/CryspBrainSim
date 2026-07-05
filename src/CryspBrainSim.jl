@@ -18,6 +18,8 @@ using LinearAlgebra: diag
 using HDF5: h5open, read_attribute, attributes
 using JSON3
 using TOML
+using NPZ: npzread, npzwrite
+using Random: MersenneTwister
 
 export depth_profile, distal_window, fit_endpoint, sigma_R
 export read_csv_table, leaf_dir, shard_files, shard_attrs, read_shard,
@@ -25,14 +27,20 @@ export read_csv_table, leaf_dir, shard_files, shard_attrs, read_shard,
 export ShardQA, shard_qa
 export TruthReference, characterize, distal_crossing, read_depth_dose,
        read_activity_profile, write_reference
+export phantom_attenuation, attenuation_ellipsoid, centered_grid, build_mumap,
+       attenuation_mumap
+export sensitivity_base, scaled_sensitivity, save_sensitivity,
+       load_sensitivity, recocrysp_sha
 
 include("profile.jl")
 include("endpoint.jl")
 include("products.jl")
 include("qa.jl")
 include("characterize.jl")
+include("mumap.jl")
+include("sensitivity.jl")
 
-# The remaining analysis surface arrives over dev/PLAN.md build steps 4–6:
-#   mumap.jl · sensitivity.jl · thinning.jl · dualhead_sampler.jl
+# The remaining analysis surface arrives over dev/PLAN.md build steps 5–6:
+#   thinning.jl · dualhead_sampler.jl
 
 end # module CryspBrainSim

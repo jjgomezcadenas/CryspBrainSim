@@ -185,7 +185,7 @@ differences purely geometric.
 | ROI radius / centre | ρ ≈ n·√(σ_spot²+σ_PSF²)+R_β⁺ ≈ 12–15 mm; centre (0,0) | single-shard stage |
 | distal fit window | (z_nom − δ_prox, z_nom + δ_dist), z_nom ≈ −5 mm | single-shard stage |
 | MLEM iteration count | on the R50-vs-iterations plateau | single-shard stage |
-| n_sens | 5×10⁸, revalidated at our grid | single-shard stage |
+| n_sens | 10⁹ (measured mottle 1.24% at the provisional grid; ~40 s to build) | set 2026-07-05 |
 | truth selection | trues-only (truth==0), first pass | fixed |
 
 Run plain `mlem` at the fixed iteration count on the headline pass, starting from
@@ -226,10 +226,11 @@ Each rung reuses the previous one; the chain grows without rebuilding.
 
 ## Stage checks that set the knobs (single-shard stage)
 
-- **Sensitivity noise at our grid.** The 5×10⁸ LOR count was certified at 2.5 mm voxels; at a finer
-  grid each voxel is crossed by fewer sampled LORs, so confirm the sensitivity's Monte-Carlo mottle
-  sits below the other noise at our voxel size before freezing n_sens — compute `base` with two
-  seeds (or double n_sens) and confirm R50 is stable. Minutes on Metal.
+- **Sensitivity noise at our grid.** n_sens = 10⁹ is set (two-seed mottle 1.24% per image at the
+  provisional 1.5 mm grid, exact 1/√n across 10⁸/5×10⁸/10⁹; the upstream 5×10⁸ certification was
+  at 2.5 mm voxels, and the finer grid holds ~4.6× fewer LOR crossings per voxel). At the frozen
+  grid, confirm R50 is stable between two `base` seeds before the sweep — `tools/make_sensitivity.jl
+  --check` builds the pair in ~70 s on Metal.
 - **Tolerance-based comparison.** The atomic Float32 backprojection accumulates in
   order-dependent fashion, so images and R50 reproduce to a small tolerance while the thinned event
   list reproduces bit-for-bit. Write every test and the cross-check against a documented tolerance

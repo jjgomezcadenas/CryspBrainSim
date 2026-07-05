@@ -343,4 +343,81 @@ end
         @test distal_crossing(z, y; level=0.5) ≈ 8.0
         @test isnan(distal_crossing(z, fill(1.0, 11); level=0.5))
     end
+
+    @testset "mumap — chords, factors, voxel route" begin
+        @test centered_grid((41, 41, 160), (1.5, 1.5, 1.5)) ==
+              (-30.0f0, -30.0f0, -119.25f0)
+
+        axes3 = (72.0f0, 87.0f0, 102.0f0)
+        ctr = (0.0f0, -30.0f0, 0.0f0)
+        μ = 0.009913f0
+
+        # Axial LOR through the ellipsoid centre: chord = 2c = 204 mm.
+        xs = reshape(Float32[0, -30, -500], 3, 1)
+        xe = reshape(Float32[0, -30, 500], 3, 1)
+        a = attenuation_ellipsoid(xs, xe; semi_axes=axes3, centre=ctr, mu_mm_inv=μ)
+        @test a[1] ≈ exp(-μ * 204.0f0) rtol = 1e-5
+
+        # A LOR clear of the body survives untouched.
+        miss = attenuation_ellipsoid(reshape(Float32[300, 300, -500], 3, 1),
+                                     reshape(Float32[300, 300, 500], 3, 1);
+                                     semi_axes=axes3, centre=ctr, mu_mm_inv=μ)
+        @test miss[1] == 1.0f0
+
+        # Voxel route agrees with the analytic route to voxelization accuracy.
+        n = (80, 120, 105)
+        vs = (2.0f0, 2.0f0, 2.0f0)
+        org = centered_grid(n, vs)
+        mumap = build_mumap(; n=n, img_origin=org, voxsize=vs,
+                            semi_axes=axes3, centre=ctr, mu_mm_inv=μ)
+        vol_vox = sum(mumap .> 0) * prod(vs)
+        vol_true = 4π / 3 * prod(axes3)
+        @test abs(vol_vox / vol_true - 1) < 0.01
+
+        many_s = Float32[0 -30 -500; 20 0 -500; 0 -100 -500; 60 -30 -400]'
+        many_e = Float32[0 -30 500; -20 -60 500; 0 40 500; -60 -30 400]'
+        av = attenuation_mumap(Float32.(many_s), Float32.(many_e), mumap, org, vs)
+        ae = attenuation_ellipsoid(Float32.(many_s), Float32.(many_e);
+                                   semi_axes=axes3, centre=ctr, mu_mm_inv=μ)
+        @test all(abs.(log.(av) .- log.(ae)) .< μ * 2 * maximum(vs))  # ≤ 2-voxel chord error
+    end
+
+    @testset "sensitivity — chunked base, scale, cache roundtrip" begin
+        n = (16, 16, 16)
+        vs = (8.0f0, 8.0f0, 8.0f0)
+        org = centered_grid(n, vs)
+        atten_ones(xs, xe) = ones(Float32, size(xs, 2))
+        args = (r_inner_mm=200.0, half_length_mm=200.0, n=n, img_origin=org,
+                voxsize=vs, attenuation=atten_ones, n_sens=200_000,
+                chunk=60_000, seed=7, progress=false)
+        base = sensitivity_base(; args...)
+        @test size(base) == n
+        @test all(isfinite, base)
+        mid = n .÷ 2
+        @test base[mid...] > 0            # the FOV centre is illuminated
+
+        # Same seed reproduces to the atomic-accumulation tolerance
+        # (order-nondeterministic Float32 adds — compare with rtol, never ==).
+        base2 = sensitivity_base(; args...)
+        @test base ≈ base2 rtol = 1e-3
+
+        # The per-realization scale.
+        sens = scaled_sensitivity(base, 100_000, 200_000)
+        @test sens[mid...] ≈ 0.5f0 * base[mid...]
+
+        mktempdir() do dir
+            p = save_sensitivity(joinpath(dir, "sens", "base"), base;
+                                 r_inner_mm=200.0, half_length_mm=200.0,
+                                 n_sens=200_000, chunk=60_000, seed=7,
+                                 img_origin=org, voxsize=vs,
+                                 attenuation_meta=(route="none", mu_mm_inv=0.0))
+            b2, meta = load_sensitivity(p)
+            @test b2 == base
+            @test meta["draw"]["n_sens"] == 200_000
+            @test meta["grid"]["n"] == collect(n)
+            @test meta["scanner"]["r_inner_mm"] == 200.0
+            @test meta["attenuation"]["route"] == "none"
+            @test haskey(meta, "recocrysp_sha")
+        end
+    end
 end

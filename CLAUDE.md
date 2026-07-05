@@ -64,9 +64,20 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   shards pass QA (acceptance 21.73–21.75%, trues 81.1%, 0 degenerate). Rung-4 quick-look: erfc fit
   of the detected-origin profile −14.76 ± 0.03 mm vs −14.32 mm on the truth profile — the 0.4 mm
   tilt is the attenuation gradient (detected subset ≠ true activity; the recon corrects it).
-- **Step 4 — NEXT: mumap.jl + sensitivity.jl** (`dev/PLAN.md` write-items 4–5): ellipsoid-chord and
-  voxel-μ routes from the phantom files; `ContinuousPET` chunked `base` cache with provenance.
-- **Then** steps 5–8 in `dev/PLAN.md`.
+- **Step 4 — mumap + sensitivity: DONE.** `src/mumap.jl` (analytic `attenuation_ellipsoid` +
+  voxel `build_mumap`/`attenuation_mumap` routes, `centered_grid`), `src/sensitivity.jl`
+  (`sensitivity_base` chunked over `ContinuousPET` draws, NPZ cache + TOML provenance with the
+  RecoCrysp SHA, `scaled_sensitivity` applied per realization); 101 tests green.
+  **Scale assessed** (`tools/bench_sensitivity.jl` → `out/sensitivity_scope/bench.toml`, M-series,
+  6 threads, Metal): sample 34 M LORs/s, chords 934 M/s, backprojection 242 M/s (Metal) / 61 M/s
+  (CPU) — **n_sens 10⁹ costs ~37 s**, 5×10⁸ ~20 s; memory is a non-issue (chunk 0.5 GiB, pooled
+  174 M-event master ≈ 4.6 GiB for recon arrays, 48 GiB RAM). Two-seed MC mottle at the provisional
+  64×64×96 @1.5 mm grid (`tools/make_sensitivity.jl --check`): 3.92% per image at 10⁸, 1.76% at
+  5×10⁸, 1.24% at 10⁹ (exact 1/√n). **Knob set: n_sens = 10⁹** (PLAN.md table; base cached under
+  `out/sensitivity/`), with the R50-vs-seed stage check at rung 5 confirming it at the frozen grid.
+- **Step 5 — NEXT: thinning.jl** (`thin_lm`, pooled Bernoulli, own seed namespace); confirm the
+  `p = dose/top_dose` anchor against the recipe's `dose_to_counts`.
+- **Then** steps 6–8 in `dev/PLAN.md`.
 
 Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
 `dose_to_counts` (step 5). The `truth/` bundle is delivered
