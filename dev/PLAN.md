@@ -85,8 +85,9 @@ CryspBrainSim/
   config/                     the FROZEN run parameters, common-mode across arms (see below)
   drivers/
     one_shard.jl              one shard → R          (the single-shard chain; the atomic unit)
-    shard_crosscheck.jl       ten shards → bias-free σ_R at top dose  (the standing gate)
-    sweep.jl                  thinned realizations × doses × arms → σ_R-vs-dose  (the deliverable)
+    sigma_r_common.jl         shared setup + reconstruction chain for the two σ_R drivers
+    sigma_r_at_dose.jl        σ_R at one dose: --from-shards (reference) or thinned realizations
+    sigma_r_sweep_dose.jl     σ_R across a dose grid → the σ_R-vs-dose curve  (the deliverable)
   tools/                      Python quick-looks + plotting (reproducible, on disk)
     plot_shard.py             the 3×3 detector QA panel (adapted from PTCryspMC plot_prod.py)
     plot_truth.py             activity / depth_dose / dose_activity / sobp_plateau from truth/
@@ -189,7 +190,7 @@ status and the build step that owns it.
 ## Fixed run parameters (`config/`) — the common-mode discipline
 
 Identical across every scanner, crystal, dose, and realization; consumed unchanged by
-`sensitivity.jl`, `profile.jl`, and `sweep.jl`. Keeping them common-mode is what makes σ_R
+`sensitivity.jl`, `profile.jl`, and the σ_R drivers. Keeping them common-mode is what makes σ_R
 differences purely geometric.
 
 The frozen values live in **`config/run_parameters.toml`** (loaded via `load_run_parameters()`); this table mirrors
@@ -241,7 +242,7 @@ Each rung reuses the previous one; the chain grows without rebuilding.
    the rung-1 truth activity-R50; (b) the erfc fit converges with sub-voxel z0_err in the fixed
    window; (c) R50 holds under small ROI/window perturbations; (d) wall-clock per reconstruction is
    measured (it sizes the sweep). This stage **freezes the run parameters**.
-6. **Ten-shard cross-check** (`shard_crosscheck.jl`) — **FIRST HALF DONE**: σ_R(1 Gy) =
+6. **Ten-shard cross-check** (`sigma_r_at_dose.jl`) — **FIRST HALF DONE**: σ_R(1 Gy) =
    **0.065 mm** (fit convention; sem 0.021) / 0.239 mm (crossing convention — 3.7× noisier, the
    measured case for fitting the edge); mean R50 −15.553 mm; σ_R/mean(z0_err) = 0.45, so the
    per-fit error is ~2× conservative (MLEM correlations smooth P(z) below Poisson). 13 s per
@@ -249,7 +250,7 @@ Each rung reuses the previous one; the chain grows without rebuilding.
    take the std → a bias-free σ_R at top dose (~24% precision, n=10). **SECOND HALF DONE**: the
    thinned σ_R(1 Gy) = 0.078 mm (Z=50) agrees with the 0.065 mm bias-free value (ratio 1.20, band
    ±51% 2σ) — the gate passes. Rung 6 complete.
-7. **Thinned sweep** (`sweep.jl`) — Z≈100–200 realizations × dose grid × arms → σ_R-vs-dose.
+7. **Thinned sweep** (`sigma_r_sweep_dose.jl`) — Z≈100–200 realizations × dose grid × arms → σ_R-vs-dose.
    Thin the same realization index across arms from matched shards to keep the source common-mode
    exact.
 
@@ -323,5 +324,5 @@ Steps 1–4 are committed on `main`; per-step detail and measured numbers live i
    before its only consumers (the crosscheck and sweep drivers).*
 6. **NEXT** — W6 `thinning.jl`; confirm the `p = dose/top_dose` anchor against the recipe's
    `dose_to_counts`.
-7. `drivers/shard_crosscheck.jl` and `drivers/sweep.jl` (rungs 6–7) as the remaining data lands.
+7. `drivers/sigma_r_at_dose.jl` and `drivers/sigma_r_sweep_dose.jl` (rungs 6–7) as the remaining data lands.
 8. Update `latex/depth_profile.tex` (code-map table → Julia; keep the single windowed estimator).

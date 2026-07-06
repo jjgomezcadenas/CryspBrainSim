@@ -38,6 +38,10 @@ one curve per scanner geometry. This is the analysis end of the chain
   figure, a reference file, a cache — lives in the repo (`tools/`, `test/`), so the artifact can be
   regenerated from a committed path. A scratchpad script that made a kept artifact is a lost
   provenance chain. When in doubt about where a script belongs, ask.
+- **Always check before deleting; prefer rename over delete+add.** Never remove a file (or bundle a
+  delete into a wider command) without first inspecting what is being removed and stating it. To
+  rename or move a file, use `git mv` so the history reads as a rename, then apply new content on
+  top — do not delete the old file and create a new one. Keep each delete as its own visible step.
 - **Say "state plainly"** where you might reach for "honest / honestly" — describe the thing directly.
 
 ## Status
@@ -87,21 +91,21 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   `load_run_parameters()`; drivers and tools consume it): grid, ROI 13 mm, window (−36.45, −1.45),
   niter 50, n_sens 10⁹ (corridor base: mottle 1.28%, 36.7 s, cached under `out/sensitivity/`).
   Results: `out/one_shard/results_shard000.toml`, figures under `out/one_shard/figures/`.
-- **Rung 6, first half — ten-shard cross-check: DONE** (`drivers/shard_crosscheck.jl` +
-  `tools/plot_crosscheck.py`): **σ_R(1 Gy) = 0.065 mm** (fit; sem 0.021, n = 10 → ±24% on σ_R
-  itself) vs 0.239 mm in the crossing convention (3.7× noisier — the measured case for fitting).
-  Mean R50 −15.553 mm, offset to dose-R80 −9.97 mm. σ_R/mean(z0_err) = 0.45: the per-fit error is
-  ~2× conservative (MLEM correlations). 13 s/shard. Scatter effect (all events, uncorrected,
-  shard 0): +65 μm fit / −6 μm crossing — correction deferred.
-- **Step 6 — thinning.jl: DONE; rung 6 complete.** `src/thinning.jl` (`thin_mask`/`thin_lm`
+- **Step 6 — thinning + rung 6: DONE.** The σ_R drivers are `drivers/sigma_r_at_dose.jl`
+  (σ_R at one dose: `--from-shards` reference or `--realizations N [--dose D]` thinned),
+  `drivers/sigma_r_sweep_dose.jl` (σ_R across a dose grid), and shared `sigma_r_common.jl`;
+  figures from `tools/plot_sigma_r.py` into `out/sigma_r/`. `src/thinning.jl` (`thin_mask`/`thin_lm`
   seeded Bernoulli over the pooled master, own seed namespace `THINNING_SEED_BASE = 1_000_000`;
-  `dose_to_counts`, the anchor confirmed — yield model collapses to `p = (dose/top_dose)/n_shards`
-  because each shard is one top-dose acquisition). `drivers/shard_crosscheck.jl --thinned Z` pools
-  the 10 shards and draws Z Bernoulli realizations. **Gate PASSES**: thinned σ_R(1 Gy) = 0.078 mm
-  (Z=50, mean −15.555) vs bias-free 0.065 mm — ratio 1.20, inside the ±51% 2σ band; crossing
-  σ_R 0.247 vs 0.239 mm. 122 tests green. Pool + 50 reconstructions in 632 s.
-- **Step 7 — NEXT: drivers/sweep.jl** (PLAN.md rung 7): Z realizations × dose grid × arms →
-  σ_R-vs-dose, the deliverable curve. Then step 8 (latex).
+  `dose_to_counts`, anchor confirmed — yield model collapses to `p = (dose/top_dose)/n_shards`
+  because each shard is one top-dose acquisition).
+  **σ_R(1 Gy) = 0.065 mm** from the 10 independent shards (`--from-shards`; fit; sem 0.021, ±24%),
+  vs 0.239 mm crossing (3.7× noisier — the case for fitting). Mean R50 −15.553 mm, offset to
+  dose-R80 −9.97 mm; each fit's own error 0.147 mm is 2.2× the true spread (MLEM correlations).
+  **Gate PASSES**: thinned σ_R(1 Gy) = 0.078 mm (50 realizations) vs 0.065 mm — ratio 1.20, inside
+  the ±51% 2σ band. Scatter effect (all events, uncorrected, shard 0): +65 μm fit / −6 μm crossing —
+  correction deferred. 122 tests green.
+- **Step 7 — NEXT: `drivers/sigma_r_sweep_dose.jl`** (PLAN.md rung 7): Z realizations × dose grid →
+  the σ_R-vs-dose curve. Then step 8 (latex).
 
 Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
 `dose_to_counts` (step 5). The `truth/` bundle is delivered
