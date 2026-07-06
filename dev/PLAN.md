@@ -154,7 +154,11 @@ status and the build step that owns it.
    the per-realization scale `n_events/n_sens` at reconstruction time — `base` is
    realization-independent and reused across the whole sweep, the scale rides on each realization's
    event count.
-**W6 · thinning.jl — PLANNED (step 6, after the order reversal).**
+**W6 · thinning.jl — DONE (step 6).** Confirmed: thinned σ_R(1 Gy) = 0.078 mm vs the bias-free
+   0.065 mm (ratio 1.20, inside the ±51% 2σ band) — the rung-6 gate passes. The
+   `p = dose/top_dose` anchor is confirmed against `dose_to_counts` (the yield model collapses to
+   the dose ratio because each shard IS one acquisition at the top dose; keep-probability
+   `p = (dose/top_dose)/n_shards`).
    `thin_lm(shard_files, target_counts, realization_index)`: pool across all
    shards, keep each event independently with probability `p = target/M_total` over the union, using
    an RNG seeded by the downstream realization index (its own namespace, operating purely on the
@@ -242,8 +246,9 @@ Each rung reuses the previous one; the chain grows without rebuilding.
    measured case for fitting the edge); mean R50 −15.553 mm; σ_R/mean(z0_err) = 0.45, so the
    per-fit error is ~2× conservative (MLEM correlations smooth P(z) below Poisson). 13 s per
    shard, 138 s total. Fit each of the 10 shards independently and
-   take the std → a bias-free σ_R at top dose (~24% precision, n=10). The thinned σ_R at top dose
-   agrees within that band — the second half, once thinning lands.
+   take the std → a bias-free σ_R at top dose (~24% precision, n=10). **SECOND HALF DONE**: the
+   thinned σ_R(1 Gy) = 0.078 mm (Z=50) agrees with the 0.065 mm bias-free value (ratio 1.20, band
+   ±51% 2σ) — the gate passes. Rung 6 complete.
 7. **Thinned sweep** (`sweep.jl`) — Z≈100–200 realizations × dose grid × arms → σ_R-vs-dose.
    Thin the same realization index across arms from matched shards to keep the source common-mode
    exact.

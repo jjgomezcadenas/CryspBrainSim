@@ -93,9 +93,15 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   Mean R50 −15.553 mm, offset to dose-R80 −9.97 mm. σ_R/mean(z0_err) = 0.45: the per-fit error is
   ~2× conservative (MLEM correlations). 13 s/shard. Scatter effect (all events, uncorrected,
   shard 0): +65 μm fit / −6 μm crossing — correction deferred.
-- **Step 6 — NEXT: thinning.jl** (PLAN.md W6); confirm the `p = dose/top_dose` anchor against the
-  recipe's `dose_to_counts`. Rung 6's second half (thinned σ_R at 1 Gy agrees with 0.065 ± 0.016 mm)
-  is the acceptance gate. Then steps 7–8 in `dev/PLAN.md`.
+- **Step 6 — thinning.jl: DONE; rung 6 complete.** `src/thinning.jl` (`thin_mask`/`thin_lm`
+  seeded Bernoulli over the pooled master, own seed namespace `THINNING_SEED_BASE = 1_000_000`;
+  `dose_to_counts`, the anchor confirmed — yield model collapses to `p = (dose/top_dose)/n_shards`
+  because each shard is one top-dose acquisition). `drivers/shard_crosscheck.jl --thinned Z` pools
+  the 10 shards and draws Z Bernoulli realizations. **Gate PASSES**: thinned σ_R(1 Gy) = 0.078 mm
+  (Z=50, mean −15.555) vs bias-free 0.065 mm — ratio 1.20, inside the ±51% 2σ band; crossing
+  σ_R 0.247 vs 0.239 mm. 122 tests green. Pool + 50 reconstructions in 632 s.
+- **Step 7 — NEXT: drivers/sweep.jl** (PLAN.md rung 7): Z realizations × dose grid × arms →
+  σ_R-vs-dose, the deliverable curve. Then step 8 (latex).
 
 Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
 `dose_to_counts` (step 5). The `truth/` bundle is delivered

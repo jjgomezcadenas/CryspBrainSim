@@ -394,6 +394,40 @@ end
         @test k.truth_selection == "trues-only"
     end
 
+    @testset "thinning — Bernoulli mask, seed namespace, dose anchor" begin
+        # Bit-for-bit reproducibility per realization index; independence
+        # across indices.
+        m1 = thin_mask(100_000, 10_000, 7)
+        @test m1 == thin_mask(100_000, 10_000, 7)
+        m2 = thin_mask(100_000, 10_000, 8)
+        @test m1 != m2
+
+        # Binomial count statistics: kept ~ Binomial(M, p); 5σ tolerance.
+        M, target = 400_000, 40_000
+        σ = sqrt(target * (1 - target / M))
+        counts = [count(thin_mask(M, target, k)) for k in 1:20]
+        @test all(abs.(counts .- target) .< 5σ)
+        # The count FLUCTUATES across realizations (Bernoulli, not exact-count).
+        @test length(unique(counts)) > 1
+        # The ensemble mean sits on the target (sem = σ/√20).
+        @test abs(sum(counts) / 20 - target) < 5σ / sqrt(20)
+
+        # Two realizations overlap at rate ≈ p² (independent draws).
+        both = count(m1 .& m2)
+        @test abs(both - 100_000 * 0.1^2) < 5 * sqrt(100_000 * 0.01)
+
+        # Bounds and errors.
+        @test count(thin_mask(1000, 0, 1)) == 0
+        @test count(thin_mask(1000, 1000, 1)) == 1000
+        @test_throws ArgumentError thin_mask(1000, 1001, 1)
+
+        # The dose anchor: one acquisition's count scaled by the dose ratio.
+        @test dose_to_counts(1.0, 1.0, 174_296_897, 10) == 17_429_690
+        @test dose_to_counts(0.1, 1.0, 174_296_897, 10) == 1_742_969
+        @test_throws ArgumentError dose_to_counts(2.0, 1.0, 100, 10)
+        @test_throws ArgumentError dose_to_counts(0.0, 1.0, 100, 10)
+    end
+
     @testset "sensitivity — chunked base, scale, cache roundtrip" begin
         n = (16, 16, 16)
         vs = (8.0f0, 8.0f0, 8.0f0)
