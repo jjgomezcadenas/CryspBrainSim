@@ -42,7 +42,7 @@ each depth slice.
 - `prof::Vector{Float64}`: activity summed within the ROI at each depth.
 
 Use the same `roi_radius_mm`, `roi_centre_mm` and grid for every scanner
-geometry — the ROI is one of the frozen common-mode knobs (`config/`).
+geometry — the ROI is one of the frozen common-mode run parameters (`config/`).
 """
 function depth_profile(image::AbstractArray{<:Real,3};
                        voxel_size_mm,

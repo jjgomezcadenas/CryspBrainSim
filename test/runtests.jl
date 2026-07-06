@@ -382,8 +382,8 @@ end
         @test all(abs.(log.(av) .- log.(ae)) .< μ * 2 * maximum(vs))  # ≤ 2-voxel chord error
     end
 
-    @testset "config — the frozen knobs load typed" begin
-        k = load_knobs()
+    @testset "config — the frozen run parameters load typed" begin
+        k = load_run_parameters()
         @test k.grid.n == (64, 64, 96)
         @test k.grid.img_origin == (-47.25f0, -47.25f0, -119.25f0)
         @test k.grid.voxsize == (1.5f0, 1.5f0, 1.5f0)

@@ -82,7 +82,7 @@ CryspBrainSim/
     profile.jl                depth_profile + distal_window (fixed ROI on the beam axis)
     endpoint.jl               fit_endpoint + sigma_R  (Julia port of the py estimator)
     dualhead_sampler.jl       φ-gap sensitivity sampler — arrives with the dual-head data (see Deferred)
-  config/                     the FROZEN knobs, common-mode across arms (see below)
+  config/                     the FROZEN run parameters, common-mode across arms (see below)
   drivers/
     one_shard.jl              one shard → R          (the single-shard chain; the atomic unit)
     shard_crosscheck.jl       ten shards → bias-free σ_R at top dose  (the standing gate)
@@ -182,16 +182,16 @@ status and the build step that owns it.
 
 ---
 
-## Fixed knobs (`config/`) — the common-mode discipline
+## Fixed run parameters (`config/`) — the common-mode discipline
 
 Identical across every scanner, crystal, dose, and realization; consumed unchanged by
 `sensitivity.jl`, `profile.jl`, and `sweep.jl`. Keeping them common-mode is what makes σ_R
 differences purely geometric.
 
-The frozen values live in **`config/knobs.toml`** (loaded via `load_knobs()`); this table mirrors
+The frozen values live in **`config/run_parameters.toml`** (loaded via `load_run_parameters()`); this table mirrors
 them. All were set at the single-shard stage (rung 5, shard 0, 2026-07-05).
 
-| Knob | Frozen value | Note |
+| Run parameter | Frozen value | Note |
 |---|---|---|
 | voxel grid (activity) | 64×64×96 @ 1.5 mm, origin (−47.25, −47.25, −119.25) | corridor grid; 0.06% of true origins outside |
 | attenuation | analytic ellipsoid route (`attenuation_ellipsoid`) | voxel μ-map route ready for multi-region phantoms |
@@ -231,12 +231,12 @@ Each rung reuses the previous one; the chain grows without rebuilding.
    subset, it cross-checks against — not replaces — the `truth/` activity-R50 from rung 1.
 5. **Single shard** (`one_shard.jl`) — **DONE on shard 0**: R50 fit −15.59 ± 0.15 mm / crossing
    −16.10 mm at the frozen 50 iterations (truth fit −14.32 / crossing −16.45; both gaps
-   sub-voxel), stability spread 0.31 mm, 100 iters in 26 s on Metal — knobs frozen into
-   `config/knobs.toml`. The full chain on shard 0 at full statistics. Acceptance:
+   sub-voxel), stability spread 0.31 mm, 100 iters in 26 s on Metal — run parameters frozen into
+   `config/run_parameters.toml`. The full chain on shard 0 at full statistics. Acceptance:
    (a) the reconstructed profile overlays sensibly on `depth_dose.csv` and its activity-R50 matches
    the rung-1 truth activity-R50; (b) the erfc fit converges with sub-voxel z0_err in the fixed
    window; (c) R50 holds under small ROI/window perturbations; (d) wall-clock per reconstruction is
-   measured (it sizes the sweep). This stage **freezes the knobs**.
+   measured (it sizes the sweep). This stage **freezes the run parameters**.
 6. **Ten-shard cross-check** (`shard_crosscheck.jl`) — fit each of the 10 shards independently and
    take the std → a bias-free σ_R at top dose (~24% precision, n=10). The thinned σ_R at top dose
    agrees within that band. Wire this gate in from the start; it runs once shards 1–9 land.
@@ -246,7 +246,7 @@ Each rung reuses the previous one; the chain grows without rebuilding.
 
 ---
 
-## Stage checks that set the knobs (single-shard stage)
+## Stage checks that set the run parameters (single-shard stage)
 
 - **Sensitivity noise at our grid.** n_sens = 10⁹ is set (two-seed mottle 1.28% per image at the
   provisional corridor grid, 1/√n-exact across 10⁸/5×10⁸/10⁹; the upstream 5×10⁸ certification was
@@ -306,10 +306,10 @@ Steps 1–4 are committed on `main`; per-step detail and measured numbers live i
    rung-4 quick-look ran (commit `e0b96c0`).
 4. **DONE** — W4 `mumap.jl`, W5 `sensitivity.jl`; scale assessed, n_sens = 10⁹ set, base cached
    (commit `535811b`).
-5. **DONE** — `drivers/one_shard.jl` ran the full chain on shard 0 and froze the knobs into
-   `config/knobs.toml` (ladder rung 5; numbers in the ladder and the knob table). *Pulled ahead
+5. **DONE** — `drivers/one_shard.jl` ran the full chain on shard 0 and froze the run parameters into
+   `config/run_parameters.toml` (ladder rung 5; numbers in the ladder and the run parameter table). *Pulled ahead
    of thinning (order reversal, 2026-07-05): the single-shard chain and thinning are independent,
-   rung 5 freezes the grid/ROI/iteration knobs every thinned reconstruction consumes, and its
+   rung 5 freezes the grid/ROI/iteration run parameters every thinned reconstruction consumes, and its
    wall-clock measurement sizes the sweep — so the chain ran first and thinning lands immediately
    before its only consumers (the crosscheck and sweep drivers).*
 6. **NEXT** — W6 `thinning.jl`; confirm the `p = dose/top_dose` anchor against the recipe's

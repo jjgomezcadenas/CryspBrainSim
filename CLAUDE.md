@@ -13,7 +13,7 @@ one curve per scanner geometry. This is the analysis end of the chain
 ## Read first
 
 - **`dev/PLAN.md`** — the build plan: structure, dependencies, the consume-vs-write code inventory,
-  the frozen knobs, the validation ladder, the deferred register, and the build order. Start here.
+  the frozen run parameters, the validation ladder, the deferred register, and the build order. Start here.
 - **`dev/reference/`** — vendored snapshots of the upstream contracts (products tree, data-generation
   strategy, σ_R recipe, LOR schema, RecoCrysp usage), with provenance in `dev/reference/README.md`.
 
@@ -73,9 +73,9 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   (CPU) — **n_sens 10⁹ costs ~37 s**, 5×10⁸ ~20 s; memory is a non-issue (chunk 0.5 GiB, pooled
   174 M-event master ≈ 4.6 GiB for recon arrays, 48 GiB RAM). Two-seed MC mottle at the provisional
   64×64×96 @1.5 mm grid (`tools/make_sensitivity.jl --check`): 3.92% per image at 10⁸, 1.76% at
-  5×10⁸, 1.24% at 10⁹ (exact 1/√n). **Knob set: n_sens = 10⁹** (PLAN.md table; base cached under
+  5×10⁸, 1.24% at 10⁹ (exact 1/√n). **Run parameter set: n_sens = 10⁹** (PLAN.md table; base cached under
   `out/sensitivity/`), with the R50-vs-seed stage check at rung 5 confirming it at the frozen grid.
-- **Step 5 — single-shard chain: DONE (rung 5; knobs frozen).** `drivers/one_shard.jl` +
+- **Step 5 — single-shard chain: DONE (rung 5; run parameters frozen).** `drivers/one_shard.jl` +
   `tools/plot_one_shard.py`. Shard 0's 14.14 M trues reconstructed on the corridor grid
   (64×64×96 @ 1.5 mm, origin (−47.25, −47.25, −119.25) — fixed from the first, clipping, centered
   grid; 0.06% of origins outside): **R50 fit −15.593 ± 0.147 mm / crossing −16.101 mm at the
@@ -83,8 +83,8 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   bracketing the truth (the residual is the disc-ROI vs full-plane profile convention, not
   attenuation). Plateau <0.01 mm per 10 iters past 40 (re-verified to 100 each run); stability
   spread 0.31 mm (ROI 12/15, window ±2 mm); 100 iters in 26 s on Metal → ~13 s per full-stat
-  reconstruction at the frozen count. **Knobs frozen into `config/knobs.toml`** (loaded by
-  `load_knobs()`; drivers and tools consume it): grid, ROI 13 mm, window (−36.45, −1.45),
+  reconstruction at the frozen count. **Run parameters frozen into `config/run_parameters.toml`** (loaded by
+  `load_run_parameters()`; drivers and tools consume it): grid, ROI 13 mm, window (−36.45, −1.45),
   niter 50, n_sens 10⁹ (corridor base: mottle 1.28%, 36.7 s, cached under `out/sensitivity/`).
   Results: `out/one_shard/results_shard000.toml`, figures under `out/one_shard/figures/`.
 - **Step 6 — NEXT: thinning.jl** (PLAN.md W6); confirm the `p = dose/top_dose` anchor against the

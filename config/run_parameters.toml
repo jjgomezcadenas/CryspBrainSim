@@ -1,4 +1,4 @@
-# The frozen common-mode knobs (dev/PLAN.md → Fixed knobs), set at the
+# The frozen common-mode run parameters (dev/PLAN.md → Fixed run parameters), set at the
 # single-shard stage on shard 0 (ladder rung 5, 2026-07-05). Identical across
 # every scanner, crystal, dose, and realization — keeping them common-mode is
 # what makes σ_R differences purely geometric. A change here re-runs rung 5.

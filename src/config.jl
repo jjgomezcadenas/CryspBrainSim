@@ -1,17 +1,17 @@
-# config.jl — the frozen common-mode knobs (config/knobs.toml). Drivers and
+# config.jl — the frozen common-mode run parameters (config/run_parameters.toml). Drivers and
 # tools consume them unchanged; the file is the single source the sweep's
 # common-mode discipline hangs on.
 
 """
-    load_knobs(path=joinpath(pkgdir(CryspBrainSim), "config", "knobs.toml"))
+    load_run_parameters(path=joinpath(pkgdir(CryspBrainSim), "config", "run_parameters.toml"))
         -> NamedTuple
 
-The frozen knobs as typed values: `grid = (n, img_origin, voxsize)` (tuples,
+The frozen run parameters as typed values: `grid = (n, img_origin, voxsize)` (tuples,
 Float32 where the projectors want them), `roi = (radius_mm, centre_mm)`,
 `window = (z_lo, z_hi)`, `niter`, `n_sens`, `chunk`, `truth_selection`.
 """
-function load_knobs(path::AbstractString=joinpath(pkgdir(CryspBrainSim),
-                                                  "config", "knobs.toml"))
+function load_run_parameters(path::AbstractString=joinpath(pkgdir(CryspBrainSim),
+                                                  "config", "run_parameters.toml"))
     k = TOML.parsefile(path)
     g = k["grid"]
     return (grid=(n=Tuple(Int.(g["n"])),

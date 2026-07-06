@@ -123,7 +123,7 @@ end
     write_reference(ref, path)
 
 Write a `TruthReference` as TOML — the regenerable rung-1 artifact (e.g.
-`out/characterize/truth_reference.toml`) later runs and the `config/` knobs
+`out/characterize/truth_reference.toml`) later runs and the `config/` run parameters
 read from.
 """
 function write_reference(ref::TruthReference, path::AbstractString)

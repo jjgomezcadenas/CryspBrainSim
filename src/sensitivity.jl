@@ -5,7 +5,7 @@
 # whole sweep; the per-realization factor `n_events / n_sens` rides on each
 # event list at reconstruction time (`scaled_sensitivity`).
 #
-# The project knob is n_sens = 10⁹ (dev/PLAN.md fixed-knobs table; the MC
+# The project run parameter is n_sens = 10⁹ (dev/PLAN.md run-parameters table; the MC
 # studies certified 5×10⁸ at 2.5 mm voxels, and our finer 1.5 mm grid holds
 # ~4.6× fewer LOR crossings per voxel, so the sample is doubled — measured
 # two-seed mottle 1.28% per image at the provisional corridor grid, ~37 s to

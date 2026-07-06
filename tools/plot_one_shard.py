@@ -7,9 +7,10 @@ plot_one_shard.py — the two rung-5 figures from a drivers/one_shard.jl run:
                          references (activity overlay, R50 markers, dose-R80)
   r50_iter_shardNNN.png  R50 vs MLEM iteration (the semi-convergence plateau)
 
-Run:  python3 tools/plot_one_shard.py [shard_index]
-Reads out/one_shard/recon_shardNNN.npz + results_shardNNN.toml and the
-scenario truth/; writes into out/one_shard/figures/.
+Run:  python3 tools/plot_one_shard.py [shard_index] [--all-uncorr]
+Reads out/one_shard/recon_<tag>.npz + results_<tag>.toml (tag =
+shardNNN[_all_uncorr]) and the scenario truth/; writes into
+out/one_shard/figures/.
 """
 import os
 import sys
@@ -42,8 +43,9 @@ def style(ax):
 
 
 def main():
-    shard = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    tag = f"shard{shard:03d}"
+    pos = [a for a in sys.argv[1:] if not a.startswith("--")]
+    shard = int(pos[0]) if pos else 0
+    tag = f"shard{shard:03d}" + ("_all_uncorr" if "--all-uncorr" in sys.argv else "")
     out = os.path.join(REPO, "out", "one_shard")
     d = np.load(os.path.join(out, f"recon_{tag}.npz"))
     with open(os.path.join(out, f"results_{tag}.toml"), "rb") as f:
@@ -60,8 +62,9 @@ def main():
     fig, ax = plt.subplots(figsize=(9.5, 5), facecolor=SURFACE)
     style(ax)
     ax.axvspan(*win, color=GRIDC, alpha=0.5, lw=0)
+    sel = res.get("selection", "trues-only")
     ax.plot(z, prof, drawstyle="steps-mid", color=BLUE, lw=1.6,
-            label=f"reconstructed profile (ROI {res['roi_mm']:g} mm)")
+            label=f"reconstructed profile (ROI {res['roi_mm']:g} mm, {sel})")
 
     ta = np.genfromtxt(os.path.join(SCEN, "truth", "activity_profile_fast.csv"),
                        delimiter=",", names=True)

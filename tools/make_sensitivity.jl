@@ -15,9 +15,9 @@ using Metal
 using Printf
 using Statistics: mean, std
 
-const KNOBS = load_knobs()      # config/knobs.toml — grid, n_sens, chunk
+const PARAMS = load_run_parameters()      # config/run_parameters.toml — grid, n_sens, chunk
 const N_SENS = let a = filter(!startswith("--"), ARGS)
-    isempty(a) ? KNOBS.n_sens : parse(Int, a[1])
+    isempty(a) ? PARAMS.n_sens : parse(Int, a[1])
 end
 const CHECK = "--check" in ARGS
 
@@ -25,10 +25,10 @@ const SCEN = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds",
                       "uniform_headep_sobp_1e8")
 # The frozen activity grid on the beam corridor (the offset z-origin covers
 # the proximal activity a centered grid would clip).
-const N = KNOBS.grid.n
-const VS = KNOBS.grid.voxsize
-const ORG = KNOBS.grid.img_origin
-const CHUNK = KNOBS.chunk
+const N = PARAMS.grid.n
+const VS = PARAMS.grid.voxsize
+const ORG = PARAMS.grid.img_origin
+const CHUNK = PARAMS.chunk
 
 function main()
     geo = scanner_geometry(joinpath(SCEN, "crysp_ring_1m"))
