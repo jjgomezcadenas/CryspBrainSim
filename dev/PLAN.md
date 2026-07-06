@@ -237,9 +237,13 @@ Each rung reuses the previous one; the chain grows without rebuilding.
    the rung-1 truth activity-R50; (b) the erfc fit converges with sub-voxel z0_err in the fixed
    window; (c) R50 holds under small ROI/window perturbations; (d) wall-clock per reconstruction is
    measured (it sizes the sweep). This stage **freezes the run parameters**.
-6. **Ten-shard cross-check** (`shard_crosscheck.jl`) — fit each of the 10 shards independently and
+6. **Ten-shard cross-check** (`shard_crosscheck.jl`) — **FIRST HALF DONE**: σ_R(1 Gy) =
+   **0.065 mm** (fit convention; sem 0.021) / 0.239 mm (crossing convention — 3.7× noisier, the
+   measured case for fitting the edge); mean R50 −15.553 mm; σ_R/mean(z0_err) = 0.45, so the
+   per-fit error is ~2× conservative (MLEM correlations smooth P(z) below Poisson). 13 s per
+   shard, 138 s total. Fit each of the 10 shards independently and
    take the std → a bias-free σ_R at top dose (~24% precision, n=10). The thinned σ_R at top dose
-   agrees within that band. Wire this gate in from the start; it runs once shards 1–9 land.
+   agrees within that band — the second half, once thinning lands.
 7. **Thinned sweep** (`sweep.jl`) — Z≈100–200 realizations × dose grid × arms → σ_R-vs-dose.
    Thin the same realization index across arms from matched shards to keep the source common-mode
    exact.

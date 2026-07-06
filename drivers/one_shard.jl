@@ -19,7 +19,6 @@ using RecoCryspTools
 using Metal
 using NPZ: npzwrite
 using Printf
-using Statistics: median
 using TOML
 
 const SHARD = let a = filter(!startswith("--"), ARGS)
@@ -43,17 +42,6 @@ const SENS_CACHE = joinpath(dirname(@__DIR__), "out", "sensitivity",
 const ROI_MM = PARAMS.roi.radius_mm
 const NITER_MAX = 2 * PARAMS.niter
 const CHECK_EVERY = 10
-
-# Half-height crossing inside the window against its own plateau/tail medians
-# (the crossing-convention reading, comparable to the truth activity-R50).
-function windowed_crossing(z, prof, window)
-    lo, hi = window
-    sel = (z .>= lo) .& (z .<= hi)
-    zf, pf = z[sel], prof[sel]
-    k = max(2, length(pf) ÷ 5)
-    plateau, base = median(pf[1:k]), median(pf[end-k+1:end])
-    return distal_crossing(zf, pf; level=1.0, reference=base + 0.5 * (plateau - base))
-end
 
 fit_r50(img, window; roi=ROI_MM) = begin
     z, prof = depth_profile(img; voxel_size_mm=VS, beam_axis=3,

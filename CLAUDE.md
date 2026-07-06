@@ -87,8 +87,15 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   `load_run_parameters()`; drivers and tools consume it): grid, ROI 13 mm, window (−36.45, −1.45),
   niter 50, n_sens 10⁹ (corridor base: mottle 1.28%, 36.7 s, cached under `out/sensitivity/`).
   Results: `out/one_shard/results_shard000.toml`, figures under `out/one_shard/figures/`.
+- **Rung 6, first half — ten-shard cross-check: DONE** (`drivers/shard_crosscheck.jl` +
+  `tools/plot_crosscheck.py`): **σ_R(1 Gy) = 0.065 mm** (fit; sem 0.021, n = 10 → ±24% on σ_R
+  itself) vs 0.239 mm in the crossing convention (3.7× noisier — the measured case for fitting).
+  Mean R50 −15.553 mm, offset to dose-R80 −9.97 mm. σ_R/mean(z0_err) = 0.45: the per-fit error is
+  ~2× conservative (MLEM correlations). 13 s/shard. Scatter effect (all events, uncorrected,
+  shard 0): +65 μm fit / −6 μm crossing — correction deferred.
 - **Step 6 — NEXT: thinning.jl** (PLAN.md W6); confirm the `p = dose/top_dose` anchor against the
-  recipe's `dose_to_counts`. Then steps 7–8 in `dev/PLAN.md`.
+  recipe's `dose_to_counts`. Rung 6's second half (thinned σ_R at 1 Gy agrees with 0.065 ± 0.016 mm)
+  is the acceptance gate. Then steps 7–8 in `dev/PLAN.md`.
 
 Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
 `dose_to_counts` (step 5). The `truth/` bundle is delivered

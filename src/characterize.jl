@@ -29,6 +29,28 @@ function distal_crossing(z::AbstractVector{<:Real}, y::AbstractVector{<:Real};
 end
 
 """
+    windowed_crossing(z, profile, window) -> Float64
+
+Half-height crossing read INSIDE the fixed window, against the window's own
+proximal-plateau and distal-tail medians (first/last fifth of the window
+points) — the crossing-convention reading of a reconstructed or detected
+profile, comparable to the truth activity-R50 crossing. Reading locally
+matters: a global-max threshold misreads profiles tilted by attenuation or
+sloped by reconstruction. Returns `NaN` on fewer than 4 window points.
+"""
+function windowed_crossing(z::AbstractVector{<:Real},
+                           profile::AbstractVector{<:Real}, window)
+    lo, hi = window
+    sel = (z .>= lo) .& (z .<= hi)
+    zf, pf = Float64.(z[sel]), Float64.(profile[sel])
+    length(zf) < 4 && return NaN
+    k = max(2, length(pf) ÷ 5)
+    plateau, base = median(pf[1:k]), median(pf[end-k+1:end])
+    return distal_crossing(zf, pf; level=1.0,
+                           reference=base + 0.5 * (plateau - base))
+end
+
+"""
     read_depth_dose(truth_dir) -> NamedTuple
 
 `truth/depth_dose.csv` as `(z_mm, dose_core_Gy, edep_total_MeV)` — the core
