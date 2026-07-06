@@ -4,7 +4,8 @@ plot_sigma_r.py — figures for the range-precision σ_R (validation ladder
 rungs 6–7). σ_R is the spread of the fitted range endpoint R across many
 acquisitions; these figures show that spread and how it behaves.
 
-Reads what the σ_R drivers write into out/sigma_r/:
+Reads what the σ_R drivers write into the config's sigma_r/ directory
+(out/<scenario>/<topology>/<ring>/<crystal>/sigma_r/):
   from_shards.{npz,toml}   drivers/sigma_r_at_dose.jl --from-shards
   at_dose_1Gy.{npz,toml}   drivers/sigma_r_at_dose.jl --realizations N
   sweep.{npz,toml}         drivers/sigma_r_sweep_dose.jl
@@ -30,8 +31,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(REPO, "out", "sigma_r")
+from crysp_paths import config_out  # noqa: E402
+
+# The configuration these figures belong to (the current case). A different arm
+# swaps these four.
+SCENARIO, TOPOLOGY, RING, CRYSTAL = (
+    "uniform_headep_sobp_1e8", "closed", "crysp_ring_1m", "bgo_3X0")
+OUT = os.path.join(config_out(SCENARIO, TOPOLOGY, RING, CRYSTAL), "sigma_r")
 NOMINAL = "at_dose_1Gy"  # the nominal-dose thinned run
 
 BLUE, AQUA = "#2a78d6", "#1baf7a"

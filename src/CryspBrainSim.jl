@@ -24,7 +24,7 @@ using Random: MersenneTwister
 export depth_profile, distal_window, fit_endpoint, sigma_R
 export read_csv_table, leaf_dir, shard_files, shard_attrs, read_shard,
        pool_shards, scanner_geometry, phantom_region, material_mu, truth_dir
-export ShardQA, shard_qa
+export ShardStats, shard_stats
 export TruthReference, characterize, distal_crossing, windowed_crossing,
        read_depth_dose, read_activity_profile, write_reference
 export phantom_attenuation, attenuation_ellipsoid, centered_grid, build_mumap,
@@ -34,12 +34,15 @@ export sensitivity_base, scaled_sensitivity, save_sensitivity,
 export load_run_parameters
 export THINNING_SEED_BASE, dose_to_counts, thin_mask, thin_lm
 export dose_tag, load_run_context, lor_attenuation, reconstruct_endpoint
+export crystal_label, CRYSTAL_X0_MM, out_root, scenario_out, truth_out,
+       mumap_out, sensitivity_out, config_out, validation_out
 
 include("config.jl")
+include("output.jl")
 include("profile.jl")
 include("endpoint.jl")
 include("products.jl")
-include("qa.jl")
+include("shard_stats.jl")
 include("characterize.jl")
 include("mumap.jl")
 include("sensitivity.jl")

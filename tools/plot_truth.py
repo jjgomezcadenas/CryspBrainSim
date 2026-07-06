@@ -22,6 +22,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
+from crysp_paths import truth_out  # noqa: E402
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_SCENARIO = os.path.join(os.path.dirname(REPO), "PtCryspProds",
                                 "uniform_headep_sobp_1e8")
@@ -90,12 +92,14 @@ def main():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--scenario-dir", default=DEFAULT_SCENARIO)
     p.add_argument("--budget", default="fast")
-    p.add_argument("--out-dir", default=os.path.join(REPO, "out", "characterize",
-                                                     "figures"))
+    p.add_argument("--out-dir", default=None,
+                   help="default: out/<scenario>/truth/figures")
     args = p.parse_args()
 
     tdir = os.path.join(args.scenario_dir, "truth")
     scen = os.path.basename(os.path.abspath(args.scenario_dir))
+    if args.out_dir is None:
+        args.out_dir = os.path.join(truth_out(scen), "figures")
     dose_t = read_table(os.path.join(tdir, "depth_dose.csv"))
     act_t = read_table(os.path.join(tdir, f"activity_profile_{args.budget}.csv"))
     run = read_table(os.path.join(tdir, "run_meta.csv"))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 plot_shard.py — the 3×3 detector QA panel for one stored LOR shard
-(validation ladder rung 2; the figure companion of src/qa.jl's ShardQA).
+(validation ladder rung 2; the figure companion of src/shard_stats.jl's ShardStats).
 Adapted from PTCryspMC py/plot_prod.py for the PtCryspProds tree: the input
 is a lors_shardNNN.h5 config-leaf shard, the scanner geometry is found by
 walking up to the scanner's scanner_geometry.json, and the PNG lands under
@@ -12,7 +12,7 @@ LOR axial midpoint · source fill (transverse, axial) · coincidence Δt ·
 composition + acceptance.
 
 Run:  python3 tools/plot_shard.py --shard <.../fast_1Gy/lors_shard000.h5>
-Writes out/shard_qa/figures/<scenario>_<crystal>_<leaf>_shardNNN.png
+Writes into the config's shard_stats/figures/ (out/<scenario>/<topology>/<ring>/<crystal>/)
 (override with --out).
 """
 import argparse
@@ -25,6 +25,8 @@ import matplotlib
 matplotlib.use("Agg")  # headless: write a file, never open a window
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+
+from crysp_paths import config_out, crystal_label  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -48,10 +50,11 @@ def find_geometry(shard_path):
 
 
 def scanner_dims(geom_file):
-    """(r_inner_mm, wall_mm, half_length_mm) from the geometry JSON."""
+    """(name, r_inner_mm, wall_mm, half_length_mm) from the geometry JSON."""
     with open(geom_file) as f:
         s = json.load(f)["scanner"]
-    return 10.0 * s["r_inner_cm"], 10.0 * s["wall_thickness_cm"], 10.0 * s["half_length_cm"]
+    return (s["name"], 10.0 * s["r_inner_cm"], 10.0 * s["wall_thickness_cm"],
+            10.0 * s["half_length_cm"])
 
 
 def load_shard(path):
@@ -89,7 +92,8 @@ def main():
     args = p.parse_args()
 
     geom = args.geometry or find_geometry(args.shard)
-    Ri, wall, H = scanner_dims(geom) if geom else (387.0, 37.0, 512.0)
+    ring, Ri, wall, H = scanner_dims(geom) if geom else \
+        ("crysp_ring_1m", 387.0, 37.0, 512.0)
 
     d, attrs = load_shard(args.shard)
     scenario = dec(attrs.get("scenario", "?"))
@@ -97,8 +101,9 @@ def main():
     shard_ix = int(attrs.get("realization", -1))
     leaf = os.path.basename(os.path.dirname(os.path.abspath(args.shard)))
     if not args.out:
+        cfg = config_out(scenario, "closed", ring, crystal_label(crystal, wall))
         name = f"{scenario}_{crystal.lower()}_{leaf}_shard{shard_ix:03d}.png"
-        args.out = os.path.join(REPO, "out", "shard_qa", "figures", name)
+        args.out = os.path.join(cfg, "shard_stats", "figures", name)
 
     truth = d["truth"]
     n = truth.size

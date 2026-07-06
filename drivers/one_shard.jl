@@ -27,17 +27,16 @@ end
 const ALL_UNCORR = "--all-uncorr" in ARGS
 
 const ROOT = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds")
-const SCEN = joinpath(ROOT, "uniform_headep_sobp_1e8")
+const SCENARIO = "uniform_headep_sobp_1e8"
+const TOPOLOGY = "closed"
+const RING = "crysp_ring_1m"
 
-# The frozen run parameters (config/run_parameters.toml); the loaded sensitivity cache's
-# provenance is checked against the run parameter grid below. NITER_MAX runs past the
-# frozen iteration count so every run re-verifies the plateau.
+# The frozen run parameters (config/run_parameters.toml). NITER_MAX runs past
+# the frozen iteration count so every run re-verifies the plateau.
 const PARAMS = load_run_parameters()
 const N = PARAMS.grid.n
 const VS = PARAMS.grid.voxsize
 const ORG = PARAMS.grid.img_origin
-const SENS_CACHE = joinpath(dirname(@__DIR__), "out", "sensitivity",
-    "crysp_ring_1m_grid64x64x96_1.5mm_orgm47.25_m47.25_m119.25_n$(PARAMS.n_sens)")
 
 const ROI_MM = PARAMS.roi.radius_mm
 const NITER_MAX = 2 * PARAMS.niter
@@ -50,20 +49,18 @@ fit_r50(img, window; roi=ROI_MM) = begin
 end
 
 function main()
-    # --- inputs: reference, sensitivity cache (grid-verified), shard trues
-    ref = characterize(SCEN)
+    # --- inputs via the shared context loader (reference, sensitivity cache
+    # grid-verified, phantom, shard files, and the configuration identity).
+    cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
+                     sensitivity_cache_name(PARAMS))
+    ctx = load_run_context(; products_root=ROOT, scenario=SCENARIO,
+                           topology=TOPOLOGY, scanner=RING, crystal="bgo",
+                           leaf="fast_1Gy", sens_cache=cache, params=PARAMS)
+    ref, base, meta, ph = ctx.ref, ctx.base, ctx.meta, ctx.phantom
+    n_sens = PARAMS.n_sens
     show(stdout, MIME"text/plain"(), ref); println()
 
-    base, meta = load_sensitivity(SENS_CACHE)
-    g = meta["grid"]
-    (g["n"] == collect(N) && Float32.(g["img_origin"]) == collect(ORG) &&
-     Float32.(g["voxsize"]) == collect(VS)) ||
-        error("one_shard: sensitivity cache grid $(g) ≠ driver grid — regenerate")
-    n_sens = meta["draw"]["n_sens"]
-
-    leaf = leaf_dir(ROOT; scenario="uniform_headep_sobp_1e8",
-                    scanner="crysp_ring_1m", crystal="bgo", leaf="fast_1Gy")
-    file = shard_files(leaf)[SHARD+1]
+    file = ctx.files[SHARD+1]
     println("shard: ", basename(file))
     r = read_shard(file)
     tmask = ALL_UNCORR ? trues(length(r.coinc)) : is_true(r.coinc)
@@ -81,7 +78,6 @@ function main()
     @printf("events: %d;  origins outside grid: %.4f%%\n", nev, 100out_frac)
 
     # --- model: attenuation mult + scaled sensitivity, on Metal when present
-    ph = phantom_attenuation(SCEN)
     t_att = @elapsed mult = attenuation_ellipsoid(xs, xe; semi_axes=ph.semi_axes,
                                                   centre=ph.centre,
                                                   mu_mm_inv=ph.mu_mm_inv)
@@ -129,7 +125,8 @@ function main()
             t_att, NITER_MAX, t_recon)
 
     # --- artifacts
-    out = joinpath(dirname(@__DIR__), "out", "one_shard")
+    out = joinpath(config_out(ctx.scenario, ctx.topology, ctx.ring, ctx.crystal),
+                   "one_shard")
     mkpath(out)
     tag = @sprintf("shard%03d", SHARD) * (ALL_UNCORR ? "_all_uncorr" : "")
     npzwrite(joinpath(out, "recon_$(tag).npz"),
@@ -144,7 +141,7 @@ function main()
             "roi_mm" => ROI_MM, "niter" => PARAMS.niter,
             "niter_plateau_check" => NITER_MAX,
             "window_mm" => collect(ref.window),
-            "sens" => Dict("cache" => SENS_CACHE, "n_sens" => n_sens,
+            "sens" => Dict("cache" => cache, "n_sens" => n_sens,
                            "recocrysp_sha" => meta["recocrysp_sha"]),
             "r50_vs_iter" => Dict("iters" => iters, "r50_mm" => r50s,
                                   "z0_err_mm" => werrs),

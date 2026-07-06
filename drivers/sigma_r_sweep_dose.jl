@@ -22,7 +22,7 @@
 #
 # Run:  julia -t auto --project=. drivers/sigma_r_sweep_dose.jl --realizations 100
 #       julia -t auto --project=. drivers/sigma_r_sweep_dose.jl --doses 1,0.5,0.2,0.1,0.05
-# Writes out/sigma_r/sweep.toml + sweep.npz; the curve comes from
+# Writes sweep.toml + sweep.npz into the config's sigma_r/; the curve comes from
 # tools/plot_sigma_r.py --sweep.
 
 using CryspBrainSim
@@ -32,8 +32,6 @@ using NPZ: npzwrite
 using Printf
 using TOML
 
-const OUT = joinpath(dirname(@__DIR__), "out", "sigma_r")
-
 const REALIZATIONS = let i = findfirst(==("--realizations"), ARGS)
     i === nothing ? 50 : parse(Int, ARGS[i+1])
 end
@@ -41,19 +39,25 @@ const DOSES = let i = findfirst(==("--doses"), ARGS)
     i === nothing ? [1.0, 0.5, 0.2, 0.1] : parse.(Float64, split(ARGS[i+1], ","))
 end
 
+const SCENARIO = "uniform_headep_sobp_1e8"
+const TOPOLOGY = "closed"
+const RING = "crysp_ring_1m"
+
 const DEV = Metal.functional() ? MtlArray : identity
 
 function context()
     params = load_run_parameters()
-    cache = joinpath(dirname(@__DIR__), "out", "sensitivity",
-                     sensitivity_cache_name("crysp_ring_1m", params))
+    cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
+                     sensitivity_cache_name(params))
     return load_run_context(;
         products_root=joinpath(dirname(dirname(@__DIR__)), "PtCryspProds"),
-        scenario="uniform_headep_sobp_1e8", scanner="crysp_ring_1m",
+        scenario=SCENARIO, topology=TOPOLOGY, scanner=RING,
         crystal="bgo", leaf="fast_1Gy", sens_cache=cache, params=params)
 end
 
 function sweep(ctx)
+    out = joinpath(config_out(ctx.scenario, ctx.topology, ctx.ring, ctx.crystal),
+                   "sigma_r")
     println("pooling $(length(ctx.files)) shards…")
     t_pool = @elapsed pool = pool_shards(ctx.files)
     M_total = length(pool.coinc)
@@ -81,8 +85,8 @@ function sweep(ctx)
                 dose, target, sf.sigma, sc.sigma, sf.n_ok, sf.n_fail, t)
     end
 
-    mkpath(OUT)
-    npzwrite(joinpath(OUT, "sweep.npz"),
+    mkpath(out)
+    npzwrite(joinpath(out, "sweep.npz"),
              Dict("dose_Gy" => [p.dose for p in points],
                   "target_counts" => Float64.([p.target for p in points]),
                   "sigma_fit_mm" => [p.sf.sigma for p in points],
@@ -90,7 +94,7 @@ function sweep(ctx)
                   "mean_fit_mm" => [p.sf.mean for p in points],
                   "n_ok" => Float64.([p.sf.n_ok for p in points]),
                   "n_fail" => Float64.([p.sf.n_fail for p in points])))
-    open(joinpath(OUT, "sweep.toml"), "w") do io
+    open(joinpath(out, "sweep.toml"), "w") do io
         TOML.print(io, Dict(
             "realizations" => REALIZATIONS, "doses_Gy" => DOSES,
             "M_total" => M_total, "n_shards" => n_shards,
@@ -102,7 +106,7 @@ function sweep(ctx)
                              "n_ok" => p.sf.n_ok, "n_fail" => p.sf.n_fail)
                         for p in points]))
     end
-    println("wrote $(joinpath(OUT, "sweep.toml")) (+ sweep.npz)")
+    println("wrote $(joinpath(out, "sweep.toml")) (+ sweep.npz)")
 end
 
 sweep(context())

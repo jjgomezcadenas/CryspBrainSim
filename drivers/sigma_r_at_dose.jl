@@ -32,7 +32,8 @@
 # Run:  julia -t auto --project=. drivers/sigma_r_at_dose.jl --from-shards
 #       julia -t auto --project=. drivers/sigma_r_at_dose.jl --realizations 50
 #       julia -t auto --project=. drivers/sigma_r_at_dose.jl --realizations 50 --dose 0.5
-# Writes into out/sigma_r/; figures come from tools/plot_sigma_r.py.
+# Writes into the config's sigma_r/ (out/<scenario>/<topology>/<ring>/<crystal>/);
+# figures come from tools/plot_sigma_r.py.
 
 using CryspBrainSim
 using RecoCryspTools
@@ -41,8 +42,6 @@ using NPZ: npzwrite
 using Printf
 using Statistics: mean
 using TOML
-
-const OUT = joinpath(dirname(@__DIR__), "out", "sigma_r")
 
 const FROM_SHARDS = "--from-shards" in ARGS
 const REALIZATIONS = let i = findfirst(==("--realizations"), ARGS)
@@ -55,15 +54,23 @@ end
 # The scanner configuration this driver measures: the BGO closed 1 m ring on
 # the uniform-head SOBP scenario. A different arm points these at its own tree
 # leaf and sensitivity cache.
+const SCENARIO = "uniform_headep_sobp_1e8"
+const TOPOLOGY = "closed"
+const RING = "crysp_ring_1m"
+
 function context()
     params = load_run_parameters()
-    cache = joinpath(dirname(@__DIR__), "out", "sensitivity",
-                     sensitivity_cache_name("crysp_ring_1m", params))
+    cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
+                     sensitivity_cache_name(params))
     return load_run_context(;
         products_root=joinpath(dirname(dirname(@__DIR__)), "PtCryspProds"),
-        scenario="uniform_headep_sobp_1e8", scanner="crysp_ring_1m",
+        scenario=SCENARIO, topology=TOPOLOGY, scanner=RING,
         crystal="bgo", leaf="fast_1Gy", sens_cache=cache, params=params)
 end
+
+# The output directory for this configuration's σ_R results.
+config_sigma_r(ctx) = joinpath(config_out(ctx.scenario, ctx.topology, ctx.ring,
+                                          ctx.crystal), "sigma_r")
 
 const DEV = Metal.functional() ? MtlArray : identity
 
@@ -79,6 +86,7 @@ end
 # The reference: σ_R from the ten shards reconstructed independently, no thinning.
 function from_shards(ctx)
     p = ctx.params
+    out = config_sigma_r(ctx)
     println("$(length(ctx.files)) shards; niter $(p.niter), " *
             "ROI $(p.roi.radius_mm) mm, window $(round.(ctx.ref.window; digits=2))")
     results = NamedTuple[]
@@ -101,14 +109,14 @@ function from_shards(ctx)
             mean(errs), mean(errs) / sf.sigma)
     @printf("  wall-clock %.0f s\n", t_total)
 
-    mkpath(OUT)
-    npzwrite(joinpath(OUT, "from_shards.npz"),
+    mkpath(out)
+    npzwrite(joinpath(out, "from_shards.npz"),
              Dict("shards" => Float64.([r.shard for r in results]),
                   "r50_fit" => fits, "z0_err" => errs,
                   "r50_cross" => [r.r50_cross for r in results],
                   "w" => [r.w for r in results],
                   "nev" => Float64.([r.nev for r in results])))
-    open(joinpath(OUT, "from_shards.toml"), "w") do io
+    open(joinpath(out, "from_shards.toml"), "w") do io
         TOML.print(io, Dict(
             "method" => "ten independent shards, no thinning",
             "n_shards" => length(results), "dose_Gy" => 1.0,
@@ -130,11 +138,12 @@ function from_shards(ctx)
                                 "activity_R50_crossing_mm" => ctx.ref.activity_R50),
             "timing_s" => t_total))
     end
-    println("wrote $(joinpath(OUT, "from_shards.toml")) (+ from_shards.npz)")
+    println("wrote $(joinpath(out, "from_shards.toml")) (+ from_shards.npz)")
 end
 
 # The production method: σ_R from N thinned realizations at the chosen dose.
 function thinned(ctx)
+    out = config_sigma_r(ctx)
     println("pooling $(length(ctx.files)) shards…")
     t_pool = @elapsed pool = pool_shards(ctx.files)
     M_total = length(pool.coinc)
@@ -162,7 +171,7 @@ function thinned(ctx)
 
     # At the nominal dose, compare against the shard reference — the rung-6 gate.
     gate = Dict{String,Any}()
-    ref_toml = joinpath(OUT, "from_shards.toml")
+    ref_toml = joinpath(out, "from_shards.toml")
     if DOSE_GY == 1.0 && isfile(ref_toml)
         rt = TOML.parsefile(ref_toml)
         σ_ref = rt["sigma_R_fit"]["sigma_mm"]
@@ -178,12 +187,12 @@ function thinned(ctx)
     @printf("  wall-clock %.0f s\n", t_total)
 
     tag = dose_tag(DOSE_GY)
-    mkpath(OUT)
-    npzwrite(joinpath(OUT, "at_dose_$(tag).npz"),
+    mkpath(out)
+    npzwrite(joinpath(out, "at_dose_$(tag).npz"),
              Dict("r50_fit" => fits, "z0_err" => [r.z0_err for r in results],
                   "r50_cross" => [r.r50_cross for r in results],
                   "nev" => Float64.([r.nev for r in results])))
-    open(joinpath(OUT, "at_dose_$(tag).toml"), "w") do io
+    open(joinpath(out, "at_dose_$(tag).toml"), "w") do io
         TOML.print(io, Dict(
             "method" => "thinned realizations of the pooled master",
             "realizations" => REALIZATIONS, "dose_Gy" => DOSE_GY,
@@ -194,7 +203,7 @@ function thinned(ctx)
             "sigma_R_crossing" => Dict("mean_mm" => sc.mean, "sigma_mm" => sc.sigma),
             "gate" => gate, "timing_s" => t_total))
     end
-    println("wrote $(joinpath(OUT, "at_dose_$(tag).toml")) (+ at_dose_$(tag).npz)")
+    println("wrote $(joinpath(out, "at_dose_$(tag).toml")) (+ at_dose_$(tag).npz)")
 end
 
 let ctx = context()

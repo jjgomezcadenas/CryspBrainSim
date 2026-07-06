@@ -3,7 +3,7 @@
 # ellipsoid attenuation, backprojection on CPU and Metal) at the recipe's
 # 20 M chunk, extrapolate to n_sens = 1×10⁸ and the locked 5×10⁸, and record
 # the memory footprint of the pooled 174 M-event master. Writes
-# out/sensitivity_scope/bench.toml and prints the table.
+# out/validation/sensitivity_scope/bench.toml and prints the table.
 #
 # Run:  julia -t auto --project=. tools/bench_sensitivity.jl [chunk_size]
 
@@ -83,7 +83,7 @@ function bench()
     @printf("master (full MCCoincidences)     %5.2f GiB\n", gib(master_struct))
     @printf("machine RAM          %5.1f GiB\n", gib(sysmem))
 
-    out = joinpath(dirname(@__DIR__), "out", "sensitivity_scope")
+    out = joinpath(validation_out(), "sensitivity_scope")
     mkpath(out)
     open(joinpath(out, "bench.toml"), "w") do io
         TOML.print(io, Dict(

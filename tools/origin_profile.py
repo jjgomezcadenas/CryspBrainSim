@@ -13,6 +13,7 @@ Writes out/origin_profile/figures/<scenario>_<crystal>_shardNNN_origin.png
 """
 import argparse
 import csv
+import json
 import os
 
 import h5py
@@ -21,6 +22,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+
+from crysp_paths import config_out, crystal_label  # noqa: E402
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -152,8 +155,14 @@ def main():
     ax.tick_params(colors=MUTED, labelsize=9)
 
     if not args.out:
+        ring_dir = os.path.dirname(os.path.dirname(os.path.dirname(
+            os.path.abspath(args.shard))))
+        ring = os.path.basename(ring_dir)
+        with open(os.path.join(ring_dir, "scanner_geometry.json")) as gf:
+            wall_mm = 10.0 * json.load(gf)["scanner"]["wall_thickness_cm"]
+        cfg = config_out(scenario, "closed", ring, crystal_label(crystal, wall_mm))
         name = f"{scenario}_{crystal.lower()}_shard{shard_ix:03d}_origin.png"
-        args.out = os.path.join(REPO, "out", "origin_profile", "figures", name)
+        args.out = os.path.join(cfg, "origin_profile", "figures", name)
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     fig.tight_layout()
     fig.savefig(args.out, dpi=160, facecolor=SURFACE)

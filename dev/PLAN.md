@@ -74,7 +74,7 @@ CryspBrainSim/
   src/
     CryspBrainSim.jl          module top; re-exports the public surface
     products.jl               PtCryspProds navigation: glob shards, pool, verify provenance attrs + truth/ bundle
-    qa.jl                     shard statistics + sanity numbers (struct drivers assert on)
+    shard_stats.jl            shard statistics + sanity numbers (struct drivers assert on)
     characterize.jl          truth/ bundle → activity(z), dose(z), dose-R80/activity-R50 offset (the reference)
     mumap.jl                  scenario phantom → attenuation (ellipsoid_chord and/or voxel μ-map)
     sensitivity.jl            ContinuousPET sampler + chunked sens; cache `base` + provenance
@@ -83,6 +83,7 @@ CryspBrainSim/
     profile.jl                depth_profile + distal_window (fixed ROI on the beam axis)
     endpoint.jl               fit_endpoint + sigma_R  (Julia port of the py estimator)
     config.jl                 load_run_parameters (the frozen knobs as typed values)
+    output.jl                 the output layout: crystal_label + config_out/… path helpers
     dualhead_sampler.jl       φ-gap sensitivity sampler — arrives with the dual-head data (see Deferred)
   config/                     the FROZEN run parameters, common-mode across arms (see below)
   drivers/
@@ -101,6 +102,34 @@ CryspBrainSim/
 Julia package name: `CryspBrainSim` (matches the repo). The analysis is Julia end to end; Python
 serves quick-looks and figures. The existing `py/` modules serve as the frozen cross-validation
 reference for the port, then retire.
+
+### Output layout
+
+`out/` mirrors the products-tree axes so results decouple by **what they depend on** — the depth of
+a result equals the scope it depends on. Path helpers in `src/output.jl` (`truth_out`,
+`sensitivity_out`, `config_out`, `validation_out`, `crystal_label`) and their Python mirror
+`tools/crysp_paths.py` are the single source of these paths; nothing hard-codes `out/<...>`.
+
+```
+out/<scenario>/                                     SCENARIO = proton run + head phantom
+  truth/    reference + figures                       [scenario tier]
+  mumap/    voxel μ-map (reserved)                     [scenario tier]
+  <topology>/                                          closed | open
+    <ring>/                                            ring geometry, e.g. crysp_ring_1m
+      sensitivity/  base cache + provenance            [scenario × ring — shared across crystals]
+      <crystal>/                                       material + thickness, e.g. bgo_3X0
+        shard_stats/ one_shard/ sigma_r/ origin_profile/    [config tier]
+out/validation/  endpoint_port/ sensitivity_scope/     package cross-checks, no scenario
+```
+
+- **Sensitivity is essentially geometric** (ring + object attenuation), so one base serves every
+  crystal on a ring — it lives at the ring tier. The crystal's effect on σ_R enters through the
+  shard **data** (counts, resolution), not the sensitivity image. (The current base is geometric
+  only; the crystal-DOI sampler, when it lands, keeps the same tier.)
+- **Crystal thickness in radiation lengths X0** (`crystal_label`): the 3.7 cm BGO wall is 3.3 X0 →
+  `bgo_3X0`; a thinner variant is `bgo_2X0`. X0 makes BGO and CsI comparable by stopping power.
+- The sensitivity cache **filename** carries only what varies within its directory (grid, origin,
+  n_sens); the scenario and ring are in the path.
 
 ---
 

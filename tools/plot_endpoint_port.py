@@ -25,7 +25,7 @@ from scipy.special import erfc  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 REF_PATH = REPO / "test" / "data" / "endpoint_reference.npz"
-OUT = REPO / "out" / "endpoint_port"
+OUT = REPO / "out" / "validation" / "endpoint_port"   # package cross-check
 JL_PATH = OUT / "julia_fits.npz"
 
 # Categorical slots 1-2 of the validated dataviz reference palette, plus

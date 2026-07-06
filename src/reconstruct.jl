@@ -39,22 +39,27 @@ dose_tag(d::Real) =
     load_run_context(; products_root, scenario, scanner, crystal, leaf,
                      sens_cache, params=load_run_parameters()) -> NamedTuple
 
-Load the fixed inputs one scanner configuration reconstructs against, and
-return them as `(ref, base, meta, phantom, files, params)`:
+Load the fixed inputs one PET configuration reconstructs against. `crystal` is
+the material key (e.g. `"BGO"`); `topology` is `"closed"` or `"open"`. Returns a
+NamedTuple with the inputs and the configuration's identity (the latter names
+the output directory via [`config_out`](@ref)):
 
 - `ref`: the truth reference (dose-R80, the true activity edge, the fixed fit
   window), from [`characterize`](@ref).
-- `base`: the cached sensitivity image, checked to match the frozen grid.
-- `meta`: the sensitivity provenance record.
+- `base`, `meta`: the cached sensitivity image (checked to match the frozen
+  grid) and its provenance.
 - `phantom`: the head's attenuation parameters, from [`phantom_attenuation`](@ref).
 - `files`: the shard files under the config leaf, in shard-index order.
 - `params`: the frozen run parameters.
+- `scenario`, `topology`, `ring`, `crystal`: the identity — `ring` is the
+  scanner name, `crystal` the material+thickness label (e.g. `"bgo_3X0"`,
+  computed from the ring wall).
 
-A different scanner has its own tree leaf and sensitivity cache — point the
-arguments there. The compute device is the caller's to choose (pass it to
+The compute device is the caller's to choose (pass it to
 [`reconstruct_endpoint`](@ref)), so this stays free of any GPU dependency.
 """
 function load_run_context(; products_root::AbstractString, scenario::AbstractString,
+                          topology::AbstractString="closed",
                           scanner::AbstractString, crystal::AbstractString,
                           leaf::AbstractString, sens_cache::AbstractString,
                           params=load_run_parameters())
@@ -67,9 +72,12 @@ function load_run_context(; products_root::AbstractString, scenario::AbstractStr
      Float32.(g["voxsize"]) == collect(params.grid.voxsize)) ||
         error("load_run_context: sensitivity cache grid ≠ frozen run-parameter grid")
     ph = phantom_attenuation(scen)
+    geo = scanner_geometry(joinpath(scen, scanner))
     files = shard_files(leaf_dir(products_root; scenario=scenario, scanner=scanner,
                                  crystal=crystal, leaf=leaf))
-    return (ref=ref, base=base, meta=meta, phantom=ph, files=files, params=params)
+    return (ref=ref, base=base, meta=meta, phantom=ph, files=files, params=params,
+            scenario=scenario, topology=topology, ring=scanner,
+            crystal=crystal_label(crystal, geo.wall_mm))
 end
 
 """

@@ -21,8 +21,9 @@ const N_SENS = let a = filter(!startswith("--"), ARGS)
 end
 const CHECK = "--check" in ARGS
 
-const SCEN = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds",
-                      "uniform_headep_sobp_1e8")
+const SCENARIO = "uniform_headep_sobp_1e8"
+const TOPOLOGY = "closed"
+const SCEN = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds", SCENARIO)
 # The frozen activity grid on the beam corridor (the offset z-origin covers
 # the proximal activity a centered grid would clip).
 const N = PARAMS.grid.n
@@ -40,10 +41,10 @@ function main()
             "half_length $(geo.half_length_mm) mm; μ $(ph.mu_mm_inv) mm⁻¹; " *
             "n_sens $N_SENS; device $(dev === identity ? "CPU" : "Metal")")
 
-    # The cache name (grid, origin and n_sens stamped in) is one rule, shared
-    # with the drivers that load the file.
-    name = sensitivity_cache_name(geo.name, PARAMS; n_sens=N_SENS)
-    out = joinpath(dirname(@__DIR__), "out", "sensitivity", name)
+    # The base lives under out/<scenario>/<topology>/<ring>/sensitivity/, shared
+    # across crystals; the name holds only the grid, origin and n_sens.
+    name = sensitivity_cache_name(PARAMS; n_sens=N_SENS)
+    out = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, geo.name), name)
 
     build(seed) = sensitivity_base(; r_inner_mm=geo.r_inner_mm,
                                    half_length_mm=geo.half_length_mm,

@@ -104,6 +104,14 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   **Gate PASSES**: thinned σ_R(1 Gy) = 0.078 mm (50 realizations) vs 0.065 mm — ratio 1.20, inside
   the ±51% 2σ band. Scatter effect (all events, uncorrected, shard 0): +65 μm fit / −6 μm crossing —
   correction deferred. 122 tests green.
+- **Output layout: DONE (branch `output-layout`).** `out/` mirrors the products axes
+  (`out/<scenario>/[truth,mumap]`, `.../<topology>/<ring>/sensitivity`,
+  `.../<ring>/<crystal>/{shard_stats,one_shard,sigma_r,origin_profile}`, `out/validation/`) via path
+  helpers in `src/output.jl` + `tools/crysp_paths.py` — nothing hard-codes `out/<...>`. Sensitivity
+  is at the ring tier (geometric, shared across crystals); crystal folds material + thickness in X0
+  (`bgo_3X0` = 3.7 cm BGO ≈ 3.3 X0). Renames: `qa`→`shard_stats` (`ShardStats`, `shard_stats`);
+  `sensitivity_cache_name` drops the ring prefix (path carries it). Existing `out/` data relocated
+  (not regenerated); all drivers + tools verified against the new tree; 138 tests green.
 - **Step 7 — NEXT: `drivers/sigma_r_sweep_dose.jl`** (PLAN.md rung 7): Z realizations × dose grid →
   the σ_R-vs-dose curve. Then step 8 (latex).
 

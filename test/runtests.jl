@@ -286,10 +286,10 @@ end
         end
     end
 
-    @testset "qa — ShardQA on the miniature shard" begin
+    @testset "shard_stats — ShardStats on the miniature shard" begin
         mktempdir() do dir
             f = write_mini_shard(joinpath(dir, "lors_shard000.h5"); nevents=40)
-            q = shard_qa(f; r_inner_mm=387.0)
+            q = shard_stats(f; r_inner_mm=387.0)
             @test q.nrows == 8 && q.nevents == 40
             @test q.acceptance ≈ 0.2
             @test q.n_true == 5 && q.n_random == 1
@@ -429,24 +429,40 @@ end
     end
 
     @testset "sensitivity_cache_name + dose_tag" begin
+        # The scenario and ring are carried by the path; the name holds only
+        # the grid, its origin, and n_sens.
         p = (grid=(n=(64, 64, 96), voxsize=(1.5f0, 1.5f0, 1.5f0),
                    img_origin=(-47.25f0, -47.25f0, -119.25f0)),
              n_sens=1_000_000_000)
-        @test sensitivity_cache_name("crysp_ring_1m", p) ==
-              "crysp_ring_1m_grid64x64x96_1.5mm_orgm47.25_m47.25_m119.25_n1000000000"
+        @test sensitivity_cache_name(p) ==
+              "grid64x64x96_1.5mm_orgm47.25_m47.25_m119.25_n1000000000"
         # n_sens override for the builder's sweep of the sample size.
-        @test endswith(sensitivity_cache_name("crysp_ring_1m", p; n_sens=500_000_000),
-                       "_n500000000")
+        @test endswith(sensitivity_cache_name(p; n_sens=500_000_000), "_n500000000")
         # A different origin yields a different name (no collision).
         p2 = (grid=(n=(64, 64, 96), voxsize=(1.5f0, 1.5f0, 1.5f0),
                     img_origin=(0.0f0, 0.0f0, 0.0f0)), n_sens=1_000_000_000)
-        @test sensitivity_cache_name("crysp_ring_1m", p2) !=
-              sensitivity_cache_name("crysp_ring_1m", p)
+        @test sensitivity_cache_name(p2) != sensitivity_cache_name(p)
 
         @test dose_tag(1.0) == "1Gy"
         @test dose_tag(0.5) == "0p5Gy"
         @test dose_tag(0.05) == "0p05Gy"
         @test dose_tag(2.0) == "2Gy"
+    end
+
+    @testset "output layout — crystal_label + path helpers" begin
+        @test crystal_label("BGO", 37.0) == "bgo_3X0"   # 37 / 11.18 ≈ 3.3
+        @test crystal_label("BGO", 22.4) == "bgo_2X0"   # 22.4 / 11.18 ≈ 2.0
+        @test crystal_label("CsI", 37.2) == "csi_2X0"   # 37.2 / 18.6 = 2.0
+        @test_throws ErrorException crystal_label("LYSO", 30.0)
+
+        r = "/tmp/out"
+        @test scenario_out("scen"; root=r) == joinpath(r, "scen")
+        @test truth_out("scen"; root=r) == joinpath(r, "scen", "truth")
+        @test sensitivity_out("scen", "closed", "ring1"; root=r) ==
+              joinpath(r, "scen", "closed", "ring1", "sensitivity")
+        @test config_out("scen", "closed", "ring1", "bgo_3X0"; root=r) ==
+              joinpath(r, "scen", "closed", "ring1", "bgo_3X0")
+        @test validation_out(; root=r) == joinpath(r, "validation")
     end
 
     @testset "sensitivity — chunked base, scale, cache roundtrip" begin

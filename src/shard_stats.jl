@@ -1,4 +1,4 @@
-# qa.jl — validation ladder rung 2: a stored shard's statistics and sanity
+# shard_stats.jl — validation ladder rung 2: a stored shard's statistics and sanity
 # numbers as a struct the drivers assert on, turning "the shard looks fine"
 # into an automatable gate. Runs on a shard at full statistics (distinct from
 # a thinned realization); run it first on every new shard. The companion 3×3
@@ -10,7 +10,7 @@
 # columns (`t1_ns`, `t2_ns`, `dt_ns`) that `MCCoincidences` does not carry.
 
 """
-    ShardQA
+    ShardStats
 
 One stored shard's statistics + sanity numbers (all positions mm, energies
 keV). Fields:
@@ -29,7 +29,7 @@ keV). Fields:
   `tau_ns`.
 - source: `src_min`/`src_max` — the annihilation-point bounding box.
 """
-struct ShardQA
+struct ShardStats
     file::String
     scenario::String
     crystal::String
@@ -56,13 +56,13 @@ struct ShardQA
 end
 
 """
-    shard_qa(file; r_inner_mm) -> ShardQA
+    shard_stats(file; r_inner_mm) -> ShardStats
 
 Compute the QA statistics of one stored shard. `r_inner_mm` comes from
 [`scanner_geometry`](@ref) and anchors the DOI range; the provenance attrs
 are verified on read ([`shard_attrs`](@ref)).
 """
-function shard_qa(file::AbstractString; r_inner_mm::Real)
+function shard_stats(file::AbstractString; r_inner_mm::Real)
     attrs = shard_attrs(file)
     xs = Float64(attrs["xyz_scale_mm"])
     es = Float64(attrs["e_scale_keV"])
@@ -72,7 +72,7 @@ function shard_qa(file::AbstractString; r_inner_mm::Real)
         truth = col("truth")
         nrows = length(truth)
         Int(attrs["nrows"]) == nrows ||
-            error("shard_qa: attr nrows=$(attrs["nrows"]) ≠ $(nrows) rows in $file")
+            error("shard_stats: attr nrows=$(attrs["nrows"]) ≠ $(nrows) rows in $file")
 
         n_true = count(==(Int8(0)), truth)
         n_random = count(==(Int8(2)), truth)
@@ -108,7 +108,7 @@ function shard_qa(file::AbstractString; r_inner_mm::Real)
         src_max = (maximum(x0), maximum(y0), maximum(z0))
 
         nevents = Int(attrs["nevents"])
-        return ShardQA(
+        return ShardStats(
             String(file), String(attrs["scenario"]), String(attrs["crystal"]),
             String(attrs["budget"]), Int(attrs["realization"]),
             nrows, nevents, nrows / nevents,
@@ -119,9 +119,9 @@ function shard_qa(file::AbstractString; r_inner_mm::Real)
     end
 end
 
-function Base.show(io::IO, ::MIME"text/plain", q::ShardQA)
+function Base.show(io::IO, ::MIME"text/plain", q::ShardStats)
     fmt(x) = string(round(x; sigdigits=4))
-    println(io, "ShardQA  $(basename(q.file))")
+    println(io, "ShardStats  $(basename(q.file))")
     println(io, "  identity    $(q.scenario) / $(q.crystal) / $(q.budget) / shard $(q.shard)")
     println(io, "  counting    $(q.nrows) LORs from $(q.nevents) decays — acceptance $(fmt(100q.acceptance))%")
     println(io, "  composition true $(fmt(100q.frac_true))% · scatter $(fmt(100q.frac_scatter))% " *
