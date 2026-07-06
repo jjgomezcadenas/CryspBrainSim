@@ -2,7 +2,8 @@
 # (validation ladder rung 6). σ_R is the standard deviation of the fitted range
 # endpoint R across many acquisitions; this driver measures it at one dose, two
 # ways. Run both at the nominal dose and they must agree — that agreement is the
-# rung-6 gate that certifies the thinned method.
+# rung-6 gate that certifies the thinned method. (Terms — shard, realization,
+# dose, R, σ_R — are defined in src/reconstruct.jl.)
 #
 # Options:
 #
@@ -33,7 +34,15 @@
 #       julia -t auto --project=. drivers/sigma_r_at_dose.jl --realizations 50 --dose 0.5
 # Writes into out/sigma_r/; figures come from tools/plot_sigma_r.py.
 
-include(joinpath(@__DIR__, "sigma_r_common.jl"))
+using CryspBrainSim
+using RecoCryspTools
+using Metal
+using NPZ: npzwrite
+using Printf
+using Statistics: mean
+using TOML
+
+const OUT = joinpath(dirname(@__DIR__), "out", "sigma_r")
 
 const FROM_SHARDS = "--from-shards" in ARGS
 const REALIZATIONS = let i = findfirst(==("--realizations"), ARGS)
@@ -43,16 +52,41 @@ const DOSE_GY = let i = findfirst(==("--dose"), ARGS)
     i === nothing ? 1.0 : parse(Float64, ARGS[i+1])
 end
 
+# The scanner configuration this driver measures: the BGO closed 1 m ring on
+# the uniform-head SOBP scenario. A different arm points these at its own tree
+# leaf and sensitivity cache.
+function context()
+    params = load_run_parameters()
+    cache = joinpath(dirname(@__DIR__), "out", "sensitivity",
+                     sensitivity_cache_name("crysp_ring_1m", params))
+    return load_run_context(;
+        products_root=joinpath(dirname(dirname(@__DIR__)), "PtCryspProds"),
+        scenario="uniform_headep_sobp_1e8", scanner="crysp_ring_1m",
+        crystal="bgo", leaf="fast_1Gy", sens_cache=cache, params=params)
+end
+
+const DEV = Metal.functional() ? MtlArray : identity
+
+# Two-convention σ_R summary line.
+function report(label, sf, sc)
+    @printf("\nσ_R %s (n = %d, the spread itself is known to ±%.0f%%):\n",
+            label, sf.n_ok, 100 / sqrt(2 * (sf.n_ok - 1)))
+    @printf("  fit read:      mean R50 %8.3f mm | σ_R %.3f mm | offset to dose-R80 %.3f mm\n",
+            sf.mean, sf.sigma, sf.offset)
+    @printf("  crossing read: mean R50 %8.3f mm | σ_R %.3f mm\n", sc.mean, sc.sigma)
+end
+
 # The reference: σ_R from the ten shards reconstructed independently, no thinning.
-function from_shards(s)
-    println("$(length(s.files)) shards; niter $(PARAMS.niter), " *
-            "ROI $(PARAMS.roi.radius_mm) mm, window $(round.(s.ref.window; digits=2))")
+function from_shards(ctx)
+    p = ctx.params
+    println("$(length(ctx.files)) shards; niter $(p.niter), " *
+            "ROI $(p.roi.radius_mm) mm, window $(round.(ctx.ref.window; digits=2))")
     results = NamedTuple[]
-    t_total = @elapsed for f in s.files
+    t_total = @elapsed for f in ctx.files
         r = read_shard(f)
         xs, xe = endpoints(r.coinc, is_true(r.coinc))
-        t = @elapsed res = recon_endpoint(xs, xe, attenuation(xs, xe, s.ph),
-                                          s.ref, s.base, s.dev)
+        t = @elapsed res = reconstruct_endpoint(ctx, xs, xe,
+                                                lor_attenuation(ctx, xs, xe); device=DEV)
         push!(results, (shard=Int(r.attrs["realization"]), res...))
         @printf("shard %d: R50 fit %8.3f ± %.3f mm | crossing %8.3f mm | %d ev | %.1f s\n",
                 results[end].shard, res.r50_fit, res.z0_err, res.r50_cross, res.nev, t)
@@ -60,9 +94,9 @@ function from_shards(s)
 
     fits = [r.r50_fit for r in results]
     errs = [r.z0_err for r in results]
-    sf = sigma_R(fits; dose_bragg_peak=s.ref.dose_R80)
-    sc = sigma_R([r.r50_cross for r in results]; dose_bragg_peak=s.ref.dose_R80)
-    report_sigma("from the 10 shards at 1 Gy", sf, sc)
+    sf = sigma_R(fits; dose_bragg_peak=ctx.ref.dose_R80)
+    sc = sigma_R([r.r50_cross for r in results]; dose_bragg_peak=ctx.ref.dose_R80)
+    report("from the 10 shards at 1 Gy", sf, sc)
     @printf("  each fit's own error averages %.3f mm, %.1f× the measured spread\n",
             mean(errs), mean(errs) / sf.sigma)
     @printf("  wall-clock %.0f s\n", t_total)
@@ -78,9 +112,8 @@ function from_shards(s)
         TOML.print(io, Dict(
             "method" => "ten independent shards, no thinning",
             "n_shards" => length(results), "dose_Gy" => 1.0,
-            "niter" => PARAMS.niter, "window_mm" => collect(s.ref.window),
-            "sens" => Dict("cache" => SENS_CACHE,
-                           "recocrysp_sha" => s.meta["recocrysp_sha"]),
+            "niter" => p.niter, "window_mm" => collect(ctx.ref.window),
+            "sens" => Dict("recocrysp_sha" => ctx.meta["recocrysp_sha"]),
             "per_shard" => Dict(
                 "shard" => [r.shard for r in results],
                 "n_events" => [r.nev for r in results],
@@ -92,22 +125,22 @@ function from_shards(s)
             "sigma_R_crossing" => Dict("mean_mm" => sc.mean, "sigma_mm" => sc.sigma,
                                        "sem_mm" => sc.sem, "offset_mm" => sc.offset),
             "fit_error_over_spread" => mean(errs) / sf.sigma,
-            "reference" => Dict("dose_R80_mm" => s.ref.dose_R80,
-                                "activity_R50_fit_mm" => s.ref.activity_R50_fit,
-                                "activity_R50_crossing_mm" => s.ref.activity_R50),
+            "reference" => Dict("dose_R80_mm" => ctx.ref.dose_R80,
+                                "activity_R50_fit_mm" => ctx.ref.activity_R50_fit,
+                                "activity_R50_crossing_mm" => ctx.ref.activity_R50),
             "timing_s" => t_total))
     end
     println("wrote $(joinpath(OUT, "from_shards.toml")) (+ from_shards.npz)")
 end
 
 # The production method: σ_R from N thinned realizations at the chosen dose.
-function thinned(s)
-    println("pooling $(length(s.files)) shards…")
-    t_pool = @elapsed pool = pool_shards(s.files)
+function thinned(ctx)
+    println("pooling $(length(ctx.files)) shards…")
+    t_pool = @elapsed pool = pool_shards(ctx.files)
     M_total = length(pool.coinc)
-    n_shards = length(s.files)
+    n_shards = length(ctx.files)
     tmask = is_true(pool.coinc)
-    a_all = attenuation(pool.coinc.xstart, pool.coinc.xend, s.ph)
+    a_all = lor_attenuation(ctx, pool.coinc.xstart, pool.coinc.xend)
     target = dose_to_counts(DOSE_GY, 1.0, M_total, n_shards)
     @printf("pooled %d coincidences in %.0f s; dose %.3g Gy keeps %d per realization (fraction %.4f)\n",
             M_total, t_pool, DOSE_GY, target, target / M_total)
@@ -116,16 +149,16 @@ function thinned(s)
     t_total = @elapsed for z in 1:REALIZATIONS
         keep = thin_lm(pool.coinc, target, z) .& tmask
         xs, xe = endpoints(pool.coinc, keep)
-        res = recon_endpoint(xs, xe, a_all[keep], s.ref, s.base, s.dev)
+        res = reconstruct_endpoint(ctx, xs, xe, a_all[keep]; device=DEV)
         push!(results, res)
         @printf("realization %2d: R50 fit %8.3f ± %.3f mm | crossing %8.3f mm | %d ev\n",
                 z, res.r50_fit, res.z0_err, res.r50_cross, res.nev)
     end
 
     fits = [r.r50_fit for r in results]
-    sf = sigma_R(fits; dose_bragg_peak=s.ref.dose_R80)
-    sc = sigma_R([r.r50_cross for r in results]; dose_bragg_peak=s.ref.dose_R80)
-    report_sigma("from $REALIZATIONS thinned realizations at $(DOSE_GY) Gy", sf, sc)
+    sf = sigma_R(fits; dose_bragg_peak=ctx.ref.dose_R80)
+    sc = sigma_R([r.r50_cross for r in results]; dose_bragg_peak=ctx.ref.dose_R80)
+    report("from $REALIZATIONS thinned realizations at $(DOSE_GY) Gy", sf, sc)
 
     # At the nominal dose, compare against the shard reference — the rung-6 gate.
     gate = Dict{String,Any}()
@@ -164,6 +197,6 @@ function thinned(s)
     println("wrote $(joinpath(OUT, "at_dose_$(tag).toml")) (+ at_dose_$(tag).npz)")
 end
 
-let s = setup()
-    FROM_SHARDS ? from_shards(s) : thinned(s)
+let ctx = context()
+    FROM_SHARDS ? from_shards(ctx) : thinned(ctx)
 end

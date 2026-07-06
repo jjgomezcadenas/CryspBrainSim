@@ -30,9 +30,10 @@ export TruthReference, characterize, distal_crossing, windowed_crossing,
 export phantom_attenuation, attenuation_ellipsoid, centered_grid, build_mumap,
        attenuation_mumap
 export sensitivity_base, scaled_sensitivity, save_sensitivity,
-       load_sensitivity, recocrysp_sha
+       load_sensitivity, recocrysp_sha, sensitivity_cache_name
 export load_run_parameters
 export THINNING_SEED_BASE, dose_to_counts, thin_mask, thin_lm
+export dose_tag, load_run_context, lor_attenuation, reconstruct_endpoint
 
 include("config.jl")
 include("profile.jl")
@@ -43,6 +44,7 @@ include("characterize.jl")
 include("mumap.jl")
 include("sensitivity.jl")
 include("thinning.jl")
+include("reconstruct.jl")
 
 # The remaining analysis surface arrives over dev/PLAN.md build steps 5–6:
 #   thinning.jl · dualhead_sampler.jl

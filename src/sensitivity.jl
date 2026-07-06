@@ -53,6 +53,23 @@ function sensitivity_base(; r_inner_mm::Real, half_length_mm::Real,
 end
 
 """
+    sensitivity_cache_name(scanner_name, params; n_sens=params.n_sens) -> String
+
+The cache basename (no directory, no extension) for a sensitivity base built on
+`params`' frozen grid for `scanner_name`, e.g.
+`crysp_ring_1m_grid64x64x96_1.5mm_orgm47.25_m47.25_m119.25_n1000000000`. The
+grid origin is stamped in (`m` for a minus sign) so bases on the same-shape grid
+at different origins never share a file. One rule, used by the builder
+(`tools/make_sensitivity.jl`) and the drivers that load the cache.
+"""
+function sensitivity_cache_name(scanner_name::AbstractString, params;
+                                n_sens::Integer=params.n_sens)
+    n, vs, org = params.grid.n, params.grid.voxsize, params.grid.img_origin
+    org_tag = join(replace.(string.(round.(Float64.(org); digits=2)), "-" => "m"), "_")
+    return "$(scanner_name)_grid$(n[1])x$(n[2])x$(n[3])_$(vs[1])mm_org$(org_tag)_n$(n_sens)"
+end
+
+"""
     scaled_sensitivity(base, n_events, n_sens) -> Array{Float32,3}
 
 The per-realization sensitivity `sens = base · (n_events / n_sens)` — the

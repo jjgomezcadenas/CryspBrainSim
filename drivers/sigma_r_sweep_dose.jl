@@ -1,7 +1,8 @@
 # drivers/sigma_r_sweep_dose.jl — the range precision σ_R across a grid of
 # doses, i.e. the σ_R-vs-dose curve (validation ladder rung 7, the deliverable
-# per scanner). It runs the thinned method of sigma_r_at_dose at each dose,
-# reusing one pooled master, and records σ_R for every dose.
+# per scanner). It reconstructs thinned realizations at each dose, reusing one
+# pooled master, and records σ_R for every dose. (Terms — shard, realization,
+# dose, R, σ_R — are defined in src/reconstruct.jl.)
 #
 # Options:
 #
@@ -24,24 +25,41 @@
 # Writes out/sigma_r/sweep.toml + sweep.npz; the curve comes from
 # tools/plot_sigma_r.py --sweep.
 
-include(joinpath(@__DIR__, "sigma_r_common.jl"))
+using CryspBrainSim
+using RecoCryspTools
+using Metal
+using NPZ: npzwrite
+using Printf
+using TOML
+
+const OUT = joinpath(dirname(@__DIR__), "out", "sigma_r")
 
 const REALIZATIONS = let i = findfirst(==("--realizations"), ARGS)
     i === nothing ? 50 : parse(Int, ARGS[i+1])
 end
 const DOSES = let i = findfirst(==("--doses"), ARGS)
-    i === nothing ? [1.0, 0.5, 0.2, 0.1] :
-        parse.(Float64, split(ARGS[i+1], ","))
+    i === nothing ? [1.0, 0.5, 0.2, 0.1] : parse.(Float64, split(ARGS[i+1], ","))
 end
 
-function sweep()
-    s = setup()
-    println("pooling $(length(s.files)) shards…")
-    t_pool = @elapsed pool = pool_shards(s.files)
+const DEV = Metal.functional() ? MtlArray : identity
+
+function context()
+    params = load_run_parameters()
+    cache = joinpath(dirname(@__DIR__), "out", "sensitivity",
+                     sensitivity_cache_name("crysp_ring_1m", params))
+    return load_run_context(;
+        products_root=joinpath(dirname(dirname(@__DIR__)), "PtCryspProds"),
+        scenario="uniform_headep_sobp_1e8", scanner="crysp_ring_1m",
+        crystal="bgo", leaf="fast_1Gy", sens_cache=cache, params=params)
+end
+
+function sweep(ctx)
+    println("pooling $(length(ctx.files)) shards…")
+    t_pool = @elapsed pool = pool_shards(ctx.files)
     M_total = length(pool.coinc)
-    n_shards = length(s.files)
+    n_shards = length(ctx.files)
     tmask = is_true(pool.coinc)
-    a_all = attenuation(pool.coinc.xstart, pool.coinc.xend, s.ph)
+    a_all = lor_attenuation(ctx, pool.coinc.xstart, pool.coinc.xend)
     @printf("pooled %d coincidences in %.0f s; %d doses × %d realizations\n",
             M_total, t_pool, length(DOSES), REALIZATIONS)
 
@@ -53,11 +71,11 @@ function sweep()
         t = @elapsed for z in 1:REALIZATIONS
             keep = thin_lm(pool.coinc, target, z) .& tmask
             xs, xe = endpoints(pool.coinc, keep)
-            res = recon_endpoint(xs, xe, a_all[keep], s.ref, s.base, s.dev)
+            res = reconstruct_endpoint(ctx, xs, xe, a_all[keep]; device=DEV)
             push!(fits, res.r50_fit); push!(crosses, res.r50_cross)
         end
-        sf = sigma_R(fits; dose_bragg_peak=s.ref.dose_R80)
-        sc = sigma_R(crosses; dose_bragg_peak=s.ref.dose_R80)
+        sf = sigma_R(fits; dose_bragg_peak=ctx.ref.dose_R80)
+        sc = sigma_R(crosses; dose_bragg_peak=ctx.ref.dose_R80)
         push!(points, (dose=dose, target=target, sf=sf, sc=sc))
         @printf("dose %5.3g Gy: keep %9d | σ_R fit %.3f mm | crossing %.3f mm | %d ok/%d fail | %.0f s\n",
                 dose, target, sf.sigma, sc.sigma, sf.n_ok, sf.n_fail, t)
@@ -87,4 +105,4 @@ function sweep()
     println("wrote $(joinpath(OUT, "sweep.toml")) (+ sweep.npz)")
 end
 
-sweep()
+sweep(context())

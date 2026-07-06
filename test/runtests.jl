@@ -428,6 +428,27 @@ end
         @test_throws ArgumentError dose_to_counts(0.0, 1.0, 100, 10)
     end
 
+    @testset "sensitivity_cache_name + dose_tag" begin
+        p = (grid=(n=(64, 64, 96), voxsize=(1.5f0, 1.5f0, 1.5f0),
+                   img_origin=(-47.25f0, -47.25f0, -119.25f0)),
+             n_sens=1_000_000_000)
+        @test sensitivity_cache_name("crysp_ring_1m", p) ==
+              "crysp_ring_1m_grid64x64x96_1.5mm_orgm47.25_m47.25_m119.25_n1000000000"
+        # n_sens override for the builder's sweep of the sample size.
+        @test endswith(sensitivity_cache_name("crysp_ring_1m", p; n_sens=500_000_000),
+                       "_n500000000")
+        # A different origin yields a different name (no collision).
+        p2 = (grid=(n=(64, 64, 96), voxsize=(1.5f0, 1.5f0, 1.5f0),
+                    img_origin=(0.0f0, 0.0f0, 0.0f0)), n_sens=1_000_000_000)
+        @test sensitivity_cache_name("crysp_ring_1m", p2) !=
+              sensitivity_cache_name("crysp_ring_1m", p)
+
+        @test dose_tag(1.0) == "1Gy"
+        @test dose_tag(0.5) == "0p5Gy"
+        @test dose_tag(0.05) == "0p05Gy"
+        @test dose_tag(2.0) == "2Gy"
+    end
+
     @testset "sensitivity — chunked base, scale, cache roundtrip" begin
         n = (16, 16, 16)
         vs = (8.0f0, 8.0f0, 8.0f0)

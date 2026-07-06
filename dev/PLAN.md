@@ -79,13 +79,14 @@ CryspBrainSim/
     mumap.jl                  scenario phantom → attenuation (ellipsoid_chord and/or voxel μ-map)
     sensitivity.jl            ContinuousPET sampler + chunked sens; cache `base` + provenance
     thinning.jl               thin_lm (pooled Bernoulli, own seed namespace)
+    reconstruct.jl            load_run_context + reconstruct_endpoint (the shared recon chain)
     profile.jl                depth_profile + distal_window (fixed ROI on the beam axis)
     endpoint.jl               fit_endpoint + sigma_R  (Julia port of the py estimator)
+    config.jl                 load_run_parameters (the frozen knobs as typed values)
     dualhead_sampler.jl       φ-gap sensitivity sampler — arrives with the dual-head data (see Deferred)
   config/                     the FROZEN run parameters, common-mode across arms (see below)
   drivers/
     one_shard.jl              one shard → R          (the single-shard chain; the atomic unit)
-    sigma_r_common.jl         shared setup + reconstruction chain for the two σ_R drivers
     sigma_r_at_dose.jl        σ_R at one dose: --from-shards (reference) or thinned realizations
     sigma_r_sweep_dose.jl     σ_R across a dose grid → the σ_R-vs-dose curve  (the deliverable)
   tools/                      Python quick-looks + plotting (reproducible, on disk)

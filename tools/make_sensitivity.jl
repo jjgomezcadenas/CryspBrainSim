@@ -40,10 +40,9 @@ function main()
             "half_length $(geo.half_length_mm) mm; μ $(ph.mu_mm_inv) mm⁻¹; " *
             "n_sens $N_SENS; device $(dev === identity ? "CPU" : "Metal")")
 
-    # The origin is stamped into the name: same-shape grids at different
-    # origins must never collide on one cache file.
-    org_tag = join(replace.(string.(round.(Float64.(ORG); digits=2)), "-" => "m"), "_")
-    name = "$(geo.name)_grid$(N[1])x$(N[2])x$(N[3])_$(VS[1])mm_org$(org_tag)_n$(N_SENS)"
+    # The cache name (grid, origin and n_sens stamped in) is one rule, shared
+    # with the drivers that load the file.
+    name = sensitivity_cache_name(geo.name, PARAMS; n_sens=N_SENS)
     out = joinpath(dirname(@__DIR__), "out", "sensitivity", name)
 
     build(seed) = sensitivity_base(; r_inner_mm=geo.r_inner_mm,
