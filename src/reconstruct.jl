@@ -76,8 +76,31 @@ function load_run_context(; products_root::AbstractString, scenario::AbstractStr
     files = shard_files(leaf_dir(products_root; scenario=scenario, scanner=scanner,
                                  crystal=crystal, leaf=leaf))
     return (ref=ref, base=base, meta=meta, phantom=ph, files=files, params=params,
-            scenario=scenario, topology=topology, ring=scanner,
-            crystal=crystal_label(crystal, geo.wall_mm))
+            geo=geo, scenario=scenario, topology=topology, ring=scanner,
+            crystal_material=crystal, crystal=crystal_label(crystal, geo.wall_mm))
+end
+
+"""
+    write_descriptors(ctx) -> (geometry_path, crystal_path)
+
+Stamp the self-describing scanner descriptors for `ctx`'s configuration into
+the output tree: `geometry.toml` at the ring tier and `crystal.toml` at the
+crystal tier. Idempotent — the drivers call it so a reader of `out/` can
+answer "what scanner produced this?" from the results alone.
+"""
+function write_descriptors(ctx)
+    g = write_ring_geometry(ctx.geo; scenario=ctx.scenario,
+                            topology=ctx.topology, ring=ctx.ring)
+    # Detector response from the shard attributes (constant across a config's
+    # shards): energy + spatial resolution, energy cut, coincidence window.
+    a = shard_attrs(ctx.files[1])
+    det = (energy_resolution_fwhm=a["eres"], sigma_xyz_mm=a["sigma_xyz_mm"],
+           emin_keV=a["emin_keV"], tau_ns=a["tau_ns"])
+    c = write_crystal_spec(; scenario=ctx.scenario, topology=ctx.topology,
+                           ring=ctx.ring, crystal=ctx.crystal,
+                           material=ctx.crystal_material, wall_mm=ctx.geo.wall_mm,
+                           detector=det)
+    return (g, c)
 end
 
 """

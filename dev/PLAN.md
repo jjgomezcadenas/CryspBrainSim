@@ -116,12 +116,22 @@ out/<scenario>/                                     SCENARIO = proton run + head
   mumap/    voxel μ-map (reserved)                     [scenario tier]
   <topology>/                                          closed | open
     <ring>/                                            ring geometry, e.g. crysp_ring_1m
+      geometry.toml   full ring spec (raw + derived)   [scenario × ring]
       sensitivity/  base cache + provenance            [scenario × ring — shared across crystals]
       <crystal>/                                       material + thickness, e.g. bgo_3X0
+        crystal.toml  material, wall, X0, thickness_X0 + [detector] response  [config tier]
         shard_stats/ one_shard/ sigma_r/ origin_profile/    [config tier]
 out/validation/  endpoint_port/ sensitivity_scope/     package cross-checks, no scenario
 ```
 
+- **The output is self-describing.** `geometry.toml` (ring tier, from `write_ring_geometry` /
+  `scanner_spec`) records the raw geometry and the derived numbers — outer radius, length, crystal
+  count `n_phi × n_z`, crystal block size; `crystal.toml` (config tier) records material, wall, X0,
+  the exact `thickness_X0`, and a `[detector]` section from the shard attributes — energy resolution
+  (10% FWHM), `sigma_xyz_mm` (1.7 mm, one isotropic value: a monolithic crystal resolves the three
+  coordinates equally), `emin_keV`, `tau_ns`. A reader of `out/` can answer "what scanner produced
+  this?" without reaching back to the products tree. The drivers stamp both via
+  `write_descriptors(ctx)`.
 - **Sensitivity is essentially geometric** (ring + object attenuation), so one base serves every
   crystal on a ring — it lives at the ring tier. The crystal's effect on σ_R enters through the
   shard **data** (counts, resolution), not the sensitivity image. (The current base is geometric

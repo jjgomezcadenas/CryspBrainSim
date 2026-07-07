@@ -49,10 +49,12 @@ function context()
     params = load_run_parameters()
     cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
                      sensitivity_cache_name(params))
-    return load_run_context(;
+    ctx = load_run_context(;
         products_root=joinpath(dirname(dirname(@__DIR__)), "PtCryspProds"),
         scenario=SCENARIO, topology=TOPOLOGY, scanner=RING,
         crystal="bgo", leaf="fast_1Gy", sens_cache=cache, params=params)
+    write_descriptors(ctx)          # stamp geometry.toml + crystal.toml
+    return ctx
 end
 
 function sweep(ctx)

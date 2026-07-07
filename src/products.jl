@@ -168,8 +168,9 @@ end
     scanner_geometry(scanner_dir) -> NamedTuple
 
 The ring geometry from `<scanner>/scanner_geometry.json`, in mm:
-`(name, r_inner_mm, wall_mm, half_length_mm, n_phi, n_z)`. Accepts either
-the scanner directory or the JSON path itself.
+`(name, shape, r_inner_mm, wall_mm, half_length_mm, n_phi, n_z)`. `n_phi` is
+the crystal count per wheel (azimuthal), `n_z` the wheel count (axial).
+Accepts either the scanner directory or the JSON path itself.
 """
 function scanner_geometry(scanner_dir::AbstractString)
     path = isdir(scanner_dir) ? joinpath(scanner_dir, "scanner_geometry.json") :
@@ -177,7 +178,7 @@ function scanner_geometry(scanner_dir::AbstractString)
     isfile(path) || error("scanner_geometry: $path does not exist")
     g = JSON3.read(read(path, String))
     s = g["scanner"]
-    return (name=String(s["name"]),
+    return (name=String(s["name"]), shape=String(s["shape"]),
             r_inner_mm=10.0 * s["r_inner_cm"],
             wall_mm=10.0 * s["wall_thickness_cm"],
             half_length_mm=10.0 * s["half_length_cm"],

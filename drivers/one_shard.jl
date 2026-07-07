@@ -56,6 +56,7 @@ function main()
     ctx = load_run_context(; products_root=ROOT, scenario=SCENARIO,
                            topology=TOPOLOGY, scanner=RING, crystal="bgo",
                            leaf="fast_1Gy", sens_cache=cache, params=PARAMS)
+    write_descriptors(ctx)          # stamp geometry.toml + crystal.toml
     ref, base, meta, ph = ctx.ref, ctx.base, ctx.meta, ctx.phantom
     n_sens = PARAMS.n_sens
     show(stdout, MIME"text/plain"(), ref); println()

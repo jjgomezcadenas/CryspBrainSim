@@ -35,7 +35,8 @@ export load_run_parameters
 export THINNING_SEED_BASE, dose_to_counts, thin_mask, thin_lm
 export dose_tag, load_run_context, lor_attenuation, reconstruct_endpoint
 export crystal_label, CRYSTAL_X0_MM, out_root, scenario_out, truth_out,
-       mumap_out, sensitivity_out, config_out, validation_out
+       mumap_out, ring_out, sensitivity_out, config_out, validation_out
+export scanner_spec, write_ring_geometry, write_crystal_spec, write_descriptors
 
 include("config.jl")
 include("output.jl")

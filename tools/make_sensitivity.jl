@@ -41,6 +41,9 @@ function main()
             "half_length $(geo.half_length_mm) mm; μ $(ph.mu_mm_inv) mm⁻¹; " *
             "n_sens $N_SENS; device $(dev === identity ? "CPU" : "Metal")")
 
+    # Stamp the ring geometry descriptor (self-describing output).
+    write_ring_geometry(geo; scenario=SCENARIO, topology=TOPOLOGY, ring=geo.name)
+
     # The base lives under out/<scenario>/<topology>/<ring>/sensitivity/, shared
     # across crystals; the name holds only the grid, origin and n_sens.
     name = sensitivity_cache_name(PARAMS; n_sens=N_SENS)

@@ -258,11 +258,12 @@ end
     @testset "products — geometry, phantom, truth_dir" begin
         mktempdir() do dir
             gj = joinpath(dir, "scanner_geometry.json")
-            write(gj, """{"scanner": {"name": "ring", "r_inner_cm": 38.7,
-                  "wall_thickness_cm": 3.7, "half_length_cm": 51.2,
-                  "n_phi": 48, "n_z": 20}}""")
+            write(gj, """{"scanner": {"name": "ring", "shape": "cyl_shell",
+                  "r_inner_cm": 38.7, "wall_thickness_cm": 3.7,
+                  "half_length_cm": 51.2, "n_phi": 48, "n_z": 20}}""")
             g = scanner_geometry(dir)
-            @test g.name == "ring" && g.r_inner_mm == 387.0 && g.wall_mm == 37.0
+            @test g.name == "ring" && g.shape == "cyl_shell"
+            @test g.r_inner_mm == 387.0 && g.wall_mm == 37.0
             @test g.half_length_mm == 512.0 && g.n_phi == 48 && g.n_z == 20
 
             ph = joinpath(dir, "phantom"); mkpath(ph)
@@ -463,6 +464,42 @@ end
         @test config_out("scen", "closed", "ring1", "bgo_3X0"; root=r) ==
               joinpath(r, "scen", "closed", "ring1", "bgo_3X0")
         @test validation_out(; root=r) == joinpath(r, "validation")
+    end
+
+    @testset "scanner descriptors — spec + written TOML" begin
+        geo = (name="crysp_ring_1m", shape="cyl_shell", r_inner_mm=387.0,
+               wall_mm=37.0, half_length_mm=512.0, n_phi=48, n_z=20)
+        spec = scanner_spec(geo)
+        @test spec["r_outer_mm"] == 424.0
+        @test spec["length_mm"] == 1024.0
+        @test spec["n_crystals"] == 960
+        @test spec["crystal_axial_mm"] ≈ 1024.0 / 20
+        @test spec["crystal_transverse_mm"] ≈ 2π * 387.0 / 48
+        @test spec["crystal_radial_mm"] == 37.0
+
+        mktempdir() do dir
+            gp = write_ring_geometry(geo; scenario="scen", topology="closed",
+                                     ring="ring1", root=dir)
+            @test gp == joinpath(dir, "scen", "closed", "ring1", "geometry.toml")
+            back = TOML.parsefile(gp)
+            @test back["n_crystals"] == 960 && back["shape"] == "cyl_shell"
+
+            det = (energy_resolution_fwhm=0.10, sigma_xyz_mm=1.7,
+                   emin_keV=450.0, tau_ns=3.0)
+            cp = write_crystal_spec(; scenario="scen", topology="closed",
+                                    ring="ring1", crystal="bgo_3X0",
+                                    material="bgo", wall_mm=37.0, detector=det,
+                                    root=dir)
+            @test cp == joinpath(dir, "scen", "closed", "ring1", "bgo_3X0",
+                                 "crystal.toml")
+            cb = TOML.parsefile(cp)
+            @test cb["material"] == "BGO" && cb["label"] == "bgo_3X0"
+            @test cb["thickness_X0"] ≈ 37.0 / 11.18
+            @test cb["detector"]["energy_resolution_fwhm"] == 0.10
+            @test cb["detector"]["sigma_xyz_mm"] == 1.7
+            @test cb["detector"]["emin_keV"] == 450.0
+            @test cb["detector"]["tau_ns"] == 3.0
+        end
     end
 
     @testset "sensitivity — chunked base, scale, cache roundtrip" begin
