@@ -3,7 +3,7 @@
 % ---------------------------------------------------------------------------
 % CRYSP proposal draft --- ependymoma as illustrative case for distal
 % range-verification. British spelling; isotope notation in maths superscripts.
-% Compile: pdflatex -> bibtex -> pdflatex x2  (uses crysp_ependymoma_refs.bib)
+% Compile: pdflatex -> bibtex -> pdflatex x2  (uses biblio.bib)
 % ---------------------------------------------------------------------------
 
 \usepackage[T1]{fontenc}
@@ -24,13 +24,179 @@
 \newcommand{\GyRBE}{Gy\,(RBE)}
 \DeclareSIUnit\years{years}
 
-\title{Depth-profile extraction and endpoint estimation}
-\author{}
+\title{Distal Edge Verification in Proton Therapy Using An In-Room CRYSP Scanner}
+\author{J.J. Gómez-Cadenas}
 \date{\vspace{-3em}}
 
 \begin{document}
 \maketitle
 \vspace{-2em}
+
+\begin{abstract}
+Proton therapy concentrates dose in the sharp Bragg peak characteristic of hadron ionisation, sparing the tissue beyond it. While this sharpness is the technology's advantage, it demands careful planning and monitoring of the beam range, in particular the distal edge (the point where the beam stops). A range error of a few millimetres can underdose the tumour or overexpose a critical organ behind it, so range verification is a central problem of the field. A viable {\em in vivo} technique  is to image the positron emitters, mostly $^{15}$O and $^{11}$C, produced along the beam path, inside the treatment room, either immediately or shortly after the irradiation,  before the short-lived $^{15}$O has decayed. Open PET geometries allow in-beam, measurement with essentially zero delay after irradiation. On the other hand, a dedicated, optimised, in-room PET can provide a full ring, high AFOV, high-sensitivity measurement, in exchange of a time delay which can be as short as 1--2 minutes. 
+
+In this paper we study the potential of CRYSP (CRYogenic Sensitive PET). The base of the technology is the use of large monolithic crystals operating at cryogenic (liquid nitrogen) temperatures. We show that a large (1 m AFOV) in-room scanner applying this technology allows a precise distal edge determination at low proton doses, and is thus suitable as a precise verification instrument in proton therapy. Importantly, long AFOV CRYSP scanners allow verification of proton treatment in any region of the body (as opposed to specialised head-scanners, for example) and can be built as dedicated devices at an affordable cost. 
+ 
+%Cryogenic operation trades light yield by decay time. In particular, the light yield of CSI built from large monolithic crystals of caesium iodide. Monolithic CsI provides high sensitivity at low cost, resolves the depth of interaction, removing parallax, and reaches an energy resolution that rejects the scattered background through a narrow window around 511 keV. Because the measurement is made at low rate after the beam, the detector is free of pile-up, and the crystal can be optimised for energy resolution regardless of decay time.
+
+
+%The range of a therapeutic proton beam is the quantity a treatment plan controls
+%least well, and the distal edge of the field is where that uncertainty is paid
+%for clinically~\cite{paganetti2012}. The $\beta^{+}$ activity induced in tissue by
+%the beam carries an image of where the protons stopped, and an in-room PET scanner
+%can record it~\cite{parodi2023}. This note describes CryspBrainSim (CBS), a
+%simulation and analysis chain that starts from the list-mode lines of response a
+%PET scanner would register for a spread-out Bragg peak (SOBP) field, reconstructs
+%the $\beta^{+}$ activity by maximum-likelihood expectation maximisation
+%(MLEM)~\cite{shepp_vardi}, and extracts the distal endpoint $R$ of the activity
+%distribution together with its statistical precision $\sigma_R$. The reference
+%case is an ependymoma at the brainstem interface, modelled as a $4\times4$~cm
+%target at \SI{5.7}{\centi\metre} depth inside a uniform brain-tissue ellipsoid,
+%irradiated to \SI{1}{\gray}. The reference scanner is a CRYSP cryogenic
+%PET~\cite{soleti_crysp} with an inner radius of \SI{387}{\milli\metre}, an axial
+%field of view of \SI{1024}{\milli\metre} and 960 monolithic BGO crystals. The
+%depth--activity profile is integrated over the whole transverse plane and its
+%distal falloff fitted with a complementary error function, from which the
+%half-height point $R_{50}$ (the precision observable) and the practical endpoint
+%$R_p$ (the accuracy observable) follow analytically. On a single full-statistics
+%acquisition the reconstructed endpoint reproduces the endpoint of the generated
+%activity to better than one voxel, and the ensemble spread of the ten independent
+%acquisitions gives $\sigma_R = \SI{0.065}{\milli\metre}$ at \SI{1}{\gray} --- a
+%statistical precision far below the millimetre scale at which range uncertainty
+%is currently budgeted. The same chain, with the grid, the analysis window, the
+%fit model and the estimator held fixed, is the instrument used to compare
+%competing scanner geometries.
+\end{abstract}
+
+\section{Introduction}
+
+CryspBrainSim (CBS) fits the activity distribution of the $\beta^+$ emitters
+produced in the decay of the various isotopes activated by a proton beam crossing
+(brain) tissue and delivering a conformal dose into a (head) tumour. The case
+chosen as representative is an ependymoma located near the brainstem
+(figure~\ref{fig:tumour}).
+
+\begin{figure}[htb]
+  \centering
+
+  \includegraphics[width=0.85\textwidth]{figs/ependymoma_mri.png}
+  \caption{Gadolinium-enhanced T1-weighted MRI of a fourth-ventricle ependymoma.
+  \emph{(Left)} coronal and \emph{(right)} sagittal views show a large midline
+  enhancing mass invading the roof of the fourth ventricle and growing downward
+  toward the foramen magnum, with the brainstem displaced anteriorly. The
+  tumour--brainstem interface visible here is precisely the region where the
+  distal edge of a proton beam must be placed. Image credit: https://case.edu/med/neurology/NR/cerebelepend2.htm.}
+  \label{fig:tumour}
+\end{figure}
+
+The fit to the $\beta^+$ activity allows the determination of the distal edge of
+the proton beam ($R$), which is the critical measurement to be pinned down in
+proton beam treatment~\cite{zhu2013}. The goal is to minimise the {\em bias} of the
+$R$ determination (that is, the difference between $R$ and the true distal edge
+$D$), as well as $\sigma_R$ (the r.m.s.\ spread of $R$ over an ensemble of
+acquisitions).
+
+The input to CBS is the list of lines of response (LORs) produced by a PET scanner
+specified by a number of parameters, including PET diameter, axial field of view
+(AFOV), crystal dimensions and crystal type. For each scanner a sensitivity image
+is computed, and MLEM~\cite{shepp_vardi} is used to reconstruct the activity image
+$A$. $R$ is estimated through a depth-profile extraction and an endpoint
+estimation, as described below.
+
+\section{The phantom} 
+
+\begin{figure}[htb]
+  \centering
+
+  \includegraphics[width=0.85\textwidth]{figs/phantom.png}
+  \caption{The phantom describing the study case is an ellipsoid filled with uniform brain tissue.}
+  \label{fig:phantom}
+\end{figure}
+
+The phantom (figure~\ref{fig:phantom}) describing the study case is an ellipsoid
+approximating the shape of a head. The beam enters along the $z$ axis, and the
+target region, marked in the figure, is a $4 \times 4$~cm box located at a depth of
+\SI{5.7}{\centi\metre} from the beam entry point. For simplicity a uniform phantom,
+filled with brain tissue (\texttt{G4\_BRAIN\_ICRP}), is used.
+
+\section{The beam}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.85\textwidth]{figs/mird_head.png}
+  \caption{a) A proton beam enters the phantom moving along the $z$ axis; b) $\beta^+$ emitter trail by isotope; c) isotope mix; d) isotope production profile along the beam.}
+  \label{fig:mird}
+\end{figure}
+
+
+\begin{figure}[htbp!]
+  \centering
+
+  \includegraphics[width=0.85\textwidth]{figs/activity.png}
+  \caption{Activity of the isotopes producing the $\beta^+$ trail.}
+  \label{fig:activity}
+\end{figure}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.45\textwidth]{figs/sobp_plateau.png}
+   \includegraphics[width=0.45\textwidth]{figs/dose_activity.png}
+  \caption{Left: the SOBP beam and the definition of $R_{80}$. Right: the (nominal) activity distribution, together with the beam profile.}
+  \label{fig:dose}
+\end{figure}
+
+The proton beam delivers a typical dose of \SI{1}{\gray}. Figure~\ref{fig:mird}
+shows the emitter trail by isotope along with the isotope mix and the production
+profiles. Figure~\ref{fig:activity} shows the activity of those isotopes.
+Figure~\ref{fig:dose} shows the spread-out Bragg peak (SOBP), which delivers a
+conformal dose to the target region (left panel), as well as the relation between
+dose and activity (right panel).
+
+\section{The scanner}
+
+The reference scanner is a CRYSP\footnote{CRYogenic Sensitive PET} model, with an
+inner radius $R_{\mathrm{inner}} = \SI{387}{\milli\metre}$ and an AFOV of
+\SI{1024}{\milli\metre}. It deploys monolithic BGO crystals of
+$50 \times 50$~mm$^2$ surface and a depth of 3.3 radiation lengths
+(3.3~X$_0$), or \SI{37}{\milli\metre}. The scanner has 20 wheels and 48 crystals
+per wheel, for a total of 960 crystals. The energy resolution of the scanner is
+10\% at \SI{511}{\kilo\electronvolt} and the spatial resolution in the three
+coordinates is \SI{3.5}{\milli\metre} FWHM. The coincidence time window for the
+LORs is \SI{3}{\nano\second}~\cite{soleti_crysp}.
+
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figs/detected_activity.png}
+  \caption{Detected (blue histogram) versus true (green histogram) activity in the scanner. The detected activity is strongly biased due to absorption.}
+  \label{fig:detected}
+\end{figure}
+
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.75\textwidth]{figs/profile_corr.png}
+  \caption{Corrected (blue histogram) versus true (green histogram) activity in the scanner, together with the fit to the profile.}
+  \label{fig:profile}
+\end{figure}
+
+Figure~\ref{fig:detected} shows the detected (blue histogram) versus true (green
+histogram) activity in the scanner. The detected activity is strongly biased by
+absorption in the phantom. Figure~\ref{fig:profile} shows the reconstructed (blue
+histogram) versus true (green histogram) activity profile in the scanner, together
+with the fit to the profile.
+
+
+%- dose-R80 is the clinical range definition: the distal 80%-of-maximum point of the dose. In proton therapy the range is conventionally taken at R80 because that point sits on the steep distal Bragg falloff and is robust to range straggling. It's the number a clinician actually cares about — where the beam stops.
+%- activity-R50 is the PET observable: the half-height of the β⁺ activity distal edge. 50% is chosen because it's the erfc midpoint — the steepest, best-conditioned point of the activity falloff, the one that fits most precisely (it's literally the z0 parameter). It's what we can measure from the reconstructed image.
+
+
+The fit to a single run yields a predicted distal value of
+\SI{-16.10}{\milli\metre}, to be compared with the distal value of the true beam
+profile, \SI{-16.45}{\milli\metre}.
+
+
+%%% These are appendices
 
 \section{Depth-profile extraction and endpoint estimation}
 \label{sec:depthprofile}
@@ -38,26 +204,22 @@
 Let \(\lambda(\mathbf{r})\) denote the reconstructed activity image, resampled
 onto a beam-aligned grid with \(\mathbf{r}=(x,y,z)\) and the beam (depth) along
 \(z\). The one-dimensional depth--activity profile is the transverse integral
-over a fixed region of interest \(\mathcal{R}\),
+over the full image plane,
 \begin{equation}
-  P(z) \;=\; \int_{\mathcal{R}} \lambda(x,y,z)\,\mathrm{d}x\,\mathrm{d}y
-        \;\approx\; \Delta x\,\Delta y \!\!\sum_{(i,j)\in\mathcal{R}}\!\!
+  P(z) \;=\; \int \lambda(x,y,z)\,\mathrm{d}x\,\mathrm{d}y
+        \;\approx\; \Delta x\,\Delta y \sum_{i,j}
         \lambda_{ijk(z)},
   \label{eq:profile}
 \end{equation}
-where \(\mathcal{R}=\{(x,y):(x-x_c)^2+(y-y_c)^2\le\rho^2\}\) is a disc of radius
-\(\rho\) centred on the \emph{beam axis} \((x_c,y_c)\), not on the
-per-realisation activity centroid: a data-driven centre would inject a stochastic
-transverse shift into the endpoint and inflate \(\sigma_R\). The radius is chosen
-once, from
-\begin{equation}
-  \rho \;\gtrsim\; n\sqrt{\sigma_{\mathrm{spot}}^{2}+\sigma_{\mathrm{PSF}}^{2}}
-        \;+\; R_{\beta^{+}}, \qquad n\simeq 3,
-  \label{eq:roi}
-\end{equation}
-combining the beam spot size, the reconstruction point-spread width
-(\(\sigma_{\mathrm{PSF}}\approx\SI{1.7}{\milli\metre}\) for CRYSP) and the
-positron range \(R_{\beta^{+}}\). Equation~\eqref{eq:profile} is an integration
+carried over the whole transverse extent of the reconstruction grid.
+Integrating the full plane makes \(P(z)\) the same observable for the
+reconstructed image and for the generated activity, and keeps the endpoint
+independent of the transverse beam envelope: the halo produced by multiple
+Coulomb scattering widens with depth, so a fixed transverse aperture captures
+a depth-decreasing fraction of the activity and displaces the fitted endpoint
+proximally (by \SIrange{2}{3}{\milli\metre} for a disc of
+\SI{13}{\milli\metre} radius in the geometry of this study).
+Equation~\eqref{eq:profile} is an integration
 (a sum), never an average or a normalisation: summing preserves the counting
 statistics on which the endpoint fit and \(\sigma_R\) depend. Because
 \(P(z)\) is a sum of voxel counts it is, to first approximation, Poisson with
@@ -81,7 +243,10 @@ complementary error function,
     \operatorname{erfc}\!\left(\frac{z-z_0}{\sqrt{2}\,w}\right),
   \label{eq:erfc}
 \end{equation}
-so that \(z_0\) is by construction the \(R_{50}\) point, \(a\) and \(b\) absorb
+so that \(z_0\) is by construction the \(R_{50}\) point --- the same activity-edge
+observable, fitted on a whole-plane profile, that Zapien-Campos
+\emph{et al.}~\cite{zapien2025} adopt as the PET-activity range
+parameter --- \(a\) and \(b\) absorb
 the plateau height and background (making \(z_0\) invariant to the absolute
 activity scale), and \(w\) is the edge width. Any falloff level follows
 analytically,
@@ -89,93 +254,57 @@ analytically,
   R_x \;=\; z_0 \;+\; \sqrt{2}\,w\,\operatorname{erfc}^{-1}(2x),
   \label{eq:Rx}
 \end{equation}
-with \(R_{50}\) primary and \(R_{80},R_{20}\) as secondary tail diagnostics. The
-parameters are obtained by minimising the Poisson-weighted residual
+with \(R_{50}\) the most precisely determined point (the steepest slope of the
+edge) and \(R_{80},R_{20}\) as tail diagnostics. The parameters are obtained by
+minimising the Poisson-weighted residual
 \begin{equation}
   \chi^{2} \;=\; \sum_{z\in\mathcal{W}}
     \frac{\bigl[P(z)-\hat{P}(z)\bigr]^{2}}{\max\!\bigl(P(z),1\bigr)},
   \label{eq:chi2}
 \end{equation}
-which yields both the endpoint \(z_0^{(k)}\) and its fit covariance for each
-realisation \(k\).
+which yields the parameters \(z_0^{(k)}, w^{(k)}\) and their covariance for
+each realisation \(k\).
+
+The predictor of the beam endpoint is the \emph{practical endpoint}, obtained
+by extrapolating the tangent of the fitted edge at \(z_0\) down to the
+baseline,
+\begin{equation}
+  R_p \;=\; z_0 \;+\; \sqrt{\tfrac{\pi}{2}}\,w,
+  \label{eq:Rp}
+\end{equation}
+the construction used for the practical range of electron beams; on the fitted
+edge it marks the point where the signal has fallen to \(10.5\%\) of the
+plateau, and its uncertainty follows from the \((z_0,w)\) covariance. The
+extrapolated crossing of the activity towards zero is reported at a fixed
+small fraction of the plateau through Eq.~\eqref{eq:Rx}
+(\(R_{1\%}=z_0+2.326\,w\)); it lies distal of \(R_p\), and since it sits far
+from the steep part of the edge its uncertainty is dominated by that of the
+width \(w\). \(R_p\) therefore serves as the primary predictor and
+\(R_{1\%}\) as a tail diagnostic. Both constructions, applied identically to
+the depth--dose curve, give the endpoint-to-endpoint distance between the
+\(\beta^{+}\) activity and the delivered dose.
 
 Finally, over the ensemble of \(K\) realisations at a given delivered dose, the
 mean endpoint estimates the systematic activity-edge position while its spread is
 the terminal figure of merit,
 \begin{equation}
-  \bar{z}_0 = \frac{1}{K}\sum_{k} z_0^{(k)}, \qquad
-  \sigma_R = \sqrt{\frac{1}{K-1}\sum_{k}\bigl(z_0^{(k)}-\bar{z}_0\bigr)^{2}}
+  \bar{R}_p = \frac{1}{K}\sum_{k} R_p^{(k)}, \qquad
+  \sigma_R = \sqrt{\frac{1}{K-1}\sum_{k}\bigl(R_p^{(k)}-\bar{R}_p\bigr)^{2}}
            \;\sim\; \frac{1}{\sqrt{N}},
   \label{eq:sigmaR}
 \end{equation}
 recovering the counts-limited scaling in the detected-coincidence number \(N\).
-The methodological invariant of the comparison is that the grid, the region of
-interest \((x_c,y_c,\rho)\), the window \(\mathcal{W}\), the model
-\eqref{eq:erfc} and the estimator \eqref{eq:chi2} are identical across the three
+The methodological invariant of the comparison is that the grid, the window
+\(\mathcal{W}\), the model \eqref{eq:erfc} and the estimator \eqref{eq:chi2}
+are identical across the three
 geometries: the \emph{only} quantity that differs entering \(\sigma_R\) is the
 reconstructed image content. This is also where the open dual-head geometry is
 tested most sharply---its limited-angle artefact elongates the activity
 distribution, and whenever that elongation projects onto the beam ($z$) axis it
-biases \(z_0\) directly, so \(\sigma_R\) is reported as a function of beam-axis
+biases \(R_p\) directly, so \(\sigma_R\) is reported as a function of beam-axis
 orientation relative to the head gap.
 
-\subsection{Implementation and validation}
-\label{sec:implementation}
-
-The analysis is realised in two small, reconstruction-agnostic Python modules, so
-that the only bespoke component is the MLEM reconstruction itself. Module
-\texttt{range\_endpoint.py} provides the realisation generator
-\texttt{thin\_lm} (step~2, Poisson-thinning of the master list-mode run) and the
-ensemble aggregator \texttt{sigma\_R} (step~6). Module \texttt{depth\_profile.py}
-provides the profile extractor \texttt{depth\_profile} (step~4) and a
-window-aware, Poisson-weighted \texttt{fit\_endpoint} (step~5) that supersedes the
-simpler estimator in \texttt{range\_endpoint.py}. The two are joined at a single
-seam: within the sweep loop, \texttt{depth\_profile} and \texttt{fit\_endpoint}
-are imported from \texttt{depth\_profile.py} while \texttt{thin\_lm} and
-\texttt{sigma\_R} are imported from \texttt{range\_endpoint.py}. Crucially, the
-fixed analysis window \(\mathcal{W}\) of Eq.~\eqref{eq:erfc} is constructed once,
-via \texttt{distal\_window(}\(z_0^{\mathrm{nom}}\)\texttt{)}, and reused unchanged
-for every geometry and every realisation---the concrete guarantee that the window
-is not a per-realisation, noise-correlated quantity.
-
-The correspondence between the formalism and the code is one-to-one, as
-summarised in Table~\ref{tab:codemap}. In particular, the Poisson weighting of
-Eq.~\eqref{eq:chi2} is implemented as a least-squares fit with
-\(\sigma=\sqrt{\max(P,1)}\) and \texttt{absolute\_sigma=True}, so that the fit
-covariance carries the counting-statistics scale; as noted in
-Section~\ref{sec:depthprofile}, this per-realisation error is used only for the
-weighting, whereas the reported precision is the ensemble spread
-\(\sigma_R\) of Eq.~\eqref{eq:sigmaR}.
-
-\begin{table}[htb]
-  \centering
-  \caption{Correspondence between the formalism and its implementation. Steps
-  refer to the pipeline of Section~\ref{sec:implementation}; reconstruction
-  (step~3) is external.}
-  \label{tab:codemap}
-  \begin{tabular}{@{}llll@{}}
-    \toprule
-    Equation & Step & Function & Module \\
-    \midrule
-    ---                       & 2 & \texttt{thin\_lm}      & \texttt{range\_endpoint.py} \\
-    Eq.~\eqref{eq:profile}    & 4 & \texttt{depth\_profile}& \texttt{depth\_profile.py} \\
-    Eq.~\eqref{eq:roi}        & 4 & \texttt{roi\_radius\_mm} arg. & \texttt{depth\_profile.py} \\
-    \(\mathcal{W}\) window     & 5 & \texttt{distal\_window}& \texttt{depth\_profile.py} \\
-    Eqs.~\eqref{eq:erfc}--\eqref{eq:Rx} & 5 & \texttt{fit\_endpoint} / \texttt{\_erfc\_model} & \texttt{depth\_profile.py} \\
-    Eq.~\eqref{eq:chi2}       & 5 & \texttt{fit\_endpoint} (weighted) & \texttt{depth\_profile.py} \\
-    Eq.~\eqref{eq:sigmaR}     & 6 & \texttt{sigma\_R}      & \texttt{range\_endpoint.py} \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-The extraction chain was validated on a synthetic beam-aligned phantom: a
-transverse Gaussian beam (\(\sigma_\perp\approx\SI{2}{\milli\metre}\)) modulated
-along depth by a plateau-plus-\(\operatorname{erfc}\) falloff with a known edge at
-\(R_{50}=\SI{150.0}{\milli\metre}\), sampled on a \SI{1.5}{\milli\metre} grid and
-subjected to Poisson noise. Passing this image through the full
-profile\(\rightarrow\)window\(\rightarrow\)fit chain recovers
-\(R_{50}=\SI{149.71}{\milli\metre}\) with a fit uncertainty of
-\SI{0.13}{\milli\metre}, confirming sub-voxel, essentially unbiased endpoint
-localisation at realistic single-realisation statistics.
+\bibliographystyle{unsrtnat}
+\bibliography{biblio}
 
 \end{document}
