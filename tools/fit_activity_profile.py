@@ -69,6 +69,8 @@ Options:
   --sigma-blur MM    Gaussian σ for the recon ramp model (default crystal.toml)
   --float-sigma      let σ float in the recon ramp fit (shows the L–σ
                      degeneracy; 5 parameters)
+  --no-pulls         single-panel figures (data, fit, markers) without the
+                     pull panel — the publication variant
   --show             display each figure and wait for return (PNGs are
                      written in every mode)
 
@@ -346,10 +348,12 @@ def style(ax):
     ax.tick_params(colors=MUTED, labelsize=9)
 
 
-def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show):
+def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show,
+               pulls=True):
     """Data with error bars, one edge-model fit as a thin red line, the fixed
     window shaded, R_p marked; lower panel shows the fit pulls (weighted
-    curves) or the raw residuals (dose)."""
+    curves) or the raw residuals (dose). `pulls=False` drops the lower panel
+    (the publication variant)."""
     win = (res["window_lo_mm"], res["window_hi_mm"])
     e = res[model_key]
     fn = EDGE_FN[model_key]
@@ -357,9 +361,15 @@ def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show):
     zf = np.linspace(win[0] - 12, win[1] + 10, 800)
     yerr = np.sqrt(np.clip(y, 1.0, None)) if weighted else None
 
-    fig, (a1, a2) = plt.subplots(2, 1, figsize=(9.5, 6.4), facecolor=SURFACE,
-                                 sharex=True, height_ratios=[3, 1])
-    for a in (a1, a2):
+    if pulls:
+        fig, (a1, a2) = plt.subplots(2, 1, figsize=(9.5, 6.4),
+                                     facecolor=SURFACE, sharex=True,
+                                     height_ratios=[3, 1])
+        axes = (a1, a2)
+    else:
+        fig, a1 = plt.subplots(figsize=(9.5, 5.0), facecolor=SURFACE)
+        a2, axes = None, (a1,)
+    for a in axes:
         style(a)
     a1.axvspan(*win, color=GRIDC, alpha=0.5, lw=0)
     a1.errorbar(z, y, yerr=yerr, fmt="o", ms=3, color=INK, mec="none",
@@ -380,18 +390,21 @@ def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show):
                  color=INK, fontsize=11, loc="left")
     a1.legend(frameon=False, fontsize=8.5, labelcolor=INK, loc="upper right")
 
-    inw = (z >= win[0]) & (z <= win[1])
-    fit = fn(z[inw], e["b"], e["a"], e["z0_mm"], s)
-    a2.axhline(0, color=MUTED, lw=1)
-    if weighted:
-        pulls = (y[inw] - fit) / np.sqrt(np.clip(y[inw], 1.0, None))
-        a2.errorbar(z[inw], pulls, yerr=1.0, fmt="o", ms=2.5, color=INK,
-                    elinewidth=0.8, capsize=0)
-        a2.set_ylabel("pull", color=INK)
+    if a2 is not None:
+        inw = (z >= win[0]) & (z <= win[1])
+        fit = fn(z[inw], e["b"], e["a"], e["z0_mm"], s)
+        a2.axhline(0, color=MUTED, lw=1)
+        if weighted:
+            pull = (y[inw] - fit) / np.sqrt(np.clip(y[inw], 1.0, None))
+            a2.errorbar(z[inw], pull, yerr=1.0, fmt="o", ms=2.5, color=INK,
+                        elinewidth=0.8, capsize=0)
+            a2.set_ylabel("pull", color=INK)
+        else:
+            a2.plot(z[inw], y[inw] - fit, "o", ms=2.5, color=INK)
+            a2.set_ylabel("residual", color=INK)
+        a2.set_xlabel("z [mm]", color=INK)
     else:
-        a2.plot(z[inw], y[inw] - fit, "o", ms=2.5, color=INK)
-        a2.set_ylabel("residual", color=INK)
-    a2.set_xlabel("z [mm]", color=INK)
+        a1.set_xlabel("z [mm]", color=INK)
 
     fig.tight_layout()
     path = os.path.join(figdir, f"{name}.png")
@@ -452,6 +465,8 @@ def main():
     p.add_argument("--zero-fraction", type=float, default=0.01,
                    help="plateau fraction defining the crossing Rx (default 1%%)")
     p.add_argument("--float-sigma", action="store_true")
+    p.add_argument("--no-pulls", action="store_true",
+                   help="single-panel figures without the pull panel")
     p.add_argument("--show", action="store_true")
     args = p.parse_args()
 
@@ -546,7 +561,7 @@ def main():
             fig_name = base_name + ("" if mk == "erfc" else "_sigmoid")
             plot_curve(plt, fig_name, np.asarray(zc, float),
                        np.asarray(yc, float), res, mk, weighted, figdir,
-                       args.show)
+                       args.show, pulls=not args.no_pulls)
 
     # The headline: activity endpoints against the dose endpoints, same
     # construction (same model, same window recipe) on both curves.

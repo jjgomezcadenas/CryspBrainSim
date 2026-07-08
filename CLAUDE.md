@@ -140,9 +140,22 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   their range-shift transfer test is their problem (IMPT spots), not ours (fixed field, dose axis).
   Upstream request written: `dev/upstream_request_lor_decay_time.md` (t_decay_s Float32 only;
   isotope id dropped as non-actionable).
+- **Summary note: `latex/endpoint_precision.tex` (compiles clean).** Self-contained note on the
+  estimator + precision: definitions (R50, R80, ΔR), setup, calibration budget (Table 1), scatter
+  check, low-dose operation (1 Gy vs 0.1 Gy, exploratory-dose conclusion), outlook (delayed start,
+  composite model, scanner comparison). Figures collected from `out/` into `latex/figs/` by
+  `tools/collect_note_figures.sh` (fit_recon_activity, recon_projections, scatters_profile,
+  ladder_delta_r50, dose_sweep_r50). New tools: `plot_recon_projections.py` (orthogonal projections
+  + phantom outline + R50 plane), `--no-pulls` in the fit lab (publication figures; standing set on
+  disk is pull-free, whole-plane, erfc).
 - **Pending:** (1) latex/cbs.tex: revert eq:sigmaR from R_p back to z0/R50 (R_p keeps the accuracy
   paragraph); cite Zapien-Campos; fold in the ladder + dose-sweep numbers. (2) Delayed-start study
-  when t_decay_s lands upstream (truth-level version computable now from per-isotope truth columns).
+  when t_decay_s lands upstream (truth-level version computable now from per-isotope truth columns);
+  hypothesis to test: 2–3 min start → ¹¹C-dominated mix → lower positron endpoint (0.96 vs
+  1.73 MeV) → sharper intrinsic edge, statistics absorbed by sensitivity. (3) Composite-erfc edge
+  model (2–3 isotope components, offsets/widths frozen from per-isotope truth profiles, free
+  amplitudes + global shift): characterize per-isotope truth profiles, add `--model composite`,
+  re-run ladder + dose sweep; adopt only if σ and rung stability improve incl. at 0.1 Gy.
 - **Step 7 (part b) — later: `drivers/sigma_r_sweep_dose.jl`** (PLAN.md rung 7): σ_R vs dose per
   scanner; confirmatory (1/√N) for the closed ring, diagnostic for the open arms. Then step 8.
 
