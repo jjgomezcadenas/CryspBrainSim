@@ -24,5 +24,8 @@ __pycache__/
 # The frozen cross-validation reference is committed (see test/make_reference.py)
 !/test/data/endpoint_reference.npz
 
+# Reference papers (copyrighted; kept locally, not committed)
+/papers/
+
 # OS
 .DS_Store
