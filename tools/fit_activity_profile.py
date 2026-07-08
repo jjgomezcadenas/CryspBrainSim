@@ -12,10 +12,12 @@ Inputs (all under the current configuration, via crysp_paths):
   <crystal>/crystal.toml           the detector response (σ_xyz for the blur)
   PtCryspProds/<scenario>/truth/   activity_profile_fast.csv, depth_dose.csv
 
-The profile is the transverse sum over the fixed disc ROI at each depth (the
-paper's Eq. profile); the constant voxel-area factor is absorbed by the fit's
-scale parameters. The recomputed profile is checked against the one the driver
-stored — a wiring self-test.
+The profile is the transverse sum at each depth over the WHOLE plane (the
+settled convention — a disc clips the depth-widening beam halo and shifts the
+endpoint proximally); pass --roi R to clip to a disc instead. The constant
+voxel-area factor is absorbed by the fit's scale parameters. Against the disc
+ROI the recomputed profile is checked against the one the driver stored — a
+wiring self-test.
 
 Edge models fitted inside the window (choose with --model):
   erfc     P(z) = b + a/2 · erfc((z − z0)/(√2 w))
@@ -54,11 +56,10 @@ Options:
                                 same z grid — no reconstruction involved, so
                                 recon-vs-origins comparisons isolate detector
                                 + reconstruction effects from geometry ones
-  --roi R|none       transverse ROI radius in mm, or `none` for the whole
-                     plane (default: the frozen run parameter). Comparing a
-                     disc profile against the full-plane truth mixes in the
-                     depth-growing beam halo; `--roi none` puts recon and
-                     truth on the same convention
+  --roi R            transverse ROI radius in mm to clip the profile to a
+                     disc; the default is the WHOLE PLANE (the settled
+                     convention). `none` is also accepted as an explicit
+                     whole-plane request
   --window LO,HI     fit window in mm (default: the frozen run parameter;
                      the distal tail past the frozen edge constrains z_end,
                      so widening distally is a useful experiment)
@@ -440,7 +441,7 @@ def main():
     p.add_argument("--all-uncorr", action="store_true")
     p.add_argument("--source", choices=["recon", "origins"], default="recon")
     p.add_argument("--roi", default=None,
-                   help="ROI radius in mm, or `none` (default: frozen value)")
+                   help="disc ROI radius in mm; default is the whole plane")
     p.add_argument("--window", default=None, help="LO,HI in mm")
     p.add_argument("--model", choices=["erfc", "sigmoid", "both"],
                    default="erfc", help="edge model(s) to fit (default erfc)")
@@ -471,9 +472,9 @@ def main():
 
     frozen_roi = params["roi"]["radius_mm"]
     centre = params["roi"]["centre_mm"]
-    if args.roi is None:
-        roi_radius = frozen_roi
-    elif args.roi.lower() == "none":
+    # Whole plane by default (the settled convention); a numeric --roi clips
+    # to a disc, `none` is an explicit whole-plane request.
+    if args.roi is None or args.roi.lower() == "none":
         roi_radius = None
     else:
         roi_radius = float(args.roi)
@@ -497,8 +498,7 @@ def main():
 
     models = (("erfc", "sigmoid") if args.model == "both" else (args.model,))
     baseline = not args.no_baseline
-    roi_tag = ("" if roi_radius == frozen_roi
-               else ("_roinone" if roi_radius is None else f"_roi{roi_radius:g}"))
+    roi_tag = "" if roi_radius is None else f"_roi{roi_radius:g}"
     nob_tag = "_nob" if args.no_baseline else ""
     tag = (shard_tag + ("" if args.source == "recon" else "_origins")
            + roi_tag + nob_tag)
