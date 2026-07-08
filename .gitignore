@@ -1,13 +1,20 @@
-# LaTeX build artifacts (keep .tex and .pdf)
+# LaTeX build artifacts — keep only .tex and figs/; the .pdf is a build
+# product (regenerate with tools/latex_compile.py)
 *.aux
 *.log
 *.out
 *.synctex.gz
 *.toc
+*.lof
+*.lot
 *.fls
 *.fdb_latexmk
 *.bbl
 *.blg
+*.nav
+*.snm
+*.vrb
+/latex/*.pdf
 
 # Python
 __pycache__/
