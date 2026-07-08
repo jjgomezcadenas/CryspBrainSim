@@ -29,6 +29,13 @@ defines the models, windows, and profiles. No per-shard figures are
 written here (inspect any single case with fit_activity_profile.py);
 the two summary figures show every shard as a point.
 
+The Fano test (--fano) is the model-free check of the origins error
+assignment: per z bin, the variance of the count across the ten shards
+divided by its mean. Independent same-condition acquisitions give exactly
+Fano = 1 for Poisson counts — no fit model enters anywhere. A window
+average well above 1 would mean super-Poisson bin errors; ≈ 1 pins the
+origins fit's large χ²/ndf on the erfc shape, not the errors.
+
 The dose sweep (--dose-sweep) answers the test-dose question: how precisely
 does a single low-dose acquisition locate the distal edge? Per dose
 (1.0 Gy = the ten shards; 0.5/0.2/0.1 Gy = seeded thins of each shard) every
@@ -42,6 +49,9 @@ Writes  <config>/ten_shards/results.toml
   and with --dose-sweep
         <config>/ten_shards/dose_sweep.toml
         <config>/ten_shards/figures/delta_r50_vs_dose.png
+  and with --fano
+        <config>/ten_shards/fano.toml
+        <config>/ten_shards/figures/fano_origins.png
 """
 import argparse
 import os
@@ -55,7 +65,7 @@ import numpy as np
 
 from crysp_paths import REPO
 from fit_activity_profile import (
-    BLUE, CFG, INK, MUTED, RED, SCENARIO, RING, SURFACE, TRUTH,
+    BLUE, CFG, GRIDC, INK, MUTED, RED, SCENARIO, RING, SURFACE, TRUTH,
     analyze, edge_window, profile_from_image, profile_from_origins, style,
     toml_dump)
 
@@ -319,14 +329,74 @@ def plot_dose_sweep(groups, dose, sig1, path, mk="erfc"):
     print(f"wrote {path}")
 
 
+# --- the Fano test ------------------------------------------------------------
+def fano(params, centre, window):
+    """Variance/mean of the origins count per z bin across the ten shards.
+    Poisson counts give Fano = 1 with per-bin sampling error √(2/(n−1));
+    the window average tests the error assignment to a few percent."""
+    counts = []
+    for i in SHARDS:
+        z, c = profile_from_origins(shard_h5(i), params["grid"], centre, None)
+        counts.append(c)
+    counts = np.stack(counts)
+    n = counts.shape[0]
+    mean = counts.mean(axis=0)
+    var = counts.var(axis=0, ddof=1)
+    ok = mean > 100          # bins with enough counts for a meaningful ratio
+    f = np.where(ok, var / np.where(ok, mean, 1.0), np.nan)
+    per_bin_se = np.sqrt(2.0 / (n - 1))
+
+    def band(sel):
+        v = f[sel & ok]
+        return {"n_bins": int(v.size), "fano_mean": float(v.mean()),
+                "fano_se": float(v.std(ddof=1) / np.sqrt(v.size)),
+                "expected_se": float(per_bin_se / np.sqrt(v.size))}
+
+    inw = (z >= window[0]) & (z <= window[1])
+    res = {"meta": {"shards": n, "min_mean_counts": 100.0,
+                    "per_bin_se": float(per_bin_se),
+                    "window_lo_mm": window[0], "window_hi_mm": window[1]},
+           "window": band(inw), "all_bins": band(np.ones_like(ok, bool))}
+    w, a = res["window"], res["all_bins"]
+    print(f"Fano (origins, {n} shards): window {w['fano_mean']:.3f} ± "
+          f"{w['fano_se']:.3f} over {w['n_bins']} bins "
+          f"(sampling se {w['expected_se']:.3f}); all bins "
+          f"{a['fano_mean']:.3f} ± {a['fano_se']:.3f} ({a['n_bins']})")
+    path = os.path.join(OUT, "fano.toml")
+    toml_dump(path, res)
+    print(f"wrote {path}")
+
+    fig, ax = plt.subplots(figsize=(8.5, 4.6), facecolor=SURFACE)
+    style(ax)
+    ax.axvspan(window[0], window[1], color=GRIDC, alpha=0.5, lw=0)
+    ax.errorbar(z[ok], f[ok], yerr=per_bin_se * f[ok], fmt="o", ms=4,
+                color=INK, elinewidth=0.8, capsize=0, label="var/mean per bin")
+    ax.axhline(1.0, color=RED, lw=1.0, label="Poisson (Fano = 1)")
+    ax.set_xlabel("z [mm]", color=INK)
+    ax.set_ylabel("Fano = var/mean", color=INK)
+    ax.set_title("Origins counts across the ten shards: Fano factor per z bin",
+                 color=INK, fontsize=11, loc="left")
+    ax.legend(frameon=False, fontsize=9, labelcolor=INK, loc="best")
+    fig.tight_layout()
+    fpath = os.path.join(OUT, "figures", "fano_origins.png")
+    fig.savefig(fpath, dpi=160, facecolor=SURFACE)
+    plt.close(fig)
+    print(f"wrote {fpath}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--dose-sweep", action="store_true",
                    help="fit the thinned dose realizations instead of the "
                         "rung ladder")
+    p.add_argument("--fano", action="store_true",
+                   help="Fano test of the origins bin errors instead of the "
+                        "rung ladder")
     args = p.parse_args()
     params, centre, window, truth_act, dose = setup()
-    if args.dose_sweep:
+    if args.fano:
+        fano(params, centre, window)
+    elif args.dose_sweep:
         dose_sweep(params, centre, window, dose)
     else:
         ladder(params, centre, window, truth_act, dose)
