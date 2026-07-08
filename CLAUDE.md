@@ -112,8 +112,39 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   (`bgo_3X0` = 3.7 cm BGO ≈ 3.3 X0). Renames: `qa`→`shard_stats` (`ShardStats`, `shard_stats`);
   `sensitivity_cache_name` drops the ring prefix (path carries it). Existing `out/` data relocated
   (not regenerated); all drivers + tools verified against the new tree; 138 tests green.
-- **Step 7 — NEXT: `drivers/sigma_r_sweep_dose.jl`** (PLAN.md rung 7): Z realizations × dose grid →
-  the σ_R-vs-dose curve. Then step 8 (latex).
+- **Endpoint study, part (a): DONE (2026-07-08).** The study splits: (a) distal-edge estimation,
+  (b) scanner comparison. **Settled protocol: whole-plane profiles (no ROI — the 13 mm disc clips
+  the depth-widening halo, shifting R_p proximally 2.4–3.0 mm), erfc edge fit with FREE baseline
+  (forcing b = 0 shifts R50 by 0.4–0.6 mm at our statistics; the fitted b is a small negative
+  shape-slack, −1.5…−8% of amplitude, not a background), R50 (= fitted z0) as THE observable.**
+  Its ~−11 mm offset to the dose R50 is a calibration constant fixed by the reference simulation;
+  the measurement delivers variations against that anchor. Model cross-check (fit lab `--model
+  erfc|sigmoid|both`, `--no-baseline`): the logistic sigmoid (Zapien-Campos Eq. 3 + baseline) gives
+  identical R50 information — constant +0.10 mm offset, identical spreads, rung shifts equal to
+  0.02 mm — and slightly better χ²; erfc stays primary, sigmoid is the built-in cross-check.
+  R_p (tangent endpoint) demoted to a qualitative accuracy statement: it swings ~1.2 mm across
+  rungs (the shard-0 "blur-stable" reading was a fluctuation; ten-shard mean shift truth→recon is
+  +0.32 mm), 4× the shard spread of R50. R_x (1%) is a tail diagnostic only (model-dependent by
+  ~7 mm). **Ten-shard ladder** (`tools/ten_shards.py` → `ten_shards/results.toml`, figures): Δ_R50
+  = R50(act) − R50(dose), erfc: truth activity −10.743; origins (acceptance only) −10.988 ± 0.010
+  [std 0.031]; recon(trues) −11.216 ± 0.018 [0.057]; recon(all events, uncorrected) −11.194 ± 0.022
+  [0.071]. Budget: acceptance −0.25 mm, reconstruction −0.23 mm, scatters +0.02 mm (correction
+  stays deferred). **Dose sweep** (`drivers/ten_shards_dose.jl` thins each shard, p = dose/1 Gy,
+  seed idx = shard·1000 + 100·dose + seed; `tools/ten_shards.py --dose-sweep` →
+  `ten_shards/dose_sweep.toml`): Δ_R50 dose-invariant (means −11.216/−11.207/−11.197/−11.248 at
+  1.0/0.5/0.2/0.1 Gy, each within 1σ of the anchor) and σ_R follows 1/√dose exactly:
+  0.057/0.072/0.117/0.177 mm (pred 0.081/0.127/0.180). **Test-dose statement: a single 0.1 Gy
+  acquisition locates the distal edge to σ_R ≈ 0.18 mm with the calibration bias known to
+  ≤ 0.04 mm** (trues, fast window, closed ring). Literature anchor: Zapien-Campos et al., Med Phys
+  2025 (papers/, untracked) — logistic fit, PAR = R50, whole-plane, offset stable to 0.4–0.5 mm;
+  their range-shift transfer test is their problem (IMPT spots), not ours (fixed field, dose axis).
+  Upstream request written: `dev/upstream_request_lor_decay_time.md` (t_decay_s Float32 only;
+  isotope id dropped as non-actionable).
+- **Pending:** (1) latex/cbs.tex: revert eq:sigmaR from R_p back to z0/R50 (R_p keeps the accuracy
+  paragraph); cite Zapien-Campos; fold in the ladder + dose-sweep numbers. (2) Delayed-start study
+  when t_decay_s lands upstream (truth-level version computable now from per-isotope truth columns).
+- **Step 7 (part b) — later: `drivers/sigma_r_sweep_dose.jl`** (PLAN.md rung 7): σ_R vs dose per
+  scanner; confirmatory (1/√N) for the closed ring, diagnostic for the open arms. Then step 8.
 
 Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
 `dose_to_counts` (step 5). The `truth/` bundle is delivered
