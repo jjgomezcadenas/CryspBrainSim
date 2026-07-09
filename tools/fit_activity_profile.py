@@ -87,12 +87,13 @@ import numpy as np
 from scipy.optimize import curve_fit
 from scipy.special import erfc, erfcinv, expit
 
-from crysp_paths import REPO, config_out
+from crysp_paths import REPO, active_config
 
-SCENARIO, TOPOLOGY, RING, CRYSTAL = (
-    "uniform_headep_sobp_1e8", "closed", "crysp_ring_1m", "bgo_3X0")
-CFG = config_out(SCENARIO, TOPOLOGY, RING, CRYSTAL)
-TRUTH = os.path.join(os.path.dirname(REPO), "PtCryspProds", SCENARIO, "truth")
+ACTIVE = active_config()          # run_parameters.toml [configuration]
+SCENARIO, TOPOLOGY, RING, CRYSTAL = (ACTIVE.scenario, ACTIVE.topology,
+                                     ACTIVE.scanner, ACTIVE.label)
+CFG = ACTIVE.cfg_dir
+TRUTH = ACTIVE.truth_dir
 
 BLUE, AQUA, RED = "#2a78d6", "#1baf7a", "#e34948"
 INK, MUTED, GRIDC = "#1a1a19", "#8a897f", "#e8e7e2"
@@ -504,9 +505,8 @@ def main():
         act_name = ("recon_all_events_activity" if args.all_uncorr
                     else "recon_activity")
     else:
-        shard_file = os.path.join(
-            os.path.dirname(REPO), "PtCryspProds", SCENARIO, RING, "bgo",
-            "fast_1Gy", f"lors_shard{args.shard:03d}.h5")
+        shard_file = os.path.join(ACTIVE.products_leaf,
+                                  f"lors_shard{args.shard:03d}.h5")
         z, prof = profile_from_origins(shard_file, params["grid"], centre,
                                        roi_radius)
         act_name = "origins_activity"

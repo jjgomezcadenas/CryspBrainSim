@@ -102,9 +102,18 @@ def main():
     print(f"window: scatter level {level:.0f} "
           f"({100 * level / plateau:.1f}% of plateau), slope "
           f"{slope:+.2f} ± {slope_err:.2f} per mm over {span:.0f} mm")
+    # The measured trues → all-events shift, from this arm's own ladder.
+    ladder = os.path.join(CFG, "ten_shards", "results.toml")
+    measured = ""
+    if os.path.exists(ladder):
+        with open(ladder, "rb") as f:
+            t = tomllib.load(f)
+        d = (t["all_ev"]["erfc"]["delta_R50_mean_mm"]
+             - t["recon"]["erfc"]["delta_R50_mean_mm"])
+        res["ratios"]["measured_shift_mm"] = d
+        measured = f" (measured trues→all-events: {d:+.3f} mm)"
     print(f"all-events edge gradient {grad:.0f} per mm → worst-case R50 "
-          f"shift bound ≈ {shift:+.3f} mm (measured trues→all-events: "
-          f"+0.02 mm)")
+          f"shift bound ≈ {shift:+.3f} mm{measured}")
 
     fits = os.path.join(out, "fits")
     figdir = os.path.join(fits, "figures")

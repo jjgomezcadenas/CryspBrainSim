@@ -24,11 +24,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
-from crysp_paths import config_out  # noqa: E402
+from crysp_paths import active_config  # noqa: E402
 
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCENARIO, TOPOLOGY, RING, CRYSTAL = (
-    "uniform_headep_sobp_1e8", "closed", "crysp_ring_1m", "bgo_3X0")
+ACTIVE = active_config()
 
 BLUE = "#2a78d6"
 INK, MUTED, GRIDC = "#1a1a19", "#8a897f", "#e8e7e2"
@@ -50,7 +48,7 @@ def main():
     pos = [a for a in sys.argv[1:] if not a.startswith("--")]
     shard = int(pos[0]) if pos else 0
     tag = f"shard{shard:03d}" + ("_all_uncorr" if "--all-uncorr" in sys.argv else "")
-    out = os.path.join(config_out(SCENARIO, TOPOLOGY, RING, CRYSTAL), "one_shard")
+    out = os.path.join(ACTIVE.cfg_dir, "one_shard")
     d = np.load(os.path.join(out, f"recon_{tag}.npz"))
     figdir = os.path.join(out, "fits", "figures")
     os.makedirs(figdir, exist_ok=True)

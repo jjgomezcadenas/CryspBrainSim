@@ -24,9 +24,9 @@ import numpy as np
 from matplotlib.patches import Ellipse
 
 from crysp_paths import REPO
-from fit_activity_profile import CFG, INK, MUTED, RED, SCENARIO, SURFACE
+from fit_activity_profile import ACTIVE, CFG, INK, MUTED, RED, SURFACE
 
-PRODUCTS = os.path.join(os.path.dirname(REPO), "PtCryspProds", SCENARIO)
+PRODUCTS = ACTIVE.scenario_dir
 
 
 def phantom_region(region=0):
@@ -94,8 +94,8 @@ def main():
         for sp in ax.spines.values():
             sp.set_color(MUTED)
 
-    fig.suptitle(f"{tag}: reconstructed activity, orthogonal projections — "
-                 "head outline dashed"
+    fig.suptitle(f"{ACTIVE.scanner} / {ACTIVE.label} — {tag}: reconstructed "
+                 "activity, orthogonal projections — head outline dashed"
                  + ("" if r50 is None else ", fitted R50 dotted"),
                  color=INK, fontsize=11, x=0.02, ha="left")
     fig.tight_layout(rect=[0, 0, 1, 0.95])

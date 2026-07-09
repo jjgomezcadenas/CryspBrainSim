@@ -19,16 +19,19 @@
 const CRYSTAL_X0_MM = Dict("BGO" => 11.18, "CSI" => 18.6)
 
 """
-    crystal_label(material, wall_mm) -> String
+    crystal_label(crystal, wall_mm) -> String
 
-The crystal directory name, folding material and thickness together:
-`crystal_label("BGO", 37.0) == "bgo_3X0"` (37 mm ÷ 11.18 mm/X0 ≈ 3X0).
+The crystal directory name, folding the crystal arm and thickness together:
+`crystal_label("BGO", 37.0) == "bgo_3X0"` (37 mm ÷ 11.18 mm/X0 ≈ 3X0),
+`crystal_label("bgo_195k", 22.36) == "bgo_195k_2X0"`. The material for the
+X0 lookup is the arm name's first token, so operating-point variants
+(`bgo_195k`, `bgo_77k`) keep distinct labels while sharing the material.
 """
-function crystal_label(material::AbstractString, wall_mm::Real)
-    key = uppercase(material)
+function crystal_label(crystal::AbstractString, wall_mm::Real)
+    key = uppercase(first(split(crystal, "_")))
     haskey(CRYSTAL_X0_MM, key) ||
-        error("crystal_label: no radiation length on file for material $material")
-    return "$(lowercase(material))_$(round(Int, wall_mm / CRYSTAL_X0_MM[key]))X0"
+        error("crystal_label: no radiation length on file for material $key ($crystal)")
+    return "$(lowercase(crystal))_$(round(Int, wall_mm / CRYSTAL_X0_MM[key]))X0"
 end
 
 "The out/ root (the repo's output directory)."
@@ -115,13 +118,16 @@ coordinates equally.
 """
 function write_crystal_spec(; scenario, topology, ring, crystal, material,
                             wall_mm, detector=nothing, root=out_root())
-    key = uppercase(material)
+    # The material for the X0 lookup is the arm name's first token (matching
+    # crystal_label): "bgo_195k" -> BGO.
+    key = uppercase(first(split(material, "_")))
     haskey(CRYSTAL_X0_MM, key) ||
-        error("write_crystal_spec: no radiation length on file for $material")
+        error("write_crystal_spec: no radiation length on file for $key ($material)")
     x0 = CRYSTAL_X0_MM[key]
     dir = config_out(scenario, topology, ring, crystal; root)
     mkpath(dir)
-    d = Dict{String,Any}("material" => uppercase(material), "label" => crystal,
+    d = Dict{String,Any}("material" => key, "arm" => lowercase(material),
+                         "label" => crystal,
                          "wall_mm" => Float64(wall_mm), "X0_mm" => x0,
                          "thickness_X0" => wall_mm / x0)
     detector === nothing || (d["detector"] = Dict(

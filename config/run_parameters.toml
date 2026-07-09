@@ -3,6 +3,15 @@
 # every scanner, crystal, dose, and realization — keeping them common-mode is
 # what makes σ_R differences purely geometric. A change here re-runs rung 5.
 
+[configuration]              # the active arm of the products tree — the one
+                             # place naming which scanner the drivers and the
+                             # Python tools read; switching arms edits this block
+scenario = "uniform_headep_sobp_1e8"
+topology = "closed"
+scanner = "crysp_ring_1m_bgo_2x0"
+crystal = "bgo_195k"         # crystal arm under the scanner (products name)
+leaf = "fast_1Gy"
+
 [grid]                       # activity grid on the beam corridor
 n = [64, 64, 96]
 img_origin_mm = [-47.25, -47.25, -119.25]   # voxel-centre origin; z spans -119.25..+23.25

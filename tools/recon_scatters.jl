@@ -18,18 +18,17 @@ using Printf
 const SHARD = isempty(ARGS) ? 0 : parse(Int, ARGS[1])
 
 const ROOT = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds")
-const SCENARIO = "uniform_headep_sobp_1e8"
-const TOPOLOGY = "closed"
-const RING = "crysp_ring_1m"
 
 const PARAMS = load_run_parameters()
+const CFG = PARAMS.config      # the active arm (run_parameters.toml)
+const SCENARIO, TOPOLOGY, RING = CFG.scenario, CFG.topology, CFG.scanner
 
 function main()
     cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
                      sensitivity_cache_name(PARAMS))
     ctx = load_run_context(; products_root=ROOT, scenario=SCENARIO,
-                           topology=TOPOLOGY, scanner=RING, crystal="bgo",
-                           leaf="fast_1Gy", sens_cache=cache, params=PARAMS)
+                           topology=TOPOLOGY, scanner=RING, crystal=CFG.crystal,
+                           leaf=CFG.leaf, sens_cache=cache, params=PARAMS)
     ph = ctx.phantom
 
     r = read_shard(ctx.files[SHARD+1])

@@ -27,13 +27,12 @@ end
 const ALL_UNCORR = "--all-uncorr" in ARGS
 
 const ROOT = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds")
-const SCENARIO = "uniform_headep_sobp_1e8"
-const TOPOLOGY = "closed"
-const RING = "crysp_ring_1m"
 
 # The frozen run parameters (config/run_parameters.toml). NITER_MAX runs past
 # the frozen iteration count so every run re-verifies the plateau.
 const PARAMS = load_run_parameters()
+const CFG = PARAMS.config      # the active arm (run_parameters.toml)
+const SCENARIO, TOPOLOGY, RING = CFG.scenario, CFG.topology, CFG.scanner
 const N = PARAMS.grid.n
 const VS = PARAMS.grid.voxsize
 const ORG = PARAMS.grid.img_origin
@@ -54,8 +53,8 @@ function main()
     cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
                      sensitivity_cache_name(PARAMS))
     ctx = load_run_context(; products_root=ROOT, scenario=SCENARIO,
-                           topology=TOPOLOGY, scanner=RING, crystal="bgo",
-                           leaf="fast_1Gy", sens_cache=cache, params=PARAMS)
+                           topology=TOPOLOGY, scanner=RING, crystal=CFG.crystal,
+                           leaf=CFG.leaf, sens_cache=cache, params=PARAMS)
     write_descriptors(ctx)          # stamp geometry.toml + crystal.toml
     ref, base, meta, ph = ctx.ref, ctx.base, ctx.meta, ctx.phantom
     n_sens = PARAMS.n_sens

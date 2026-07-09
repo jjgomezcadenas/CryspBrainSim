@@ -35,8 +35,11 @@ from crysp_paths import config_out  # noqa: E402
 
 # The configuration these figures belong to (the current case). A different arm
 # swaps these four.
-SCENARIO, TOPOLOGY, RING, CRYSTAL = (
-    "uniform_headep_sobp_1e8", "closed", "crysp_ring_1m", "bgo_3X0")
+from crysp_paths import active_config
+
+ACTIVE = active_config()
+SCENARIO, TOPOLOGY, RING, CRYSTAL = (ACTIVE.scenario, ACTIVE.topology,
+                                     ACTIVE.scanner, ACTIVE.label)
 OUT = os.path.join(config_out(SCENARIO, TOPOLOGY, RING, CRYSTAL), "sigma_r")
 NOMINAL = "at_dose_1Gy"  # the nominal-dose thinned run
 

@@ -65,7 +65,7 @@ import numpy as np
 
 from crysp_paths import REPO
 from fit_activity_profile import (
-    BLUE, CFG, GRIDC, INK, MUTED, RED, SCENARIO, RING, SURFACE, TRUTH,
+    ACTIVE, BLUE, CFG, GRIDC, INK, MUTED, RED, SURFACE, TRUTH,
     analyze, edge_window, profile_from_image, profile_from_origins, style,
     toml_dump)
 
@@ -79,8 +79,7 @@ OUT = os.path.join(CFG, "ten_shards")
 
 
 def shard_h5(i):
-    return os.path.join(os.path.dirname(REPO), "PtCryspProds", SCENARIO, RING,
-                        "bgo", "fast_1Gy", f"lors_shard{i:03d}.h5")
+    return os.path.join(ACTIVE.products_leaf, f"lors_shard{i:03d}.h5")
 
 
 def rung_profile(rung, shard, params, centre):

@@ -1,5 +1,6 @@
 # tools/make_sensitivity.jl — build and cache the unscaled sensitivity base
-# for the crysp_ring_1m arm on the provisional activity grid, with the real
+# for the active scanner arm (run_parameters.toml [configuration]) on the
+# frozen activity grid, with the real
 # phantom attenuation from the products tree. With `--check`, build a second
 # base at an independent seed and report the Monte-Carlo mottle (the relative
 # voxel-wise spread in the illuminated core) — the data behind the n_sens
@@ -21,8 +22,8 @@ const N_SENS = let a = filter(!startswith("--"), ARGS)
 end
 const CHECK = "--check" in ARGS
 
-const SCENARIO = "uniform_headep_sobp_1e8"
-const TOPOLOGY = "closed"
+const CFG = PARAMS.config      # the active arm (run_parameters.toml)
+const SCENARIO, TOPOLOGY = CFG.scenario, CFG.topology
 const SCEN = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds", SCENARIO)
 # The frozen activity grid on the beam corridor (the offset z-origin covers
 # the proximal activity a centered grid would clip).
@@ -32,7 +33,7 @@ const ORG = PARAMS.grid.img_origin
 const CHUNK = PARAMS.chunk
 
 function main()
-    geo = scanner_geometry(joinpath(SCEN, "crysp_ring_1m"))
+    geo = scanner_geometry(joinpath(SCEN, CFG.scanner))
     ph = phantom_attenuation(SCEN)
     atten(xs, xe) = attenuation_ellipsoid(xs, xe; semi_axes=ph.semi_axes,
                                           centre=ph.centre, mu_mm_inv=ph.mu_mm_inv)

@@ -54,18 +54,16 @@ end
 # The scanner configuration this driver measures: the BGO closed 1 m ring on
 # the uniform-head SOBP scenario. A different arm points these at its own tree
 # leaf and sensitivity cache.
-const SCENARIO = "uniform_headep_sobp_1e8"
-const TOPOLOGY = "closed"
-const RING = "crysp_ring_1m"
 
 function context()
     params = load_run_parameters()
-    cache = joinpath(sensitivity_out(SCENARIO, TOPOLOGY, RING),
+    cfg = params.config        # the active arm (run_parameters.toml)
+    cache = joinpath(sensitivity_out(cfg.scenario, cfg.topology, cfg.scanner),
                      sensitivity_cache_name(params))
     ctx = load_run_context(;
         products_root=joinpath(dirname(dirname(@__DIR__)), "PtCryspProds"),
-        scenario=SCENARIO, topology=TOPOLOGY, scanner=RING,
-        crystal="bgo", leaf="fast_1Gy", sens_cache=cache, params=params)
+        scenario=cfg.scenario, topology=cfg.topology, scanner=cfg.scanner,
+        crystal=cfg.crystal, leaf=cfg.leaf, sens_cache=cache, params=params)
     write_descriptors(ctx)          # stamp geometry.toml + crystal.toml
     return ctx
 end
