@@ -148,21 +148,39 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   ladder_delta_r50, dose_sweep_r50). New tools: `plot_recon_projections.py` (orthogonal projections
   + phantom outline + R50 plane), `--no-pulls` in the fit lab (publication figures; standing set on
   disk is pull-free, whole-plane, erfc).
+- **Two-scanner campaign (part b, first round): DONE (2026-07-10).** Upstream published two
+  ten-shard masters on the same 2X0 ring from identical annihilation sets (see
+  `dev/reference/PRODUCTS.md`/`SCHEMA.md`, refreshed; production note: PTCryspMC.jl
+  latex/scanner_prods.tex): **BGO 195 K** (15.3 M LORs/shard, 72.3/27.4/0.3% true/scatter/random,
+  eres 15%, 413 keV, τ 5 ns) and **cryogenic CsI** (6.1 M, 86.6/13.3/0.1%, eres 6%, 472 keV,
+  1.5 ns); both σ_xyz 1.486 mm (3.5 mm FWHM), with the requested `t_decay_s` column (delivered —
+  the delayed-start study is unblocked). The old `crysp_ring_1m/bgo` master is **frozen** (methods
+  reference only; the endpoint_precision.tex numbers refer to it). Plumbing: `[configuration]`
+  block in `config/run_parameters.toml` names the active arm; Julia (`params.config`) and Python
+  (`crysp_paths.active_config()`) read it — switching arms is one edit + the full chain
+  (~25 min/arm). Labels from the arm name: `bgo_195k_2X0`, `csi_2X0`. Results (whole-plane erfc,
+  free b, frozen chain): ladder Δ_R50 BGO −10.938 [0.023] / −11.165 [0.065] / −11.144 [0.113] and
+  CsI −10.962 [0.039] / −11.232 [0.084] / −11.192 [0.114] (origins/recon/all-events, std in
+  brackets); scatter shifts +0.021 / +0.040 mm (no correction needed for bias on either arm);
+  dose sweeps flat with σ_R ∝ 1/√dose. **Headline: at the uncorrected all-events protocol the
+  arms tie — k = σ_R(1 Gy) = 0.113 (BGO) vs 0.114 mm (CsI); BGO's 2.1× statistics cancels
+  against its 2.1× scatter fraction. On trues they differ (0.065 vs 0.084 mm) — a scatter
+  correction is the tiebreaker and the next technology question.** Also measured: paired shards
+  buy nothing for R50 (detection sampling dominates; paired std = quadrature sum). Upstream nit:
+  the BGO arm's scanner_geometry.json says material BGO_77K while shards say BGO_195K (stale key,
+  harmless — constants come from shard attrs).
 - **Pending:** (1) latex/cbs.tex: revert eq:sigmaR from R_p back to z0/R50 (R_p keeps the accuracy
-  paragraph); cite Zapien-Campos; fold in the ladder + dose-sweep numbers. (2) Delayed-start study
-  when t_decay_s lands upstream (truth-level version computable now from per-isotope truth columns);
-  hypothesis to test: 2–3 min start → ¹¹C-dominated mix → lower positron endpoint (0.96 vs
-  1.73 MeV) → sharper intrinsic edge, statistics absorbed by sensitivity. (3) Composite-erfc edge
-  model (2–3 isotope components, offsets/widths frozen from per-isotope truth profiles, free
-  amplitudes + global shift): characterize per-isotope truth profiles, add `--model composite`,
-  re-run ladder + dose sweep; adopt only if σ and rung stability improve incl. at 0.1 Gy.
-- **Step 7 (part b) — later: `drivers/sigma_r_sweep_dose.jl`** (PLAN.md rung 7): σ_R vs dose per
-  scanner; confirmatory (1/√N) for the closed ring, diagnostic for the open arms. Then step 8.
+  paragraph); cite Zapien-Campos; fold in the two-arm numbers. (2) Delayed-start study — now
+  unblocked (`t_decay_s` in both new masters): t_start = 1/2/3 min as pure cuts, both arms;
+  hypothesis: later start → ¹¹C-dominated mix → lower positron endpoint (0.96 vs 1.73 MeV) →
+  sharper intrinsic edge, statistics absorbed by sensitivity. (3) Scatter correction assessment —
+  promoted by the two-arm tie: BGO has ×1.7 to gain, CsI ×1.4. (4) Composite-erfc edge model
+  (2–3 isotope components, offsets/widths frozen from per-isotope truth profiles, free amplitudes
+  + global shift); adopt only if σ and rung stability improve incl. at 0.1 Gy.
+  (5) endpoint_precision.tex: supersede the frozen-master numbers with the two-arm results once
+  the round is written up.
 
-Open threads: confirm the thinning anchor `p = dose/top_dose` against the recipe's
-`dose_to_counts` (step 5). The `truth/` bundle is delivered
-(`dev/upstream_response_truth_bundle.md`) — the products tree is the only input.
-
-Data on disk: all ten BGO shards under
-`PtCryspProds/uniform_headep_sobp_1e8/crysp_ring_1m/bgo/fast_1Gy/` (pooled master: 174.3 M LORs
-from 801.8 M decays) plus the `truth/` bundle; the `csi/` arm is pending upstream.
+Data on disk: three ten-shard masters under `PtCryspProds/uniform_headep_sobp_1e8/` — the frozen
+reference `crysp_ring_1m/bgo/fast_1Gy/` (174.3 M LORs pooled; do not pool/compare with the new
+arms) and the two 2X0 arms `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` (153 M) and
+`crysp_ring_1m_csi_2x0/csi/fast_1Gy/` (61 M) — plus the shared `truth/` bundle.

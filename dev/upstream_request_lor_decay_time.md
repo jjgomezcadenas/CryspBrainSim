@@ -1,5 +1,9 @@
 # Request to PTCryspMC — add the absolute decay time to the coincidence files
 
+> **STATUS: DELIVERED (2026-07-09).** Both 2X0 production masters (`bgo_195k`, `csi`) carry
+> `t_decay_s` exactly as specified below (Float32 s, zero = acquisition start, randoms = gamma
+> 1's decay, `t_decay_zero` attr stamped). The delayed-acquisition-start study is unblocked.
+
 **From:** the CryspBrainSim analysis repo (reconstruction + range endpoint).
 **Goal:** enable the acquisition-start-time study downstream — emulate any delayed acquisition
 window as a pure event selection on the existing `fast` master, with no new productions and no

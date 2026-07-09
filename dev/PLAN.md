@@ -332,17 +332,24 @@ Each rung reuses the previous one; the chain grows without rebuilding.
 
 ---
 
-## First concrete target (data on disk today)
+## Data on disk
 
-`PtCryspProds/uniform_headep_sobp_1e8/crysp_ring_1m/bgo/fast_1Gy/lors_shard000.h5`:
-80.18 M decays → 17.43 M LORs (81.1% true / 18.7% scatter / 0.16% random). Head ellipsoid
-(semi-axes 72/87/102 mm) at centre (0, −30, 0); beam and target on the axis (0,0); nominal distal
-edge z ≈ −5 mm; brain μ(511) = 0.009913 mm⁻¹.
+Three ten-shard masters under `PtCryspProds/uniform_headep_sobp_1e8/`, all on the same head
+ellipsoid (semi-axes 72/87/102 mm at centre (0, −30, 0); brain μ(511) = 0.009913 mm⁻¹) and the
+same 80.18 M decays/shard source:
 
-All ten BGO shards (000–009) and the `truth/` bundle are on disk; the `csi/` arm is a further
-production run into the same tree, adding no machinery here. Ladder rungs 1–4 have run (locked
-reference: dose-R80 −5.58 mm, activity-R50 −16.45 mm, offset −10.87 mm; all shards pass QA;
-rung 4 read the detected-origin edge on shard 0), and rungs 5–6 are unblocked.
+- `crysp_ring_1m/bgo/fast_1Gy/` — the FROZEN reference master (17.43 M LORs/shard, 81.1% true;
+  hybrid detector constants). The whole ladder ran on it; it stays as a methods reference and
+  must not be pooled or compared quantitatively with the new arms.
+- `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` — BGO 195 K at 2X0 (15.3 M LORs/shard,
+  72.3/27.4/0.3% true/scatter/random, eres 15%, 413 keV, τ 5 ns).
+- `crysp_ring_1m_csi_2x0/csi/fast_1Gy/` — cryogenic CsI at 2X0 (6.1 M LORs/shard,
+  86.6/13.3/0.1%, eres 6%, 472 keV, τ 1.5 ns).
+
+The two 2X0 arms share the ring, σ_xyz (1.486 mm) and per-shard annihilation sets (detector-only
+differences), and carry the `t_decay_s` column (delayed acquisition start = pure cut). The active
+arm is named by `config/run_parameters.toml` → `[configuration]`; the shared `truth/` bundle
+serves all three.
 
 ## Build order
 
@@ -362,7 +369,12 @@ Steps 1–4 are committed on `main`; per-step detail and measured numbers live i
    rung 5 freezes the grid/ROI/iteration run parameters every thinned reconstruction consumes, and its
    wall-clock measurement sizes the sweep — so the chain ran first and thinning lands immediately
    before its only consumers (the crosscheck and sweep drivers).*
-6. **NEXT** — W6 `thinning.jl`; confirm the `p = dose/top_dose` anchor against the recipe's
-   `dose_to_counts`.
-7. `drivers/sigma_r_at_dose.jl` and `drivers/sigma_r_sweep_dose.jl` (rungs 6–7) as the remaining data lands.
-8. Update `latex/depth_profile.tex` (code-map table → Julia; keep the single windowed estimator).
+6. **DONE** — W6 `thinning.jl`; anchor confirmed (`p = (dose/top_dose)/n_shards` over the pooled
+   master; per-shard thins use p = dose/top_dose), rung-6 gate passed.
+7. **DONE (superseded form)** — the σ_R-vs-dose measurement runs as the ten-shard battery
+   (`tools/ten_shards.py` ladder / `--dose-sweep` + `drivers/ten_shards_dose.jl`), executed per
+   arm; `drivers/sigma_r_at_dose.jl` / `sigma_r_sweep_dose.jl` remain as the thinned-ensemble
+   variants. First round (both 2X0 arms): k = σ_R(1 Gy, all events) = 0.113 (BGO 195 K) vs
+   0.114 mm (CsI) — a tie; trues 0.065 vs 0.084 mm. Numbers in CLAUDE.md → Status.
+8. Write-ups: `latex/endpoint_precision.tex` (frozen-master round, committed) and `latex/cbs.tex`
+   (living draft); fold in the two-arm results.
