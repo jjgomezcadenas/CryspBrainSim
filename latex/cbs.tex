@@ -33,7 +33,7 @@
 \vspace{-2em}
 
 \begin{abstract}
-Proton therapy concentrates dose in the sharp Bragg peak characteristic of hadron ionisation, sparing the tissue beyond it. While this sharpness is the technology's advantage, it demands careful planning and monitoring of the beam range, in particular the distal edge (the point where the beam stops). A range error of a few millimetres can underdose the tumour or overexpose a critical organ behind it, so range verification is a central problem of the field. A viable {\em in vivo} technique  is to image the positron emitters, mostly $^{15}$O and $^{11}$C, produced along the beam path, inside the treatment room, either immediately or shortly after the irradiation,  before the short-lived $^{15}$O has decayed. Open PET geometries allow in-beam, measurement with essentially zero delay after irradiation. On the other hand, a dedicated, optimised, in-room PET can provide a full ring, high AFOV, high-sensitivity measurement, in exchange of a time delay which can be as short as 1--2 minutes. 
+Proton therapy concentrates dose in the sharp Bragg peak characteristic of hadron ionisation, sparing the tissue beyond it. While this sharpness is the technology's advantage, it demands careful planning and monitoring of the beam range, and in particular of the distal edge (the point where the beam stops), since an error of a few millimetres on its estimation can underdose the tumour or overexpose a critical organ behind it. A viable {\em in vivo} technique  is to image the positron emitters, mostly $^{15}$O and $^{11}$C, produced along the beam path, inside the treatment room, either immediately or shortly after the irradiation,  before the short-lived $^{15}$O has decayed. Open PET geometries allow in-beam, measurement with essentially zero delay after irradiation. On the other hand, a dedicated, optimised, in-room PET can provide a full ring, a long axial field of view (L AFOV), and high-sensitivity measurement, in exchange of a time delay on the start of the measurement which can be as short as 1--2 minutes. 
 
 In this paper we study the potential of CRYSP (CRYogenic Sensitive PET). The base of the technology is the use of large monolithic crystals operating at cryogenic (liquid nitrogen) temperatures. We show that a large (1 m AFOV) in-room scanner applying this technology allows a precise distal edge determination at low proton doses, and is thus suitable as a precise verification instrument in proton therapy. Importantly, long AFOV CRYSP scanners allow verification of proton treatment in any region of the body (as opposed to specialised head-scanners, for example) and can be built as dedicated devices at an affordable cost. 
  
@@ -69,6 +69,133 @@ In this paper we study the potential of CRYSP (CRYogenic Sensitive PET). The bas
 \end{abstract}
 
 \section{Introduction}
+
+
+\section{Introduction}
+
+Proton therapy
+exploits the favourable interaction properties of protons in matter, in
+particular their finite range and the characteristic dose maximum in depth
+known as the Bragg peak~\cite{Jaekel2020}. Thanks to the steep dose gradients
+and the sharp distal fall-off, proton beams can achieve highly conformal
+tumour coverage while better sparing the surrounding normal tissue in
+comparison to conventional photon radiation~\cite{Jaekel2020}. Full
+exploitation of these physical advantages in clinical practice, however,
+requires accurate knowledge of the beam stopping position in the patient, the so-called distal edge.
+
+The typical medical treatment-planning workflow relies on a semi-empirical calibration
+of X-ray computed tomography (CT) images into stopping-power ratios relative
+to water, which can introduce intrinsic range uncertainties of up to about
+$3\%$, in addition to unavoidable uncertainties in the daily patient anatomy
+and positioning~\cite{Paganetti2012}. These uncertainties translate into the
+conservative use of safety margins around the target volume and the avoidance
+of beam directions stopping just in front of radiosensitive organs. Reducing
+range uncertainties at the planning or delivery stage therefore remains an open problem~\cite{Paganetti2012,Parodi2018}.
+
+Among the techniques investigated for in-vivo verification of the beam range,
+positron-emission tomography (PET) is one of the most widely studied. When the
+beam energy is above the threshold for nuclear interactions between the
+incoming protons and the tissue nuclei, positron-emitting nuclei (e.g.
+$^{11}$C, $^{15}$O) are produced along the beam path, and the back-to-back
+$511\,\mathrm{keV}$ photons ensuing from positron annihilation can be detected
+in coincidence, providing non-invasive information on the beam stopping
+position~\cite{Bennett1978,Enghardt2004}. The irradiation-induced activity
+exhibits a pronounced fall-off shortly before the Bragg peak, whose
+correlation with the delivered dose can be exploited for range
+monitoring~\cite{Parodi2018}. 
+
+The first extensive clinical demonstration of PET-based range monitoring was
+achieved with in-beam acquisition, exploiting a dedicated, limited-angle
+dual-head scanner able to operate during dose delivery~\cite{Enghardt2004}.
+Building on early phantom and animal studies with planar cameras, this
+approach showed that the method could monitor the beam range with millimetres
+accuracy at typical therapeutic doses, detect delivery errors caused by
+anatomical changes, patient set-up errors or incorrect CT calibration, and
+even support dose quantification from the measured
+activity~\cite{Enghardt2004,Enghardt2004b}. These results established in-beam
+PET as an important contribution to treatment verification. Their obvious advantages are that they
+minimise the loss
+of signal from isotope decay and biological washout, as well as the co-registration issues that affect
+delayed measurements.
+
+The performance of these pioneering systems was, however, intrinsically
+limited by their open geometry and reduced angular acceptance. To leave an
+accessible path for the beam and the patient, the detectors were arranged as
+two opposing heads covering only a small fraction of the full solid angle,
+which results in missing projection views, limited-angle reconstruction
+artifacts and a corresponding degradation of spatial resolution along the
+axis perpendicular to the detector planes~\cite{Enghardt2004,Crespo2006}.
+These effects are most pronounced for large tumour volumes in extra-cranial
+locations, constraining the achievable image quality independently of the
+detector technology employed.
+
+Partly to circumvent these geometrical limitations and the difficulty of
+in-beam acquisition at continuous-wave accelerators, most subsequent clinical
+investigations adopted  off-room 
+implementations based on commercial PET(/CT) scanners originally designed for
+nuclear medicine~\cite{Shakirin2011,Crespo2005}. While these full-ring systems
+offer broad availability and favourable geometry, they are not optimised for
+the specific requirements of range monitoring: reconstruction of the very
+weak, broad and multi-isotope activity distributions produced during
+irradiation is present a different set of problems the the reconstruction of localised, intense single-isotope
+sources typical of radiotracer imaging. Furthermore, the additional delay introduced to move the patient exacerbates
+biological washout~\cite{Knopf2009,Parodi2018}. As a consequence, accuracy
+studies comparing measured activity with Monte Carlo predictions have
+typically remained limited to an agreement of a few mm, generally
+regarded as still unsatisfactory for routine clinical exploitation and
+motivating the development of detectors tailored to the
+problem~\cite{Parodi2018}.
+ 
+While a new generation of in-beam detectors are currently being developed, an alternative in-between in-beam and off-room 
+approaches is in-room optimised scanners. 
+
+In this paper, we show that CRYSP scanners are an optimal solution for in-room measurements in proton therapy. The acronym, CRYogenic Sensitive PET, refers to the crucial innovation of these devices, based in the fact that suitable scintillators such as CsI and BGO increase dramatically their light yield at cryogenic temperatures, in exchange of a slower decay constant. Specifically, pure CsI is a fast but faint scintillator at room temperature,
+with a light yield of about $5\,000$ photons/MeV and a decay constant of
+$\sim\!15$~ns. Upon cooling to cryogenic temperatures ($\sim\!100$~K) its light
+yield increases by a factor of about 20, reaching roughly
+$1\times10^{5}$~photons/MeV, while the decay constant lengthens by a factor of
+about 50 to $\sim\!800$~ns~\cite{soleti_crysp}. A similar behaviour is found
+in BGO: recent measurements with a SiPM-coupled crystal yield an intrinsic
+light output of about $1.4\times10^{4}$~photons/MeV at dry-ice temperature
+($195$~K) and about $2.9\times10^{4}$~photons/MeV at liquid-nitrogen
+temperature ($77$~K), to be compared with $\sim\!9\times10^{3}$~photons/MeV at
+room temperature, again at the expense of a markedly slower response, with the
+decay constant growing from $\sim\!300$~ns at $300$~K to about $1.8$~$\mu$s at
+$195$~K and to a two-component decay of $\sim\!3$--$9$~$\mu$s at
+$77$~K~\cite{ding_bgo}. The relevant figures are summarised in
+Table~\ref{tab:cryo_scint}.
+
+\begin{table}[ht]
+  \centering
+  \caption{Light yield and scintillation decay constant of pure CsI and BGO at
+  room temperature and at cryogenic temperatures. CsI values from
+  Ref.~\cite{soleti_crysp}; BGO values from Ref.~\cite{ding_bgo}
+  (room-temperature decay constant is the nominal BGO value).}
+  \label{tab:cryo_scint}
+  \begin{tabular}{llcc}
+    \hline
+    Material & Temperature & Light yield & Decay constant \\
+             &             & (photons/MeV) & $\tau$ \\
+    \hline
+    CsI & $300$~K (ambient)          & $5\times10^{3}$   & $15$~ns \\
+    CsI & $100$~K (cryogenic)        & $1\times10^{5}$   & $800$~ns \\
+    \hline
+    BGO & $300$~K (ambient)          & $\sim\!9\times10^{3}$ & $\sim\!300$~ns \\
+    BGO & $195$~K (dry ice)          & $\sim\!1.4\times10^{4}$ & $1.77$~$\mu$s \\
+    BGO & $77$~K (liquid nitrogen)   & $\sim\!2.9\times10^{4}$ & $2.99$~$\mu$s / $9.01$~$\mu$s \\
+    \hline
+  \end{tabular}
+\end{table}
+
+ In the case of CsI, the intense light emission compensates the relatively slow decay constant, allowing a coincidence time resolution (CTR) of \SI{1.5}{ns}. As discussed in ~\cite{soleti_crysp}, a LAFOV CRYSP detector based in CsI, offers a competitive performance in ordinary PET applications at a much reduced cost, both in terms of the crystals themselves (CsI crystals can be a factor ten cheaper than LYSO crystals) and the reduced number of electronics channels associated to the possibility of using large SiPMs (typically $6 \times 6$ mm$^2$ instead of $3 \times 3$ mm$^2$ often used in pixelated scanners) for the readout of the very luminous CsI monolithic crystals. 
+ 
+Furthermore, the timing features of a CsI CRYSP scanners do not have any impact in the performance of the device for in-room proton therapy applications. Instead, its large AFOV affords a high angular coverage, the uniform resolution in the three coordinates avoid parallax errors at large angles, and its excellent energy resolution minimises the impact of multiple scattering. While CsI has lower density ($\mathrm{4.5~g/cm^3}$) than BGO ($\mathrm{7.1~g/cm^3}$), and a longer radiation length ($\mathrm{1.86 cm}$ versus $\mathrm{1.12 cm}$), if offers better light yield output and CTR, as well as a more competitive cost, and ---crucially--- guaranteed supply. While CsI is a common material, readily available at stable cost, the BGO uses rare metals, whose cost can spike in unpredictable way and whose supply is much more restricted. 
+ 
+ However, it is worth to evaluate the performance of cryogenic BGO in in-room proton therapy applications, given its high density, short radiation length and high photoelectric cross section. 
+
+
+
+
 
 CryspBrainSim (CBS) fits the activity distribution of the $\beta^+$ emitters
 produced in the decay of the various isotopes activated by a proton beam crossing
