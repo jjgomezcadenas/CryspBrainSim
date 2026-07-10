@@ -55,8 +55,9 @@ one curve per scanner geometry. This is the analysis end of the chain
 
 ## Status
 
-The build is complete; the physics studies are done through the acquisition-start axis. Details
-live in `md/` (see "Read first") — this is the one-paragraph state.
+The build is complete; the physics studies are done through the acquisition-start axis and the
+isotope-washout loss study. Details live in `md/` (see "Read first") — this is the one-paragraph
+state.
 
 **Where we are:** both representative scanners (BGO 195 K, cryogenic CsI, same 2X0 ring) measure
 the distal edge with **σ_R ≈ 0.11 mm per 1 Gy run** at the working protocol; precision scales as
@@ -70,14 +71,16 @@ whole-plane protocol now lives in the Julia chain too (`[roi]` carries no radius
 + method: [`md/results.md`](md/results.md); the toolchain:
 [`md/infrastructure.md`](md/infrastructure.md).
 
-**Current problem: isotope washout (IW)** — all productions are physical-decay-only; IW is the
-missing simulation-to-patient physics. **Result (uniform-brain Mizuno):** washout-as-loss is a
-per-isotope survival scalar g_i, so the loss study is fully downstream (zero upstream). It adds
-**no bias** — the edge shift (+0.22 mm) calibrates away, parameter systematic ±0.02 mm (≪ σ_R) —
-but costs **~1.5× in σ_R** (0.11 → ~0.16 mm at 1 Gy, roughly flat vs t_start), the ordinary penalty
-for a ~57% near-uniform count loss (measured with the thinned method; the earlier "σ_R survives"
-was an n=10 artifact, corrected in md/results.md). Open: BGO thinned curve, and model-form (spatial
-non-uniformity — the one genuine bias route). Scoping, the G4/PTCrysp exchange, and the derivation:
+**Isotope washout (IW) — loss study DONE (both arms):** productions are physical-decay-only; IW is
+the missing simulation-to-patient physics. Washout-as-loss is a per-isotope survival scalar g_i, so
+the study runs fully downstream (zero upstream, no Geant4; detection is isotope-blind, the
+detected σ_R comes from per-event thinning by w(z₀,t_decay) — only columns already in the shards).
+Result: **no bias** — the edge shift (+0.22 mm) calibrates away, parameter systematic ±0.02 mm
+(≪ σ_R) — but a **~1.5× σ_R cost** (0.11 → ~0.16 mm at 1 Gy, roughly flat vs t_start, both arms),
+the ordinary penalty for a ~57% near-uniform count loss. Measured with the thinned method; the
+earlier "σ_R survives / free at t=0" was an n=10 artifact, now corrected. In the note as §7
+(`latex/endpoint_precision.tex`). **Only open IW item: spatial non-uniformity** — the one genuine
+bias route, needing a downstream perfusion-transport model (not pursued). Detail:
 [`md/isotope-washout.md`](md/isotope-washout.md),
 [`md/washout-g4-formulation.md`](md/washout-g4-formulation.md), `latex/washout_brain.tex`.
 

@@ -1,51 +1,50 @@
-# Next problem: isotope washout (IW)
+# Isotope washout (IW) — loss study DONE (2026-07-10)
 
-Every production to date models **physical decay only** — the β⁺ emitters sit where they were
-created until they decay. In tissue they do not: dissolved gases and metabolites (¹⁵O, ¹¹C, ¹³N)
-are cleared by perfusion/diffusion before decaying. This is **isotope washout (IW)** — the missing
-physics between our simulation and a real patient.
+Productions model **physical decay only**; in tissue perfusion/metabolism clears the β⁺ emitters
+(¹⁵O, ¹¹C, ¹³N…) before they decay. Washout **as loss** is now measured, fully downstream, both
+1 m arms. Numbers + method: [`md/results.md`](results.md) ("Isotope washout"); the note carries it
+as §7 of `latex/endpoint_precision.tex`; the derivation is in `latex/washout_brain.tex`; the
+G4-vs-downstream exchange in [`washout-g4-formulation.md`](washout-g4-formulation.md).
 
-Literature model: a sum of exponentials (fast/medium/slow biological components), per isotope and
-chemical form, folding with the physical half-life into an effective one.
+## The result (uniform Mizuno brain clearance)
 
-## The two questions (mirroring the endpoint study)
+The two questions, answered:
 
-- **(a) Does IW degrade precision?** It removes counts, worst at late times, compounding the
-  delayed-start loss already measured.
-- **(b) Does IW bias the edge?** Only if clearance is depth-/tissue-dependent. In the uniform-brain
-  phantom it is roughly uniform, so first-order the edge should hold; the test is whether Δ_R50
-  moves under IW.
+- **(a) Precision — yes, a real cost.** Washout removes ~57% of counts **nearly uniformly** (all
+  per-isotope survivals g_i ≈ 0.4–0.5), so it is the ordinary counting penalty **σ_R × ~1.5×**
+  (0.11 → ~0.16 mm at 1 Gy), roughly flat vs start time and scanner, rising to ~2× only at the
+  count-starved 300 s. **Not** the ¹⁵O variance-drain that protects the delayed *start* (those were
+  conflated in the first pass; the "washout free at t=0" reading was an n=10 outlier artifact,
+  corrected).
+- **(b) Bias — none, for uniform clearance.** The edge shift (ΔR₅₀^wo ≈ +0.22 mm at t=0, shrinking
+  with delay) is a deterministic constant the per-scanner reference calibrates away; its
+  washout-**parameter** systematic is ±0.02 mm ≪ σ_R.
 
-## Where IW enters — the scoping decision for the next session
+## How it was done (the key methods)
 
-- **(i) Truth level — computable now, the natural first step.**
-  `truth/activity_profile_fast.csv` has per-isotope depth profiles (columns
-  `O15,C11,N13,C10,O14,total`). **Spatially-uniform IW is a per-isotope multiplicative reweighting**
-  of those columns — each isotope's P(z) scaled by its window-integrated survival fraction under its
-  clearance model — then refit for Δ_R50. Needs no new detected-level data. Tests question (a) at
-  truth level and, since the reweighting shifts the isotope mix, whether the edge moves (b).
-- **(ii) Detected level — needs more data.**
-  - *Upstream* — a new production with IW kinetics applied (cleanest, but needs a PTCryspMC feature
-    + run).
-  - *Downstream reweighting* on the stored runs — an event decaying at `t_decay_s` had to survive
-    clearance from its creation to its decay, so it could be Bernoulli-thinned by a survival
-    probability. That needs the per-event **creation time and isotope** — the isotope id was
-    explicitly *dropped* from the decay-time request, and creation time is not stored either — so
-    downstream is **not currently possible** without more columns.
+- **Truth level** (`tools/washout.py`): the per-isotope survival g_i is a closed-form scalar (note
+  Eq. 7), cross-checked vs direct integration; reweight the five truth columns, refit Δ_R50; MC over
+  the Mizuno uncertainties gives the ±0.02 mm band.
+- **Detected level** (`drivers/washout_sigma_r.jl --thinned`): per-event thinning of the pooled
+  master by w(z₀,t_decay) = Σ_i P(i|z₀,t_decay) g_i — the isotope-**marginalised** survival, built
+  from the truth profiles and decay laws. Uses only (z₀, t_decay), **already in the shards** — the
+  earlier belief that detected level "needs creation-time + isotope columns" was wrong; detection
+  is isotope-blind, so no new columns, no upstream, no Geant4. σ_R measured with the thinned method
+  (dose-adaptive 0.2–1 Gy to keep the count-starved washed corner in the stable-fit regime; 0.1 Gy
+  was verified to fail).
 
-Decide the axis (start with (i)), then whether an upstream request (or per-event isotope +
-creation-time columns) is warranted.
+## Open — spatial non-uniformity (the one genuine bias route)
+
+Uniform clearance is first-order. A real perfusion field is heterogeneous; a **depth-dependent**
+clearance would make the edge shift depth-dependent — a genuine bias no single calibration constant
+absorbs. Capturing it needs a **downstream perfusion/compartment transport model** on the production
+points (not Geant4, not the range estimator). Not pursued here; the uniform result bounds the loss
+effect. Redistribution (cleared atoms decaying elsewhere in the FOV) is the related deferred item —
+also downstream perfusion physics, not Geant4 (see washout-g4-formulation.md).
 
 ## Related
 
-- **G4 vs downstream — resolved:** [`washout-g4-formulation.md`](washout-g4-formulation.md).
-  The loss study is **fully downstream, zero upstream**: an analytic per-isotope survival scalar
-  g_j (from the Mizuno W we own) reweights the truth isotope columns; the detected-level bias and
-  σ_R follow from the already-measured truth→detected offset and 1/√dose law, because detection is
-  isotope-blind. No column, no clock change, no regeneration, no Geant4. Redistribution deferred
-  (and if revived, a downstream perfusion model, still not Geant4).
-- The **composite-erfc edge model** (per-isotope components) is the same object as the IW
-  reweighting — the per-isotope decomposition. Worth building together.
-- **Washout is spatially uniform only to first order** — a real perfusion field is not; if the
-  truth-level study shows the edge is sensitive to the mix, spatially-dependent clearance becomes
-  the reason to go upstream.
+- **Composite-erfc edge model** (per-isotope components) = the same per-isotope decomposition as the
+  IW reweighting; still worth building (listed in [`pending.md`](pending.md)).
+- Per-arm ready configs `config/run_parameters_{bgo,csi}.toml` (`cp` to activate) were added this
+  round; the thinned σ_R machinery + failure guard in `washout_sigma_r.jl` are reusable.

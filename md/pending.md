@@ -19,6 +19,11 @@
 
 ## Deferred / on-request
 
+- **Washout spatial non-uniformity / redistribution** — the only open IW item and the one route to a
+  genuine (non-calibratable) washout bias: a heterogeneous perfusion field, or cleared atoms decaying
+  elsewhere in the FOV. Both are a downstream perfusion/compartment transport model on the production
+  points (not Geant4, not the range estimator). Trigger: if the edge proves sensitive to the
+  clearance field. See [isotope-washout.md](isotope-washout.md), washout-g4-formulation.md.
 - **Scatter correction** — machinery exists (`recon_scatters.jl`, `scatter_profile.py`); not needed
   at present precision (calibration systematics dominate ≫ 0.1 mm). The trigger for revisiting: a
   window slope approaching the edge gradient on some future configuration.

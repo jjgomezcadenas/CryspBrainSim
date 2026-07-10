@@ -147,9 +147,9 @@ and a shard-spread on the anchors need the remaining nine shards per arm from up
 Washout modelled as loss (perfusion/metabolism clears emitters before they decay) reduces — for a
 spatially-uniform brain — to a **per-isotope survival scalar** g_i (`latex/washout_brain.tex`
 Eq. 7), so the whole loss study runs downstream on the frozen source, **zero upstream** (method +
-G4/PTCrysp exchange: [`md/washout-g4-formulation.md`](washout-g4-formulation.md)). g_i is computed
-from the Mizuno brain 3-exponential (`config/washout_brain.toml`), cross-checked closed-form vs
-direct integration to 1e-6.
+G4/PTCrysp exchange: [`md/washout-g4-formulation.md`](washout-g4-formulation.md)). Written up as §7
+of `latex/endpoint_precision.tex` (Table 6). g_i is computed from the Mizuno brain 3-exponential
+(`config/washout_brain.toml`), cross-checked closed-form vs direct integration to 1e-6.
 
 **Truth level** (`tools/washout.py`): g_i = O15 0.448, C11 0.376, N13 0.386, C10 0.525, O14 0.476
 (¹⁵O the least suppressed of the abundant emitters — recorded decays are young). Kept fraction
