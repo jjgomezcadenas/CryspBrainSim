@@ -48,6 +48,8 @@ one curve per scanner geometry. This is the analysis end of the chain
   rename or move a file, use `git mv` so the history reads as a rename, then apply new content on
   top — do not delete the old file and create a new one. Keep each delete as its own visible step.
 - **Say "state plainly"** where you might reach for "honest / honestly" — describe the thing directly.
+- **Output in plain text or bold only.** Use **bold** for the emphasis you would otherwise carry
+  with colour; no coloured text.
 
 ## Status
 
