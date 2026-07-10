@@ -282,9 +282,10 @@ def dose_sweep(params, centre, window, dose):
 def plot_dose_sweep(groups, dose, sig1, path, mk="erfc"):
     """Top: every run's R relative to the 1 Gy mean (the anchor — the
     calibration constant lives in the table, not here) vs dose (log x),
-    mean ± σ per group; group means at zero show the calibration is
-    dose-invariant. Bottom: σ_R vs dose with the 1/√dose prediction
-    anchored at 1 Gy as a thin red line."""
+    mean ± σ per group; the group means agree with the anchor within the
+    spread (the low-dose points carry a small ~0.05 mm low-count pull),
+    so the calibration is dose-invariant. Bottom: σ_R vs dose with the
+    1/√dose prediction anchored at 1 Gy as a thin red line."""
     fig, (a1, a2) = plt.subplots(2, 1, figsize=(8.5, 6.8), facecolor=SURFACE,
                                  sharex=True, height_ratios=[2, 1])
     for a in (a1, a2):
