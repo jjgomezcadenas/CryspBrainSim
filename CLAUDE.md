@@ -177,8 +177,9 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   promoted by the two-arm tie: BGO has ×1.7 to gain, CsI ×1.4. (4) Composite-erfc edge model
   (2–3 isotope components, offsets/widths frozen from per-isotope truth profiles, free amplitudes
   + global shift); adopt only if σ and rung stability improve incl. at 0.1 Gy.
-  (5) endpoint_precision.tex: supersede the frozen-master numbers with the two-arm results once
-  the round is written up.
+  (Item done 2026-07-10: endpoint_precision.tex rewritten as the two-scanner note — arms table,
+  per-arm budgets, the tie + tiebreaker section, per-arm dose sweeps; figures per arm collected
+  by tools/collect_note_figures.sh as *_bgo/*_csi; frozen-master figure copies removed.)
 
 Data on disk: three ten-shard masters under `PtCryspProds/uniform_headep_sobp_1e8/` — the frozen
 reference `crysp_ring_1m/bgo/fast_1Gy/` (174.3 M LORs pooled; do not pool/compare with the new
