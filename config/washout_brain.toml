@@ -1,0 +1,24 @@
+# Isotope-washout (IW) parameters — the Mizuno three-exponential brain model
+# (latex/washout_brain.tex) plus the physical half-lives and the acquisition
+# timing that set the per-isotope survival factor g_i (note Eq. 7). Central
+# values only for this first pass; the uncertainties in the table are recorded
+# for the later error-propagation study but not used yet. The single source for
+# both the truth-level reweight (tools/washout.py) and the detected-level
+# per-event thinning (drivers/washout_sigma_r.jl).
+
+[model]                        # spatially-uniform brain washout, one table for
+                               # every isotope (species hook deferred)
+components = ["fast", "medium", "slow"]
+M     = [0.35, 0.30, 0.35]     # weights, sum to 1
+T_s   = [2.0, 140.0, 10191.0]  # biological half-lives (s), Mizuno rabbit brain
+M_err   = [0.03, 0.03, 0.01]   # 1σ on the weights (Mizuno Table)
+T_s_err = [1.8, 18.0, 2200.0]  # 1σ on the half-lives (s); fast is ~90% uncertain
+
+[physical]                     # physical half-lives (s) of the produced β⁺ emitters
+isotopes = ["O15", "C11", "N13", "C10", "O14"]
+T_half_s = [122.24, 1222.8, 597.9, 19.29, 70.62]
+
+[timing]                       # from sampling_budget_fast_meta.csv
+t_irr_s = 60.0                 # irradiation [0, t_irr]
+t1_s    = 120.0                # acquisition opens (= t_irr + t_del)
+t2_s    = 1320.0               # acquisition closes (= t1 + t_meas)

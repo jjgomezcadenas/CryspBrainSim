@@ -142,6 +142,40 @@ Figures: `out/uniform_headep_sobp_1e8/closed/comparison/figures/chs_sigma_r.png`
 `_csi` single-crystal versions; `tools/plot_chs_sigma_r.py [--crystal]`). A measured σ_R(1 Gy)
 and a shard-spread on the anchors need the remaining nine shards per arm from upstream.
 
+## Isotope washout (IW), first result: DONE at t_start = 0 (2026-07-10)
+
+Washout modelled as loss (perfusion/metabolism clears emitters before they decay) reduces — for a
+spatially-uniform brain — to a **per-isotope survival scalar** g_i (`latex/washout_brain.tex`
+Eq. 7), so the whole loss study runs downstream on the frozen source, **zero upstream** (method +
+G4/PTCrysp exchange: [`md/washout-g4-formulation.md`](washout-g4-formulation.md)). g_i is computed
+from the Mizuno brain 3-exponential (`config/washout_brain.toml`), cross-checked closed-form vs
+direct integration to 1e-6.
+
+**Truth level** (`tools/washout.py`): g_i = O15 0.448, C11 0.376, N13 0.386, C10 0.525, O14 0.476
+(¹⁵O the least suppressed of the abundant emitters — recorded decays are young). Kept fraction
+f = 0.428. Central **ΔR₅₀^wo = +0.218 mm** (edge deepens: ¹⁵O owns the distal edge and survives
+best) — **this calibrates away** like every other offset. The part that does *not*: the
+washout-**parameter** systematic band, MC over the Mizuno uncertainties, is **±0.020 mm** — ~5×
+below σ_R ≈ 0.11 mm, and the fast component's ~90% error barely propagates (spent for recorded
+ages). So within this model washout is a **benign calibrated constant**, not a systematic limit.
+
+**Detected level** (`drivers/washout_sigma_r.jl`, per-event thinning by w(z₀,t_decay) =
+Σ_i P(i|z₀,t_decay) g_i, all events, ten shards). Bias transfers scanner-independently:
+BGO +0.200, CsI +0.209 mm (vs truth +0.218). **Precision essentially untouched despite losing 57%
+of counts** — σ_R BGO 0.113→0.126 (1.11×), CsI 0.114→0.110 (0.96×, dropping one n=10 fit outlier;
+all-10 gives 0.237/2.08×), both far below the naïve 1/√f = 1.53× — the same ¹⁵O variance-drain as
+the delayed-start study: washout removes the noisiest counts. Figure:
+`out/uniform_headep_sobp_1e8/closed/comparison/figures/washout_sigma_r.png`
+(`tools/plot_washout.py`).
+
+**Caveats:** this is the **t_start = 0** limit and the **parameter** band only. The realistic
+operational point — washout compounded with the 60–300 s in-room start, where both effects drain
+¹⁵O — is the `washout_sigma_r.jl` t_start sweep (running); and **model-form** uncertainty (spatial
+non-uniformity = the genuine non-calibratable bias route, rabbit→human, per-species) is untouched.
+The n=10 σ_R needs the 50-realization thinned method to firm up. Bottom line so far: with uniform
+brain washout, IW does **not** limit range verification — it calibrates away, its parameter band is
+negligible, and precision survives; the case for going upstream now rests on spatial non-uniformity.
+
 ## Data on disk
 
 Under `PtCryspProds/uniform_headep_sobp_1e8/`, all **physical-decay-only** (no isotope washout):

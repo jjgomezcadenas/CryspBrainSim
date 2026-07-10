@@ -71,8 +71,12 @@ whole-plane protocol now lives in the Julia chain too (`[roi]` carries no radius
 [`md/infrastructure.md`](md/infrastructure.md).
 
 **Current problem: isotope washout (IW)** — all productions are physical-decay-only; IW is the
-missing simulation-to-patient physics. First step (computable now): per-isotope reweighting of the
-`truth/` activity columns by each isotope's clearance survival, refit Δ_R50. Scoping and the
-upstream-vs-downstream decision: [`md/isotope-washout.md`](md/isotope-washout.md).
+missing simulation-to-patient physics. **First result done (t_start = 0):** washout-as-loss is a
+per-isotope survival scalar g_i, so the loss study is fully downstream (zero upstream). At the
+uniform-brain Mizuno model it is a **benign calibrated constant** — the edge shift (+0.22 mm)
+calibrates away, its parameter systematic is ±0.02 mm (≪ σ_R), and σ_R survives the 57% count loss
+(variance-drain). Open: the t_start-compounded run and model-form (spatial non-uniformity). Scoping,
+the G4/PTCrysp exchange, and the derivation: [`md/isotope-washout.md`](md/isotope-washout.md),
+[`md/washout-g4-formulation.md`](md/washout-g4-formulation.md), `latex/washout_brain.tex`.
 
 **Smaller pending:** cbs.tex fold-in, composite-erfc model — [`md/pending.md`](md/pending.md).
