@@ -46,12 +46,30 @@ one curve per scanner geometry. This is the analysis end of the chain
 
 ## Status
 
-Follow `dev/PLAN.md` → "Build order". Done and next:
+Follow `dev/PLAN.md` → "Build order". The build is complete and the physics studies are running;
+this Status is the current-state orientation. Infrastructure and results below, then the next
+problem (**biological washout**).
 
-- **Step 1 — package scaffold: DONE.** `Project.toml` (package `CryspBrainSim`), `src/CryspBrainSim.jl`
-  (`using RecoCryspTools`), `test/runtests.jl`. Deps resolved incl. Metal (GPU functional);
-  `Pkg.test()` green. RecoCrysp is wired via local `[sources]` paths to the sibling checkout
-  (`../RecoCrysp` @ `a6d900e`); pin that SHA into cached artifacts for provenance.
+### Infrastructure (build steps 1–6 + output layout): DONE
+
+The Julia package (`CryspBrainSim`, `using RecoCryspTools`, Metal GPU, tests green) provides the
+whole chain: endpoint estimator (`profile.jl`, `endpoint.jl` — erfc fit, covariance = scipy
+`absolute_sigma`), products navigation + provenance (`products.jl`, `shard_stats.jl`,
+`characterize.jl`), attenuation + sensitivity (`mumap.jl`, `sensitivity.jl` — `sensitivity_base`
+over ContinuousPET draws, NPZ+TOML cache with RecoCrysp SHA), Bernoulli thinning (`thinning.jl`),
+the shared reconstruction context (`reconstruct.jl` — `load_run_context`, `write_descriptors`), the
+`[configuration]`-driven run parameters (`config.jl`), and the output-layout path helpers
+(`output.jl` mirrored by `tools/crysp_paths.py` — nothing hard-codes `out/<...>`; sensitivity at
+the ring tier, crystal label folds material+thickness in X0). Drivers: `one_shard.jl`,
+`ten_shards_dose.jl`, `ten_shards_tstart.jl`, `sigma_r_at_dose.jl`, `sigma_r_sweep_dose.jl`. Python
+tools: `fit_activity_profile.py` (the fit lab — `--model`, `--roi`, `--no-baseline`, `--no-pulls`),
+`ten_shards.py` (`--dose-sweep`/`--fano`/`--t-start`), `scatter_profile.py`,
+`recon_scatters.jl`, `plot_recon_projections.py`, `plot_tstart.py`, `collect_note_figures.sh`,
+`latex_compile.py`. **Switching scanner arm = one edit of `config/run_parameters.toml`
+`[configuration]` (scenario/topology/scanner/crystal/leaf) + rerun (~25 min/arm).**
+
+<details><summary>Original step-by-step build history (superseded by the summary above)</summary>
+
 - **Step 2 — endpoint estimator port: DONE.** `src/profile.jl` (`depth_profile`, `distal_window`) +
   `src/endpoint.jl` (`fit_endpoint`, `sigma_R`), ported from `py/`. Covariance matches scipy
   `absolute_sigma=True` via `PrecisionWeights` (unweighted path matches the MSE-scaled default).
@@ -112,6 +130,11 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   (`bgo_3X0` = 3.7 cm BGO ≈ 3.3 X0). Renames: `qa`→`shard_stats` (`ShardStats`, `shard_stats`);
   `sensitivity_cache_name` drops the ring prefix (path carries it). Existing `out/` data relocated
   (not regenerated); all drivers + tools verified against the new tree; 138 tests green.
+
+</details>
+
+### Science results
+
 - **Endpoint study, part (a): DONE (2026-07-08).** The study splits: (a) distal-edge estimation,
   (b) scanner comparison. **Settled protocol: whole-plane profiles (no ROI — the 13 mm disc clips
   the depth-widening halo, shifting R_p proximally 2.4–3.0 mm), erfc edge fit with FREE baseline
@@ -181,15 +204,58 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   weight; ¹¹C positron-range gain invisible under the intrinsic width). In the note as §6 +
   Table 5 + Fig. 7. Scatter-correction stance settled: NOT needed at this level (calibration
   systematics dominate ≫ 0.1 mm); CsI's point is parity with less scatter sensitivity.
-- **Pending:** (1) latex/cbs.tex: revert eq:sigmaR from R_p back to z0/R50 (R_p keeps the accuracy
-  paragraph); cite Zapien-Campos; fold in the two-arm numbers. (2) Composite-erfc edge model
-  (2–3 isotope components, offsets/widths frozen from per-isotope truth profiles, free amplitudes
-  + global shift); adopt only if σ and rung stability improve incl. at 0.1 Gy.
-  (Item done 2026-07-10: endpoint_precision.tex rewritten as the two-scanner note — arms table,
-  per-arm budgets, the tie + tiebreaker section, per-arm dose sweeps; figures per arm collected
-  by tools/collect_note_figures.sh as *_bgo/*_csi; frozen-master figure copies removed.)
+### The finding so far (endpoint_precision.tex — the two-scanner note, compiles clean)
 
-Data on disk: three ten-shard masters under `PtCryspProds/uniform_headep_sobp_1e8/` — the frozen
-reference `crysp_ring_1m/bgo/fast_1Gy/` (174.3 M LORs pooled; do not pool/compare with the new
-arms) and the two 2X0 arms `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` (153 M) and
-`crysp_ring_1m_csi_2x0/csi/fast_1Gy/` (61 M) — plus the shared `truth/` bundle.
+Both representative scanners locate the distal edge with **σ_R ≈ 0.11 mm per 1 Gy run** at the
+working protocol (all events, no corrections); precision scales as 1/√dose (0.16–0.23 mm at
+0.1 Gy → the exploratory-dose case) and **survives a realistic in-room acquisition start** (still
+~0.11 mm at t_start = 180 s). The activity–dose offset is a per-scanner calibration constant
+measured to 0.01–0.04 mm/term; scatters bias it ≤ 0.04 mm (no correction needed at this level —
+other calibration terms dominate). The note has 8 pages: setup + two-scanner table, estimator (R50
+defined graphically), calibration budgets, the 1 Gy comparison, low-dose, §6 acquisition-start.
+
+### Next problem: BIOLOGICAL WASHOUT (the current productions have NONE)
+
+Every production to date models **physical decay only** — the β⁺ emitters sit where they were
+created until they decay. In tissue they do not: dissolved gases and metabolites (¹⁵O, ¹¹C, ¹³N)
+are cleared by perfusion/diffusion before decaying (literature: sum-of-exponentials fast/medium/
+slow biological components per isotope/chemical form; folds with the physical half-life into an
+effective one). Washout is thus the missing physics between our simulation and a real patient. Two
+questions to answer, mirroring the endpoint study: **(a) does it degrade precision** — it removes
+counts, worst at late times, compounding the delayed-start loss; **(b) does it bias the edge** —
+only if clearance is depth-/tissue-dependent (in the uniform-brain phantom it is roughly uniform,
+so first-order the edge should hold; the test is whether Δ_R50 moves under washout).
+
+Open scoping question for the next session — **where washout enters**: (i) **upstream** — a new
+production with washout kinetics applied (cleanest, but needs a PTCryspMC feature + run); or
+(ii) **downstream reweighting** on the stored runs — an event decaying at `t_decay_s` must have
+survived clearance from its creation to its decay, so it could be Bernoulli-thinned by a survival
+probability. That needs the per-event **creation time and isotope** (the isotope id we explicitly
+*dropped* from the decay-time request; creation time is not stored either), so downstream is not
+currently possible without more columns. The **truth-level** washout study is computable now:
+`truth/activity_profile_fast.csv` has per-isotope depth profiles (columns `O15,C11,N13,C10,O14,
+total`), and **spatially-uniform washout is a per-isotope multiplicative reweighting** of those
+columns (each isotope's P(z) scaled by its window-integrated survival fraction under its clearance
+model), then refit for Δ_R50 — no new detected-level data needed. This is the natural first step;
+it directly tests question (a) at truth level and, since the reweighting shifts the isotope mix,
+whether the edge moves. Spatially-dependent clearance would need more than the depth columns.
+Decide the axis, then whether an upstream request (or per-event isotope+creation-time columns) is
+warranted.
+
+### Pending (smaller, independent of washout)
+
+- **latex/cbs.tex** (the living draft, separate from endpoint_precision.tex): revert eq:sigmaR from
+  R_p back to z0/R50 (keep the R_p accuracy paragraph), cite Zapien-Campos, fold in the two-scanner
+  numbers.
+- **Composite-erfc edge model** (2–3 isotope components, offsets/widths frozen from per-isotope
+  truth profiles, free amplitudes + global shift); adopt only if σ and rung stability improve
+  incl. at 0.1 Gy. Directly relevant to washout (the per-isotope decomposition is the same object).
+
+### Data on disk
+
+Three ten-shard masters under `PtCryspProds/uniform_headep_sobp_1e8/`, all physical-decay-only:
+the frozen reference `crysp_ring_1m/bgo/fast_1Gy/` (174.3 M LORs pooled; **do not** pool/compare
+with the new arms) and the two 2X0 arms `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` (153 M) and
+`crysp_ring_1m_csi_2x0/csi/fast_1Gy/` (61 M), plus the shared `truth/` bundle. Each new-arm shard
+carries `t_decay_s` (absolute decay time; enables the pure-cut start-time study). Config
+`[configuration]` is parked on the BGO 195 K arm.
