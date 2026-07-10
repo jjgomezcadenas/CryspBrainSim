@@ -171,21 +171,24 @@ artifact**: the CsI 0.96× came only from dropping a legitimate shard as an "out
 ten-shard from_shards run. The robust **thinned** method (30 realizations, ±13%; dose-adaptive
 0.2–0.5 Gy to keep the count-starved washed corner in the stable-fit regime — the 0.1 Gy corner was
 verified to fail, σ_R blowing to 1.6 mm at 68 k events; dose-independence checked: CsI t=0 gives
-**1.48× at 1 Gy vs 1.68× at 0.2 Gy, consistent**) measures the CsI inflation curve (scaled to 1 Gy):
+**1.48× at 1 Gy vs 1.68× at 0.2 Gy, consistent**) measures the inflation curve on both arms
+(scaled to 1 Gy):
 
 | t_start [s] | 0 | 60 | 120 | 180 | 300 |
 |---|---|---|---|---|---|
 | CsI σ_R inflation (±13%) | 1.48 | 1.74 | 1.57 | 1.54 | 1.87 |
+| BGO σ_R inflation (±13%) | 1.34 | 1.43 | 1.76 | 1.16 | 2.02 |
 
-— **roughly flat at ~1.5–1.6×**, with a rise at the count-starved 300 s end, **not** rising from
-1.0. The physics: washout removes ~57% of counts **roughly uniformly** (all g_i ≈ 0.4–0.5, ~0.07
-spread), so it is close to a uniform count cut → σ_R × ~1/√0.43 ≈ 1.5× (counting), independent of
-t_start. This is the ordinary count penalty, **not** the ¹⁵O variance-drain that protects the
-*delayed start* — that drain removes early ¹⁵O; washout removes late decays roughly uniformly (the
-two were conflated in the first pass). At 1 Gy this takes CsI σ_R from 0.11 to ~0.16 mm. BGO thinned
-curve in progress; the inflation is a count-removal *fraction* with the same g_i on both arms, so
-arm-independence predicts ~the same ~1.5×. (The superseded n=10 figures `washout_sigma_r.png` /
-`washout_tstart.png` and their "free at t=0" framing are to be regenerated from the thinned data.)
+— **both arms ~1.4–1.6× and roughly flat**, with a rise to ~2× at the count-starved 300 s end,
+**not** rising from 1.0, and **arm-consistent within the ±13% scatter** (both t=0 well above 1.0, so
+BGO's old from_shards 1.11× was also an n=10 underestimate). The physics: washout removes ~57% of
+counts **roughly uniformly** (all g_i ≈ 0.4–0.5, ~0.07 spread), so it is close to a uniform count
+cut → σ_R × ~1/√0.43 ≈ 1.5× (counting), independent of t_start and arm. This is the ordinary count
+penalty, **not** the ¹⁵O variance-drain that protects the *delayed start* — that drain removes early
+¹⁵O; washout removes late decays roughly uniformly (the two were conflated in the first pass). At
+1 Gy this takes σ_R from ~0.11 to ~0.16 mm. Figure: `.../comparison/figures/washout_inflation.png`
+(`tools/plot_washout_thinned.py`); the superseded n=10 figures `washout_sigma_r.png` /
+`washout_tstart.png` are retired.
 
 **Caveats / open:** model-form uncertainty untouched — spatial non-uniformity (the genuine
 non-calibratable bias route), rabbit→human, per-species. **Bottom line (corrected):** uniform brain
