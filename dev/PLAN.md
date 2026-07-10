@@ -379,8 +379,8 @@ Steps 1–4 are committed on `main`; per-step detail and measured numbers live i
 8. Write-ups: `latex/endpoint_precision.tex` — DONE, the two-scanner note (setup, estimator,
    calibration budgets, the 1 Gy comparison, low-dose, acquisition-start); `latex/cbs.tex` (living
    draft) still to fold in the two-scanner numbers.
-9. **NEXT — biological washout.** All productions so far are physical-decay-only; washout is the
+9. **NEXT — isotope washout (IW).** All productions so far are physical-decay-only; IW is the
    missing simulation-to-patient physics. First step (computable now): per-isotope reweighting of
    the `truth/` activity columns by each isotope's clearance survival fraction, refit Δ_R50 — tests
-   precision degradation and edge bias at truth level. Detected-level washout needs an upstream
-   production (or per-event isotope + creation-time columns). See CLAUDE.md → "Next problem".
+   precision degradation and edge bias at truth level. Detected-level IW needs an upstream
+   production (or per-event isotope + creation-time columns). See `md/isotope-washout.md`.
