@@ -54,7 +54,7 @@ so a \SI{0.1}{Gy} exploratory run locates the edge to
 precision also survives a realistic acquisition start: delaying to
 \SI{180}{s} after beam-off halves the counts yet leaves
 $\sigma_R \approx \SI{0.11}{mm}$, with the calibration constant walking
-predictably at \SIrange{8}{10}{\micro m} per second of delay.
+predictably at \SIrange{8}{11}{\micro m} per second of delay.
 \end{abstract}
 
 \section{Setup}
@@ -230,11 +230,12 @@ working protocol (all recorded events, no corrections).
 
 Each level of the measurement chain shifts $\DR$ by a definite, resolvable
 amount, and the decomposition is measured per scanner over its ten
-independent runs (Table~\ref{tab:ladder}, Fig.~\ref{fig:ladder}): from the
-true activity to the origins of the detected true coincidences (the
-acceptance level: attenuation and solid-angle weighting), to the MLEM
-reconstruction of the trues, to the reconstruction of \emph{all} events
-with no scatter or randoms correction.
+independent runs (Table~\ref{tab:ladder}): from the true activity to the
+origins of the detected true coincidences (the acceptance level:
+attenuation and solid-angle weighting), to the MLEM reconstruction of the
+trues, to the reconstruction of \emph{all} events with no scatter or
+randoms correction. Figure~\ref{fig:ladder} shows what survives the
+calibration: the run-to-run reproducibility of $R$ at each level.
 
 \begin{table}[htb]
   \centering
@@ -263,10 +264,13 @@ with no scatter or randoms correction.
   \centering
   \includegraphics[width=0.49\textwidth]{figs/ladder_delta_r50_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/ladder_delta_r50_csi.png}
-  \caption{$\DR$ at each level of the measurement chain: the ten runs
-    (circles) and their mean $\pm$ run-to-run spread $\sigma$ (red bars);
-    the dashed line is the truth-level value. Left: BGO 195\,K; right:
-    CsI.}
+  \caption{Run-to-run reproducibility of $R$ at each level of the
+    measurement chain: the ten runs (circles), each level's own mean
+    subtracted, with the mean $\pm$ run-to-run spread $\sigma$ (red bars).
+    The level-to-level offsets are calibration constants absorbed by the
+    per-scanner reference simulation (Table~\ref{tab:ladder}) and carry no
+    precision information, so they are removed from the display. Left:
+    BGO 195\,K; right: CsI.}
   \label{fig:ladder}
 \end{figure}
 
@@ -333,11 +337,17 @@ CsI's energy resolution --- is the next step of the technology comparison.
   \centering
   \includegraphics[width=0.49\textwidth]{figs/scatters_profile_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/scatters_profile_csi.png}
-  \caption{Whole-plane profile of the scatters-only reconstruction of one
-    run, in the units of the joint (all-events) image: BGO 195\,K (left,
-    $27.4\%$ of events) and CsI (right, $13.3\%$). The red line is a
-    straight fit inside the window (shaded); its slope bounds the
-    worst-case effect on $\Rfifty$.}
+  \caption{The scatter background in context, both panels in the same
+    units and on the same logarithmic scale --- fractions of each
+    scanner's all-events plateau: the all-events profile the fit runs on
+    (blue) and the scatters-only contribution to it (black), for one run. BGO 195\,K (left, $27.4\%$ of
+    events) carries a $7\%$ pedestal under its edge, CsI (right, $13.3\%$)
+    a $5\%$ one --- the amounts behind the variance factors $1.7$ and
+    $1.4$ of Table~\ref{tab:k}. The pedestal's flat part is absorbed
+    exactly by the free baseline of Eq.~(\ref{eq:erfc}); the residual
+    tilt inside the window (red line) bounds the worst-case $\Rfifty$
+    shift at $-0.13$ and \SI{-0.28}{mm}, and the measured shifts are
+    $+0.02$ and $+\SI{0.04}{mm}$.}
   \label{fig:scatters}
 \end{figure}
 
@@ -346,10 +356,11 @@ CsI's energy resolution --- is the next step of the technology comparison.
 
 The dose axis is explored by thinning each stored run with the appropriate
 Bernoulli probability and reconstructing each realisation with the
-identical chain. Figure~\ref{fig:dose} shows $\DR$ for every realisation,
-grouped by dose, and the measured $\sigma_R$ against the
-$1/\sqrt{\text{dose}}$ law anchored at \SI{1}{Gy}; Table~\ref{tab:dose}
-quantifies the two operating points per scanner (true coincidences).
+identical chain. Figure~\ref{fig:dose} shows every realisation's $R$
+relative to the \SI{1}{Gy} mean, grouped by dose, and the measured
+$\sigma_R$ against the $1/\sqrt{\text{dose}}$ law anchored at \SI{1}{Gy};
+Table~\ref{tab:dose} quantifies the two operating points per scanner
+(true coincidences).
 
 \begin{table}[htb]
   \centering
@@ -374,9 +385,10 @@ quantifies the two operating points per scanner (true coincidences).
   \centering
   \includegraphics[width=0.49\textwidth]{figs/dose_sweep_r50_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/dose_sweep_r50_csi.png}
-  \caption{Top panels: $\DR$ for every realisation (circles) grouped by
-    dose, with mean $\pm$ spread $\sigma_R$; the dashed line is the
-    \SI{1}{Gy} mean.
+  \caption{Top panels: every realisation's $R$ relative to the \SI{1}{Gy}
+    mean (circles), grouped by dose, with mean $\pm$ spread $\sigma_R$ ---
+    the calibration constant itself lives in Table~\ref{tab:k}; group
+    means on the zero line show it is dose-invariant.
     Bottom panels: the spread $\sigma_R$ per dose against the
     $1/\sqrt{\text{dose}}$ prediction anchored at \SI{1}{Gy} (red line).
     Left: BGO 195\,K; right: CsI.}
@@ -411,8 +423,8 @@ $t_{\text{decay}} \ge t_{\text{start}}$ on the stored runs ---
 statistically exact, with the per-isotope decay laws and the randoms' time
 structure included (Fig.~\ref{fig:decays} shows the isotope activities
 that drive it). Table~\ref{tab:tstart} and Fig.~\ref{fig:tstart} give
-$\DR$ and $\sigma_R$ at $t_{\text{start}} = 60$, $120$ and \SI{180}{s},
-at the working protocol on both scanners.
+$\DR$ and $\sigma_R$ at $t_{\text{start}} = 60$, $120$, $180$ and
+\SI{300}{s}, at the working protocol on both scanners.
 
 \begin{table}[htb]
   \centering
@@ -430,6 +442,7 @@ at the working protocol on both scanners.
      60 &  77 & $-11.580 \pm 0.102$ & $-11.625 \pm 0.057$ \\
     120 &  61 & $-12.131 \pm 0.116$ & $-12.167 \pm 0.091$ \\
     180 &  48 & $-12.725 \pm 0.108$ & $-12.809 \pm 0.112$ \\
+    300 &  32 & $-14.084 \pm 0.104$ & $-14.198 \pm 0.233$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -439,24 +452,38 @@ at the working protocol on both scanners.
   \includegraphics[width=0.8\textwidth]{figs/tstart_r50.png}
   \caption{The acquisition-start trade-off (all events). Top: $\DR$
     (points, $\pm$ run-to-run spread $\sigma_R$) against the start time;
-    the thin lines connect the points. Bottom: $\sigma_R$ (points, with
-    their uncertainty) against the counting prediction
-    $\sigma_R(0)/\sqrt{\text{kept fraction}}$ (dashed).}
+    the thin lines connect the points. Unlike the static calibration
+    constants of Table~\ref{tab:ladder}, this shift is \emph{physical} ---
+    the $^{15}$O component decays out of the isotope mix --- and its slope
+    (\SIrange{8}{11}{\micro m/s}) sets how accurately the start time must
+    be known. Bottom: $\sigma_R$ (points, with their uncertainty); the two
+    scanners are offset by a few seconds for legibility.}
   \label{fig:tstart}
 \end{figure}
 
 Three facts emerge. First, \textbf{the precision survives the realistic
 start}: at $t_{\text{start}} = \SI{180}{s}$ half the counts are gone,
 yet $\sigma_R$ remains at $\approx\SI{0.11}{mm}$ on both scanners ---
-at or below the counting prediction at every point. The zero-delay
-precision is therefore not an idealisation: an in-room scanner starting
-\SIrange{2}{3}{min} after beam-off delivers it. Second, the calibration
-constant walks with the start time --- $-0.44$, $-0.99$ and
-\SI{-1.6}{mm} at $60$, $120$ and \SI{180}{s}, identically on both
+at or below the counting expectation
+$\sigma_R(0)/\sqrt{\text{kept fraction}}$ at every point
+(\SI{0.16}{mm} at \SI{180}{s}). The delay removes a variance source
+along with the counts: the $^{15}$O amplitude, which owns the deepest
+part of the composite edge, fluctuates run to run, and it drains faster
+than the statistics. On CsI the removal transiently over-compensates
+($\sigma_R = \SI{0.057}{mm}$ at \SI{60}{s}, a $2\sigma$ dip at ten runs)
+before the count loss restores the zero-delay level at \SI{180}{s} and
+overtakes it at \SI{300}{s} ($\SI{0.233}{mm}$, at the counting
+expectation --- the compensation is exhausted); BGO, with $2.5\times$
+the counts, still reads \SI{0.104}{mm} there. The zero-delay precision
+is therefore not an idealisation: an in-room scanner starting
+\SIrange{2}{3}{min} after beam-off delivers it, and BGO holds it out to
+five minutes. Second, the calibration
+constant walks with the start time --- $-0.44$, $-0.99$, $-1.6$ and
+\SI{-2.9}{mm} at $60$, $120$, $180$ and \SI{300}{s}, identically on both
 scanners and at every level of the chain --- as the $^{15}$O component
 (deeper edge, from its lower production threshold) decays out of the mix.
 Calibrated at the operating start time this is bookkeeping; operationally
-it sets a sensitivity of \SIrange{8}{10}{\micro m} per second of start
+it sets a sensitivity of \SIrange{8}{11}{\micro m} per second of start
 time, so timing the acquisition start to one second keeps it at the
 \SI{0.01}{mm} level. Third, the fitted edge width grows mildly with the
 delay ($10.8 \to \SI{11.4}{mm}$ on trues): the smaller positron range of
@@ -513,7 +540,7 @@ dose-invariant calibration, so an exploratory \SI{0.1}{Gy} run verifies
 the beam range to \SIrange{0.16}{0.23}{mm} before the clinical dose is
 delivered. The precision also holds under a realistic acquisition start:
 a \SIrange{2}{3}{min} delay after beam-off halves the statistics and
-walks the calibration predictably (\SIrange{8}{10}{\micro m/s}), yet
+walks the calibration predictably (\SIrange{8}{11}{\micro m/s}), yet
 $\sigma_R$ stays at \SI{0.11}{mm} --- the in-room measurement delivers
 the zero-delay precision.
 

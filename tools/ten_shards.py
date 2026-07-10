@@ -99,37 +99,38 @@ def summarize(vals):
             "sem": float(v.std(ddof=1) / np.sqrt(v.size))}
 
 
-def plot_deltas(results, dose, truth_act, obs, path):
-    """Δ_obs per level of the measurement chain: every run as a point, the
-    mean ± sem as a bar (erfc — the paper's model; the sigmoid cross-check
-    stays in the TOML). The truth-activity level is the dashed reference
-    line; the y-range follows the data."""
+def plot_deltas(results, obs, path):
+    """Reproducibility per level of the measurement chain: every run's
+    R − ⟨R⟩ with the rung's OWN mean subtracted, the mean at zero, and the
+    ± σ error bar, σ annotated per rung (erfc — the paper's model; the
+    sigmoid cross-check stays in the TOML). The rung-to-rung offsets are
+    per-level calibration constants absorbed by the reference simulation —
+    they carry no precision information and live in the text and table,
+    not here."""
     fig, ax = plt.subplots(figsize=(8.5, 5.2), facecolor=SURFACE)
     style(ax)
     mk = "erfc"
-    tline = truth_act[mk][f"{obs}_mm"] - dose[mk][f"{obs}_mm"]
-    ax.axhline(tline, color=BLUE, ls="--", lw=1.1,
-               label="truth activity")
-    vals = [tline]
-    for ix, rung in enumerate(RUNGS):
-        r = results[rung][mk]
-        d = np.asarray(r[f"{obs}_mm"]) - dose[mk][f"{obs}_mm"]
+    resids, sigmas = [], []
+    for rung in RUNGS:
+        v = np.asarray(results[rung][mk][f"{obs}_mm"], float)
+        resids.append(v - v.mean())
+        sigmas.append(summarize(v)["std"])
+    m = 1.30 * max(np.abs(np.concatenate(resids)))
+    for ix, (d, sig) in enumerate(zip(resids, sigmas)):
         ax.plot(np.full(d.size, ix), d, "o", ms=5, mfc="none",
                 mec=INK, mew=1.1, alpha=0.7,
                 label="single runs" if ix == 0 else None)
-        s = summarize(d)
-        ax.errorbar([ix], [s["mean"]], yerr=[s["std"]], fmt="_", ms=20,
+        ax.errorbar([ix], [0.0], yerr=[sig], fmt="_", ms=20,
                     color=RED, elinewidth=1.8, capsize=5,
                     label="mean ± σ" if ix == 0 else None)
-        vals.extend(d)
-    lo, hi = min(vals), max(vals)
-    pad = 0.10 * (hi - lo)
-    ax.set_ylim(lo - pad, hi + pad)
+        ax.text(ix, -0.93 * m, f"$\\sigma$ = {sig:.3f} mm", ha="center",
+                color=INK, fontsize=11)
+    ax.set_ylim(-m, m)
     ax.set_xlim(-0.5, len(RUNGS) - 0.5)
     ax.set_xticks(range(len(RUNGS)),
                   [RUNG_TITLE[r] for r in RUNGS], color=INK, fontsize=12)
-    ax.set_ylabel(f"$\\Delta R$ [mm]", color=INK, fontsize=13)
-    ax.legend(frameon=False, fontsize=12, labelcolor=INK, loc="best")
+    ax.set_ylabel(f"$R - \\langle R \\rangle$ [mm]", color=INK, fontsize=13)
+    ax.legend(frameon=False, fontsize=12, labelcolor=INK, loc="upper right")
     fig.tight_layout()
     fig.savefig(path, dpi=160, facecolor=SURFACE)
     plt.close(fig)
@@ -214,10 +215,8 @@ def ladder(params, centre, window, truth_act, dose):
     path = os.path.join(OUT, "results.toml")
     toml_dump(path, tree)
     print(f"wrote {path}")
-    plot_deltas(results, dose, truth_act, "R50",
-                os.path.join(OUT, "figures", "delta_r50.png"))
-    plot_deltas(results, dose, truth_act, "Rp",
-                os.path.join(OUT, "figures", "delta_rp.png"))
+    plot_deltas(results, "R50", os.path.join(OUT, "figures", "delta_r50.png"))
+    plot_deltas(results, "Rp", os.path.join(OUT, "figures", "delta_rp.png"))
 
 
 # --- the dose sweep -----------------------------------------------------------
@@ -281,21 +280,20 @@ def dose_sweep(params, centre, window, dose):
 
 
 def plot_dose_sweep(groups, dose, sig1, path, mk="erfc"):
-    """Top: Δ_R50 of every run vs dose (log x), mean ± sem per group, the
-    1 Gy mean as the anchor line. Bottom: σ_R vs dose with the 1/√dose
-    prediction anchored at 1 Gy as a thin red line."""
+    """Top: every run's R relative to the 1 Gy mean (the anchor — the
+    calibration constant lives in the table, not here) vs dose (log x),
+    mean ± σ per group; group means at zero show the calibration is
+    dose-invariant. Bottom: σ_R vs dose with the 1/√dose prediction
+    anchored at 1 Gy as a thin red line."""
     fig, (a1, a2) = plt.subplots(2, 1, figsize=(8.5, 6.8), facecolor=SURFACE,
                                  sharex=True, height_ratios=[2, 1])
     for a in (a1, a2):
         style(a)
     doses = [dg for dg, _ in DOSE_GROUPS]
-    ref = dose[mk]["R50_mm"]
-    anchor = None
+    anchor = float(np.mean(groups[1.0][mk]))
     for dose_gy, _ in DOSE_GROUPS:
-        d = np.asarray(groups[dose_gy][mk]) - ref
+        d = np.asarray(groups[dose_gy][mk]) - anchor
         s = summarize(d)
-        if dose_gy == 1.0:
-            anchor = s["mean"]
         a1.plot(np.full(d.size, dose_gy), d, "o", ms=5, mfc="none", mec=INK,
                 mew=1.1, alpha=0.6,
                 label="single runs" if dose_gy == doses[0] else None)
@@ -306,11 +304,12 @@ def plot_dose_sweep(groups, dose, sig1, path, mk="erfc"):
         a2.errorbar([dose_gy], [s["std"]],
                     yerr=[s["std"] / np.sqrt(2 * (n - 1))], fmt="o", ms=6,
                     color=INK, elinewidth=1.2, capsize=4)
-    a1.axhline(anchor, color=BLUE, ls="--", lw=1.0, alpha=0.7,
+    a1.axhline(0.0, color=BLUE, ls="--", lw=1.0, alpha=0.7,
                label="1 Gy mean")
     a1.set_xscale("log")
     a1.set_xticks(doses, [f"{d:g}" for d in doses])
-    a1.set_ylabel("$\\Delta R$ [mm]", color=INK, fontsize=13)
+    a1.set_ylabel("$R - \\langle R \\rangle_{1\\,\\mathrm{Gy}}$ [mm]",
+                  color=INK, fontsize=13)
     a1.legend(frameon=False, fontsize=12, labelcolor=INK, loc="best")
     dd = np.geomspace(min(doses), max(doses), 100)
     a2.plot(dd, sig1[mk] * np.sqrt(1.0 / dd), color=RED, lw=1.2,

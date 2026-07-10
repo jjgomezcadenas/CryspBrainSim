@@ -78,13 +78,17 @@ constants come from shard attrs).
 `tools/ten_shards.py --t-start`, `tools/plot_tstart.py` (cross-scanner figure →
 `out/<scenario>/closed/comparison/figures/tstart_r50.png`).
 
-Results (all events, Δ_R50 mean ± σ): kept 77/61/48% at t_start 60/120/180 s (identical both
-scanners, cut acts on shared decay times). **σ_R stays ≈ 0.11 mm through 180 s on both scanners —
-at/below the counting prediction; the zero-delay precision survives the realistic in-room start.**
-Calibration walks −0.44/−0.99/−1.6 mm (¹⁵O drains from the mix; its lower production threshold =
-deeper edge) → start-time sensitivity 8–10 μm/s, 0.01 mm at 1 s timing. Edge-sharpening hypothesis
-refuted: w grows 10.8→11.4 mm (¹³N foot gains weight; ¹¹C positron-range gain invisible under the
-intrinsic width). In the note as §6 + Table 5 + Fig. 7.
+Results (all events, Δ_R50 mean ± σ): kept 77/61/48/32% at t_start 60/120/180/300 s (identical
+both scanners, cut acts on shared decay times). **σ_R stays ≈ 0.11 mm through 180 s on both
+scanners — at/below the counting prediction; the zero-delay precision survives the realistic
+in-room start.** The ¹⁵O drain removes a variance source with the counts (CsI transiently
+over-compensates: 0.057 mm at 60 s, a 2σ dip at n = 10); at 300 s the compensation is exhausted
+on CsI (0.233 mm ≈ counting) while BGO still reads 0.104 mm. Calibration walks
+−0.44/−0.99/−1.6/−2.9 mm (¹⁵O drains from the mix; its lower production threshold = deeper edge)
+→ start-time sensitivity 8–11 μm/s, 0.01 mm at 1 s timing. Edge-sharpening hypothesis refuted:
+w grows 10.8→11.4 mm (¹³N foot gains weight; ¹¹C positron-range gain invisible under the
+intrinsic width). In the note as §6 + Table 5 + Fig. 7 (story figures 4/6 centered, 5 in shared
+log fractional units — the offsets live in the tables, the spreads in the figures).
 
 **Scatter-correction stance settled:** NOT needed at this level (calibration systematics dominate
 ≫ 0.1 mm); CsI's point is parity with less scatter sensitivity.

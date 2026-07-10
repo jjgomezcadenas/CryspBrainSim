@@ -6,10 +6,10 @@ protocol (all events, no corrections).
 
 Reads each scanner's ten_shards/results.toml (the t_start = 0 baseline) and
 ten_shards/tstart_<T>.toml (drivers/ten_shards_tstart.jl +
-ten_shards.py --t-start); the kept-event fraction for the counting
-prediction comes from shard 0's decay times. Writes the comparison figure
-into the topology-level comparison/ leaf (a cross-scanner artifact sits
-above the per-scanner tiers).
+ten_shards.py --t-start). Writes the comparison figure into the
+topology-level comparison/ leaf (a cross-scanner artifact sits above the
+per-scanner tiers). The two scanners' points are offset by a few seconds
+so the error bars stay legible; the counting comparison lives in the text.
 
 Run:  python3 tools/plot_tstart.py [--t-starts 60,120,180]
 """
@@ -17,14 +17,13 @@ import argparse
 import os
 import tomllib
 
-import h5py
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
-from crysp_paths import PRODUCTS, config_out, crystal_label, scenario_out
+from crysp_paths import config_out, crystal_label, scenario_out
 from fit_activity_profile import BLUE, GRIDC, INK, MUTED, RED, SURFACE, style
 
 SCENARIO, TOPOLOGY = "uniform_headep_sobp_1e8", "closed"
@@ -33,16 +32,6 @@ SCENARIO, TOPOLOGY = "uniform_headep_sobp_1e8", "closed"
 SCANNERS = [("BGO 195 K", "crysp_ring_1m_bgo_2x0", "bgo_195k", 22.36, RED),
             ("CsI", "crysp_ring_1m_csi_2x0", "csi", 37.20, BLUE)]
 LEVEL = "all_ev"          # the working protocol
-
-
-def kept_fraction(scanner, crystal, t_start):
-    """Fraction of shard 0's events with t_decay >= t_start (the cut is on
-    the shared decay times, so shard 0 represents the master)."""
-    path = os.path.join(PRODUCTS, SCENARIO, scanner, crystal, "fast_1Gy",
-                        "lors_shard000.h5")
-    with h5py.File(path, "r") as f:
-        td = f["t_decay_s"][:]
-    return float(np.mean(td >= t_start))
 
 
 def series(scanner, crystal, wall_mm, t_starts):
@@ -72,23 +61,20 @@ def main():
     for a in (a1, a2):
         style(a)
     n = 10
-    for name, scanner, crystal, wall, colour in SCANNERS:
+    for jitter, (name, scanner, crystal, wall, colour) in zip((-3.0, 3.0),
+                                                              SCANNERS):
         t, mean, std = series(scanner, crystal, wall, t_starts)
-        a1.errorbar(t, mean, yerr=std, fmt="o", ms=6, color=colour,
+        a1.errorbar(t + jitter, mean, yerr=std, fmt="o", ms=6, color=colour,
                     elinewidth=1.4, capsize=4, label=name)
-        a1.plot(t, mean, color=colour, lw=0.9, alpha=0.5)
-        a2.errorbar(t, std, yerr=std / np.sqrt(2 * (n - 1)), fmt="o", ms=6,
-                    color=colour, elinewidth=1.4, capsize=4, label=name)
-        # Counting prediction anchored at t_start = 0.
-        kept = np.array([kept_fraction(scanner, crystal, ts) for ts in t])
-        a2.plot(t, std[0] / np.sqrt(kept), color=colour, lw=1.2, ls="--",
-                label="counting prediction"
-                      if name == SCANNERS[0][0] else None)
+        a1.plot(t + jitter, mean, color=colour, lw=0.9, alpha=0.5)
+        a2.errorbar(t + jitter, std, yerr=std / np.sqrt(2 * (n - 1)),
+                    fmt="o", ms=6, color=colour, elinewidth=1.4, capsize=4,
+                    label=name)
+    a2.set_ylim(0.0, None)
     a1.set_ylabel("$\\Delta R$ [mm]", color=INK, fontsize=13)
     a1.legend(frameon=False, fontsize=12, labelcolor=INK, loc="best")
     a2.set_ylabel("$\\sigma_R$ [mm]", color=INK, fontsize=13)
     a2.set_xlabel("acquisition start $t_{start}$ [s]", color=INK, fontsize=13)
-    a2.legend(frameon=False, fontsize=11, labelcolor=INK, loc="upper left")
     fig.tight_layout()
 
     out = os.path.join(scenario_out(SCENARIO), TOPOLOGY, "comparison",

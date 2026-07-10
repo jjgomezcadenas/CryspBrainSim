@@ -35,7 +35,7 @@ import numpy as np
 
 from crysp_paths import REPO
 from fit_activity_profile import (
-    CFG, GRIDC, INK, RED, SURFACE, profile_from_image, style, toml_dump)
+    BLUE, CFG, GRIDC, INK, RED, SURFACE, profile_from_image, style, toml_dump)
 
 
 def main():
@@ -121,19 +121,31 @@ def main():
     toml_dump(os.path.join(fits, f"scatters_{tag}.toml"), res)
     print(f"wrote {os.path.join(fits, f'scatters_{tag}.toml')}")
 
+    # Both profiles in fractions of the all-events plateau: the panel is
+    # directly comparable across scanners (the plateau is 1 by construction,
+    # fixed y-range), and the scatter dome is seen in context — a low
+    # pedestal under the edge the fit rides on, not a full-frame feature.
+    # Log y: the full profile fits unclipped and the pedestal LEVELS (7% vs
+    # 5% of plateau) separate visibly across the panels.
     fig, ax = plt.subplots(figsize=(9.5, 4.8), facecolor=SURFACE)
     style(ax)
     ax.axvspan(*window, color=GRIDC, alpha=0.5, lw=0)
-    ax.errorbar(z, ps, yerr=np.sqrt(np.clip(ps, 1.0, None)), fmt="o", ms=3.5,
-                color=INK, mec="none", elinewidth=0.9, capsize=0,
-                label="scatters-only reconstruction")
+    ax.plot(z, pa / plateau, "o", ms=3.0, mfc="none", mec=BLUE, mew=0.9,
+            label="all events (the profile the fit runs on)")
+    ax.errorbar(z, ps / plateau,
+                yerr=np.sqrt(np.clip(ps, 1.0, None)) / plateau, fmt="o",
+                ms=3.5, color=INK, mec="none", elinewidth=0.9, capsize=0,
+                label=f"scatters-only contribution "
+                      f"(pedestal {100 * pedestal / plateau:.0f}% of plateau)")
     zf = z[inw]
-    ax.plot(zf, level + slope * (zf - zf.mean()), color=RED, lw=1.4,
-            label=f"window slope {slope:+.1f}/mm "
-                  f"(worst case {shift:+.2f} mm on R50)")
+    ax.plot(zf, (level + slope * (zf - zf.mean())) / plateau, color=RED,
+            lw=1.4,
+            label=f"window slope (worst case {shift:+.2f} mm on R50)")
+    ax.set_yscale("log")
+    ax.set_ylim(0.015, 5.0)      # headroom keeps the legend off the data
     ax.set_xlabel("z [mm]", color=INK, fontsize=13)
-    ax.set_ylabel("P(z)", color=INK, fontsize=13)
-    ax.legend(frameon=False, fontsize=12, labelcolor=INK, loc="best")
+    ax.set_ylabel("P(z) / all-events plateau", color=INK, fontsize=13)
+    ax.legend(frameon=False, fontsize=11, labelcolor=INK, loc="upper right")
     fig.tight_layout()
     fpath = os.path.join(figdir, "scatters_activity.png")
     fig.savefig(fpath, dpi=160, facecolor=SURFACE)
