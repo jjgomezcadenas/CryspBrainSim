@@ -346,15 +346,17 @@ def style(ax):
         ax.spines[s].set_visible(False)
     for s in ("left", "bottom"):
         ax.spines[s].set_color(MUTED)
-    ax.tick_params(colors=MUTED, labelsize=9)
+    ax.tick_params(colors=MUTED, labelsize=11)
 
 
 def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show,
                pulls=True):
     """Data with error bars, one edge-model fit as a thin red line, the fixed
-    window shaded, R_p marked; lower panel shows the fit pulls (weighted
-    curves) or the raw residuals (dose). `pulls=False` drops the lower panel
-    (the publication variant)."""
+    window shaded, and the R50 construction drawn: guides at the plateau and
+    its half-height, a vertical line where the fit crosses it. The lower
+    panel shows the fit pulls (weighted curves) or the raw residuals (dose);
+    `pulls=False` drops it (the publication variant, no in-figure title —
+    the caption carries the identification)."""
     win = (res["window_lo_mm"], res["window_hi_mm"])
     e = res[model_key]
     fn = EDGE_FN[model_key]
@@ -373,23 +375,26 @@ def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show,
     for a in axes:
         style(a)
     a1.axvspan(*win, color=GRIDC, alpha=0.5, lw=0)
-    a1.errorbar(z, y, yerr=yerr, fmt="o", ms=3, color=INK, mec="none",
-                elinewidth=0.8, capsize=0, label="data")
+    a1.errorbar(z, y, yerr=yerr, fmt="o", ms=3.5, color=INK, mec="none",
+                elinewidth=0.9, capsize=0, label="data")
     a1.plot(zf, fn(zf, e["b"], e["a"], e["z0_mm"], s),
-            color=RED, lw=1.0,
-            label=f"{model_key} fit  χ²/ndf {e['chi2_ndf']:.3g}")
-    a1.axvline(e["Rp_mm"], color=BLUE, ls=":", lw=1.2,
-               label=f"Rp {e['Rp_mm']:.2f} ± {e['Rp_err_mm']:.2f} mm")
-    a1.axvline(e["Rx_mm"], color=AQUA, ls=":", lw=1.2,
-               label=f"R{100 * e['zero_fraction']:g}% {e['Rx_mm']:.2f} ± "
-                     f"{e['Rx_err_mm']:.2f} mm")
-    a1.set_xlim(win[0] - 12, max(win[1] + 10, e["Rx_mm"] + 4))
+            color=RED, lw=1.2,
+            label=f"{model_key} fit  χ²/ndf = {e['chi2_ndf']:.2g}")
+    # The R50 construction: plateau and half-height guides, the crossing.
+    plateau, half = e["b"] + e["a"], e["b"] + e["a"] / 2
+    a1.axhline(plateau, color=MUTED, ls="--", lw=0.9)
+    a1.axhline(half, color=MUTED, ls="--", lw=0.9)
+    a1.axvline(e["R50_mm"], color=BLUE, ls=":", lw=1.6,
+               label=f"R50 = {e['R50_mm']:.2f} ± {e['z0_err_mm']:.2f} mm")
+    a1.set_xlim(win[0] - 12, win[1] + 10)
     sel = (z > win[0] - 12) & (z < win[1] + 10)
-    a1.set_ylim(min(0, 1.05 * y[sel].min()), 1.15 * y[sel].max())
-    a1.set_ylabel("P(z)", color=INK)
-    a1.set_title(f"{name}: distal-edge fit and endpoint ({model_key})",
-                 color=INK, fontsize=11, loc="left")
-    a1.legend(frameon=False, fontsize=8.5, labelcolor=INK, loc="upper right")
+    a1.set_ylim(min(0, 1.05 * y[sel].min()),
+                max(1.15 * y[sel].max(), 1.08 * plateau))
+    a1.set_ylabel("P(z)", color=INK, fontsize=13)
+    if pulls:
+        a1.set_title(f"{name}: distal-edge fit ({model_key})",
+                     color=INK, fontsize=11, loc="left")
+    a1.legend(frameon=False, fontsize=12, labelcolor=INK, loc="upper right")
 
     if a2 is not None:
         inw = (z >= win[0]) & (z <= win[1])
@@ -403,9 +408,9 @@ def plot_curve(plt, name, z, y, res, model_key, weighted, figdir, show,
         else:
             a2.plot(z[inw], y[inw] - fit, "o", ms=2.5, color=INK)
             a2.set_ylabel("residual", color=INK)
-        a2.set_xlabel("z [mm]", color=INK)
+        a2.set_xlabel("z [mm]", color=INK, fontsize=13)
     else:
-        a1.set_xlabel("z [mm]", color=INK)
+        a1.set_xlabel("z [mm]", color=INK, fontsize=13)
 
     fig.tight_layout()
     path = os.path.join(figdir, f"{name}.png")

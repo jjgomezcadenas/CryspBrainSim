@@ -87,17 +87,16 @@ def main():
                              fill=False, ls="--", lw=1.2, ec=INK, alpha=0.8))
         if r50 is not None and h == 2:
             ax.axvline(r50, color=RED, ls=":", lw=1.2)
-        ax.set_title(title, color=INK, fontsize=10, loc="left")
-        ax.set_xlabel("xyz"[h] + " [mm]", color=INK)
-        ax.set_ylabel("xyz"[v] + " [mm]", color=INK)
-        ax.tick_params(colors=MUTED, labelsize=8)
+        ax.set_title(title, color=INK, fontsize=12, loc="left")
+        ax.set_xlabel("xyz"[h] + " [mm]", color=INK, fontsize=12)
+        ax.set_ylabel("xyz"[v] + " [mm]", color=INK, fontsize=12)
+        ax.tick_params(colors=MUTED, labelsize=10)
         for sp in ax.spines.values():
             sp.set_color(MUTED)
 
-    fig.suptitle(f"{ACTIVE.scanner} / {ACTIVE.label} — {tag}: reconstructed "
-                 "activity, orthogonal projections — head outline dashed"
-                 + ("" if r50 is None else ", fitted R50 dotted"),
-                 color=INK, fontsize=11, x=0.02, ha="left")
+    fig.suptitle(f"{ACTIVE.scanner} / {ACTIVE.label} — run "
+                 f"{tag.replace('shard', '').replace('_all_uncorr', ' (all events)')}",
+                 color=INK, fontsize=12, x=0.02, ha="left")
     fig.tight_layout(rect=[0, 0, 1, 0.95])
     figdir = os.path.join(out, "fits", "figures")
     os.makedirs(figdir, exist_ok=True)

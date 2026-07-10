@@ -37,19 +37,19 @@ We quantify the precision with which an in-room PET scanner determines the
 distal edge of a proton field from the $\beta^+$ activity it induces, for
 the two representative CRYSP configurations: BGO at \SI{195}{K} and
 cryogenic CsI, on the same closed \SI{1}{m} ring with two-radiation-length
-crystals. Each scanner is simulated as ten independent \SI{1}{Gy}
-acquisitions of an SOBP field in a head phantom, reconstructed with the
-full list-mode chain. The estimator --- the midpoint $\Rfifty$ of the
-distal activity fall-off, fitted on the whole-plane depth profile --- is
-established with its calibration budget per arm, each term resolved to
-\SIrange{0.01}{0.04}{mm}. The headline is a tie: at the realistic protocol
-(all events, no corrections) both scanners measure the edge with
-$\sigma_R = 0.11\,$mm per \SI{1}{Gy} acquisition --- BGO's $2.1\times$
-statistics cancels against its $2.1\times$ scatter fraction. On true
-coincidences the arms separate ($0.065$ vs.\ \SI{0.084}{mm}), which is the
-margin a scatter correction would unlock. The precision follows
-$1/\sqrt{\text{dose}}$ with a dose-invariant calibration on both arms, so a
-\SI{0.1}{Gy} exploratory shot locates the edge to
+crystals. Each scanner is simulated as ten independent \SI{1}{Gy} runs of
+an SOBP field in a head phantom, reconstructed with the full list-mode
+chain. The range observable is the midpoint $\Rfifty$ of the distal
+activity fall-off, fitted on the whole-plane depth profile; its offset to
+the dose edge is a calibration constant of each scanner, measured here to
+\SIrange{0.01}{0.04}{mm} per term of the chain. At the working protocol
+(all events, no corrections) both scanners reach the same precision,
+$\sigma_R = \SI{0.11}{mm}$ per \SI{1}{Gy} run: BGO's $2.1\times$
+statistics compensates its $2.1\times$ scatter fraction. On true
+coincidences the scanners separate ($0.065$ vs.\ \SI{0.084}{mm}), which is
+the margin a scatter correction would recover. The precision follows
+$1/\sqrt{\text{dose}}$ with a dose-invariant calibration on both scanners,
+so a \SI{0.1}{Gy} exploratory run locates the edge to
 \SIrange{0.16}{0.23}{mm} before the clinical dose is delivered.
 \end{abstract}
 
@@ -67,18 +67,18 @@ problem: the depth--dose $D(z)$ and the depth profile of the $\beta^+$
 activity $A(z)$. Because isotope production requires protons above the
 reaction thresholds ($\approx 17$ and \SI{18}{MeV} for the main $^{15}$O
 and $^{11}$C channels), the activity ends about \SI{11}{mm} upstream of the
-dose edge. That offset is stable beam physics: it is what a simulation
-calibrates and a measurement rides on.
+dose edge. The offset is a property of the beam and the tissue; the
+reference simulation calibrates it.
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.46\textwidth]{figs/sobp_plateau.png}
   \includegraphics[width=0.46\textwidth]{figs/dose_activity.png}
   \caption{Left: the SOBP depth--dose and the definition of the clinical
-    range point $R_{80}$. Right: the nominal $\beta^+$ activity profile
-    together with the dose profile; the activity edge sits $\approx
-    \SI{11}{mm}$ upstream of the dose edge, set by the production
-    thresholds.}
+    range point $R_{80}$, the depth at which the dose falls to $80\%$ of
+    its plateau. Right: the nominal $\beta^+$ activity profile together
+    with the dose profile; the activity edge sits $\approx \SI{11}{mm}$
+    upstream of the dose edge, set by the production thresholds.}
   \label{fig:sobp}
 \end{figure}
 
@@ -86,21 +86,20 @@ calibrates and a measurement rides on.
 
 Both configurations are the same closed cylindrical ring --- inner radius
 \SI{387}{mm}, axial length \SI{1024}{mm}, $48\times20$ monolithic blocks
---- differing only in crystal, each at a depth of \textbf{two radiation
-lengths} (the standard on which the CRYSP position resolution of
-\SI{3.5}{mm} FWHM per axis is measured). Table~\ref{tab:arms} gives the
-detector constants and the resulting per-acquisition statistics; the
-timing windows come from the calibrated CTR model of the production
-campaign, anchored to the cryogenic CsI bench measurement
-of ref.~\cite{soleti_csi}.
+--- differing only in crystal, each at a depth of two radiation lengths
+(the standard on which the CRYSP position resolution of \SI{3.5}{mm} FWHM
+per axis is measured). Table~\ref{tab:arms} gives the detector constants
+and the resulting per-run statistics; the timing windows come from the
+calibrated CTR model of the production campaign, anchored to the cryogenic
+CsI bench measurement of ref.~\cite{soleti_csi}.
 
 \begin{table}[htb]
   \centering
-  \caption{The two arms. Shared: ring geometry, position resolution
+  \caption{The two scanners. Shared: ring geometry, position resolution
     $\sigma_{xyz} = \SI{1.486}{mm}$ (\SI{3.5}{mm} FWHM), acquisition window
-    \SIrange{0}{1200}{s}, and the annihilation sets (acquisition $R$ sees
-    identical decays on both scanners --- differences are detector-only).
-    Statistics are per \SI{1}{Gy} acquisition ($8.02\times10^{7}$ decays).}
+    \SIrange{0}{1200}{s}, and the annihilation sets (run $R$ sees identical
+    decays on both scanners --- differences are detector-only). Statistics
+    are per \SI{1}{Gy} run ($8.02\times10^{7}$ decays).}
   \label{tab:arms}
   \vspace{1mm}
   \begin{tabular}{lcc}
@@ -119,18 +118,18 @@ of ref.~\cite{soleti_csi}.
   \end{tabular}
 \end{table}
 
-The contrast is the point of the pair: BGO delivers $2.1\times$ the true
-coincidences; CsI delivers purity --- half the scatter fraction and
-$3\times$ fewer randoms from its energy resolution and timing. The range
-measurement arbitrates between them.
+The pair spans the design trade-off: BGO records $2.1\times$ the true
+coincidences; CsI records a purer sample --- half the scatter fraction and
+$3\times$ fewer randoms, from its energy resolution and timing. The range
+measurement quantifies the balance.
 
 Images are reconstructed with list-mode MLEM~\cite{shepp_vardi} on a
 $64\times64\times96$ grid of \SI{1.5}{mm} voxels covering the activity
 corridor, with 50 iterations, per-event attenuation factors computed
-analytically on the phantom ellipsoid, and a per-arm sensitivity image from
-$10^{9}$ sampled lines of response. Figure~\ref{fig:projections} shows the
-orthogonal projections of one reconstructed BGO acquisition; the CsI image
-is identical in geometry, with $2.1\times$ fewer counts.
+analytically on the phantom ellipsoid, and a per-scanner sensitivity image
+from $10^{9}$ sampled lines of response. Figure~\ref{fig:projections}
+shows the orthogonal projections of one reconstructed BGO run; the CsI
+image is identical in geometry, with $2.1\times$ fewer counts.
 
 \begin{figure}[htb]
   \centering
@@ -138,9 +137,8 @@ is identical in geometry, with $2.1\times$ fewer counts.
   \includegraphics[width=\textwidth]{figs/recon_projections_bgo.png}
   \caption{Top: the head phantom, an ellipsoid of uniform brain tissue.
     Bottom: orthogonal projections of the reconstructed activity of one
-    \SI{1}{Gy} BGO acquisition (transaxial, coronal, sagittal). The dashed
-    curve is the phantom outline; the dotted line marks the fitted
-    $\Rfifty$.}
+    \SI{1}{Gy} BGO run (transaxial, coronal, sagittal). The dashed curve
+    is the phantom outline; the dotted line marks the fitted $\Rfifty$.}
   \label{fig:projections}
 \end{figure}
 
@@ -167,13 +165,14 @@ baseline $b$, the plateau amplitude $a$, the midpoint $z_0$ and the edge
 width $w$.
 
 \paragraph{Range points.} For any curve with a plateau and a distal
-fall-off, $R_X$ denotes the depth at which the curve has dropped to $X\%$ of
-its plateau. Two of them play distinct roles:
+fall-off, $R_X$ denotes the depth at which the curve has dropped to $X\%$
+of its plateau. Two of them play distinct roles:
 \begin{itemize}
-\item $\Rfifty \equiv z_0$, the \emph{midpoint} of the fall-off, is the
-  range observable. It is where the profile is steepest, so it carries the
-  smallest statistical error of any level, and Eq.~(\ref{eq:erfc}) yields it
-  directly as a fit parameter.
+\item $\Rfifty \equiv z_0$, the \emph{midpoint} of the fall-off --- the
+  depth at which the profile crosses half its plateau above baseline
+  (Fig.~\ref{fig:fits}) --- is the range observable. It is where the
+  profile is steepest, so it carries the smallest statistical error of any
+  level, and Eq.~(\ref{eq:erfc}) yields it directly as a fit parameter.
 \item $R_{80}$ of the \emph{dose} is the clinical prescription point
   (Fig.~\ref{fig:sobp}, left). For a given beam it differs from the dose
   $\Rfifty$ by a fixed geometric constant of the SOBP shape
@@ -196,62 +195,62 @@ truth-level value is $\DR = \SI{-10.74}{mm}$
 ($\Rfifty^{\text{activity}} = \SI{-14.32 \pm 0.01}{mm}$,
 $\Rfifty^{\text{dose}} = \SI{-3.58 \pm 0.03}{mm}$).
 
-The estimator is insensitive to its own conventions: replacing the erfc by
-a logistic edge --- the parametrisation of ref.~\cite{zapien2025}, whose
-positron-activity-range PAR is precisely $\Rfifty$ --- moves $\Rfifty$ by a
-constant \SI{0.10}{mm} on both arms, and moves the calibrated differences
-by less than \SI{0.03}{mm}. The fitted edge shape itself is a
-superposition: each isotope's activity terminates where the proton energy
-crosses its production threshold, so the fall-off is a sum of edges at
-slightly different depths --- dominated by $^{15}$O and $^{11}$C, with a
-deeper-reaching $^{13}$N foot from its low ($\approx\SI{5.5}{MeV}$)
-threshold. Equation~(\ref{eq:erfc}) is thus a convention whose parameters
-are validated by their stability, and an isotope-resolved composite fit is
-a natural refinement (Sec.~\ref{sec:outlook}).
+The fitted edge shape is a superposition: each isotope's activity
+terminates where the proton energy crosses its production threshold, so
+the fall-off is a sum of edges at slightly different depths --- dominated
+by $^{15}$O and $^{11}$C, with a deeper-reaching $^{13}$N foot from its
+low ($\approx\SI{5.5}{MeV}$) threshold. Equation~(\ref{eq:erfc}) is a
+convention whose parameters are validated by their stability across the
+measurement chain and the dose range (Secs.~\ref{sec:budget}
+and~\ref{sec:dose}); an isotope-resolved composite fit is a natural
+refinement (Sec.~\ref{sec:outlook}).
 
-Figure~\ref{fig:fit} shows the fit on one reconstructed BGO acquisition.
+Figure~\ref{fig:fits} shows the fit on one run of each scanner, at the
+working protocol (all recorded events, no corrections).
 
 \begin{figure}[htb]
   \centering
-  \includegraphics[width=0.9\textwidth]{figs/fit_recon_activity_bgo.png}
-  \caption{Whole-plane depth profile of one reconstructed \SI{1}{Gy} BGO
-    acquisition (points, Poisson errors) and the erfc fit
-    (Eq.~\ref{eq:erfc}, red line) in the fixed window (shaded). The
-    markers show two derived points: the tangent endpoint $R_p$ and the
-    1\% crossing.}
-  \label{fig:fit}
+  \includegraphics[width=0.49\textwidth]{figs/fit_all_events_bgo.png}
+  \includegraphics[width=0.49\textwidth]{figs/fit_all_events_csi.png}
+  \caption{Whole-plane depth profile of one reconstructed \SI{1}{Gy} run
+    (points, Poisson errors) at the working protocol --- all events, no
+    corrections --- with the erfc fit (Eq.~\ref{eq:erfc}, red line) in the
+    fixed window (shaded). Left: BGO 195\,K; right: CsI. The dashed guides
+    mark the fitted plateau and its half; $\Rfifty$ is the depth at which
+    the fit crosses the half-height (dotted line, value in the legend).}
+  \label{fig:fits}
 \end{figure}
 
 \section{Calibration budgets}
 \label{sec:budget}
 
-Each stage of the measurement chain shifts $\DR$ by a definite, resolvable
-amount, and the decomposition is measured per arm over its ten independent
-acquisitions (Table~\ref{tab:ladder}, Fig.~\ref{fig:ladder}): from the true
-activity to the origins of the detected true coincidences (the acceptance
-stage: attenuation and solid-angle weighting), to the MLEM reconstruction
-of the trues, to the reconstruction of \emph{all} events with no scatter or
-randoms correction.
+Each level of the measurement chain shifts $\DR$ by a definite, resolvable
+amount, and the decomposition is measured per scanner over its ten
+independent runs (Table~\ref{tab:ladder}, Fig.~\ref{fig:ladder}): from the
+true activity to the origins of the detected true coincidences (the
+acceptance level: attenuation and solid-angle weighting), to the MLEM
+reconstruction of the trues, to the reconstruction of \emph{all} events
+with no scatter or randoms correction.
 
 \begin{table}[htb]
   \centering
-  \caption{The calibration budgets: $\DR$ at each rung of the measurement
-    chain (erfc fit), over each arm's ten \SI{1}{Gy} acquisitions ---
-    mean $\pm$ standard error, [acquisition-to-acquisition spread]. The
-    truth-level value, common to both, is \SI{-10.743}{mm}.}
+  \caption{The calibration budgets: $\DR$ at each level of the measurement
+    chain (erfc fit), over each scanner's ten \SI{1}{Gy} runs --- mean
+    $\pm$ run-to-run spread $\sigma$. The truth-level value, common to
+    both, is \SI{-10.743}{mm}.}
   \label{tab:ladder}
   \vspace{1mm}
   \begin{tabular}{lll}
     \toprule
-    rung & {BGO 195\,K [mm]} & {CsI [mm]} \\
+    level & {BGO 195\,K [mm]} & {CsI [mm]} \\
     \midrule
-    detected trues (origins) & $-10.938 \pm 0.007$~~[0.023]
-                             & $-10.962 \pm 0.012$~~[0.039] \\
-    reconstruction (trues)   & $-11.165 \pm 0.020$~~[0.065]
-                             & $-11.232 \pm 0.027$~~[0.084] \\
+    detected trues (origins) & $-10.938 \pm 0.023$
+                             & $-10.962 \pm 0.039$ \\
+    reconstruction (trues)   & $-11.165 \pm 0.065$
+                             & $-11.232 \pm 0.084$ \\
     reconstruction (all events, uncorrected)
-                             & $-11.144 \pm 0.036$~~[0.113]
-                             & $-11.192 \pm 0.036$~~[0.114] \\
+                             & $-11.144 \pm 0.113$
+                             & $-11.192 \pm 0.114$ \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -260,36 +259,34 @@ randoms correction.
   \centering
   \includegraphics[width=0.49\textwidth]{figs/ladder_delta_r50_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/ladder_delta_r50_csi.png}
-  \caption{$\DR$ per rung for the ten acquisitions (circles) with mean
-    $\pm$ sem (bars), for the erfc (red) and logistic (blue) fits; the
-    dashed lines are the truth-level values. Left: BGO 195\,K; right: CsI.}
+  \caption{$\DR$ at each level of the measurement chain: the ten runs
+    (circles) and their mean $\pm$ run-to-run spread $\sigma$ (red bars);
+    the dashed line is the truth-level value. Left: BGO 195\,K; right:
+    CsI.}
   \label{fig:ladder}
 \end{figure}
 
-The budgets read the same on both arms: the acceptance stage moves the
-edge by ${\sim}\SI{-0.2}{mm}$, the reconstruction by a further
-${\sim}\SI{-0.25}{mm}$, and admitting the scattered and random
-coincidences uncorrected changes it by $+0.021$ (BGO) and
-$+\SI{0.040}{mm}$ (CsI). Each term is a constant of the chain that the
-per-scanner reference simulation calibrates, measured here to
-\SIrange{0.01}{0.04}{mm} --- far below the effects the verification aims
-to detect.
+The budgets read the same on both scanners: the acceptance level moves the
+edge by about \SI{-0.2}{mm}, the reconstruction by a further
+\SI{-0.25}{mm}, and admitting the scattered and random coincidences
+uncorrected changes it by $+0.021$ (BGO) and $+\SI{0.040}{mm}$ (CsI). Each
+term is a constant of the chain that the per-scanner reference simulation
+calibrates; over the ten runs its mean is determined to
+$\sigma/\sqrt{10}$, i.e.\ \SIrange{0.01}{0.04}{mm} --- well below the
+effects the verification aims to detect.
 
-The precision is quoted as the spread over independent acquisitions ---
-the fluctuation a real measurement has. (The per-fit errors on
-reconstructed profiles are conservative by a factor $\approx 2.5$, a known
-consequence of the correlations MLEM introduces between neighbouring
-voxels; on the origins rung, where the counts are honestly Poisson, the
-per-fit error matches the spread.)
+The precision of the measurement is quoted as $\sigma$, the spread over
+the ten independent runs: the fluctuation a repeated measurement has.
 
-\section{The two arms tie --- and why}
+\section{Comparison of the two scanners at \texorpdfstring{\SI{1}{Gy}}{1 Gy}}
 \label{sec:tie}
 
 Table~\ref{tab:k} is the central result. On true coincidences BGO's
-$2.1\times$ statistics buys the expected $\sqrt{N}$ advantage. Admitting
-the uncorrected event mix --- the protocol a real scanner runs --- costs
-BGO a factor $1.7$ in spread against CsI's $1.4$, and the two arms land on
-the same number:
+$2.1\times$ statistics gives the expected $\sqrt{N}$ advantage. At the
+working protocol --- all recorded events, no corrections --- the scattered
+coincidences widen the spread by a factor $1.7$ on BGO ($27.4\%$ scatter)
+and $1.4$ on CsI ($13.3\%$), and the two scanners reach the same
+precision:
 \begin{equation}
   \sigma_R(\SI{1}{Gy},\ \text{all events})
   \;=\; 0.113 \pm 0.027\ \text{(BGO 195\,K)}
@@ -298,10 +295,9 @@ the same number:
 
 \begin{table}[htb]
   \centering
-  \caption{The scanner constants: $\sigma_R$ at \SI{1}{Gy} from each arm's
-    ten acquisitions (erfc, whole-plane). The all-events row is the
-    realistic protocol; the trues row is what a perfect scatter correction
-    would recover.}
+  \caption{$\sigma_R$ at \SI{1}{Gy} from each scanner's ten runs (erfc,
+    whole-plane). The all-events row is the working protocol; the trues
+    row is the precision a perfect scatter correction would recover.}
   \label{tab:k}
   \vspace{1mm}
   \begin{tabular}{lcc}
@@ -314,60 +310,58 @@ the same number:
   \end{tabular}
 \end{table}
 
-The mechanism is instructive. The scattered coincidences do not bias the
-edge --- the shifts in Table~\ref{tab:ladder} are \SIrange{0.02}{0.04}{mm},
-because the scatter background reconstructs into a smooth dome under the
-edge (Fig.~\ref{fig:scatters}) whose gentle window slope the free baseline
-of Eq.~(\ref{eq:erfc}) absorbs (worst-case bounds $-0.13$ and
-\SI{-0.28}{mm}; measured $+0.02$ and $+\SI{0.04}{mm}$). What they add is
-\emph{variance}: mispositioned events that fluctuate acquisition to
-acquisition without sharpening the edge. Purity and statistics are
-therefore exchangeable at this protocol, and the two representative
-crystals happen to exchange them at par.
+The scattered coincidences do not bias the edge: the shifts in
+Table~\ref{tab:ladder} are \SIrange{0.02}{0.04}{mm}, because the scatter
+background reconstructs into a smooth dome under the edge
+(Fig.~\ref{fig:scatters}) whose window slope the free baseline of
+Eq.~(\ref{eq:erfc}) absorbs (worst-case bounds $-0.13$ and \SI{-0.28}{mm};
+measured $+0.02$ and $+\SI{0.04}{mm}$). Their cost is statistical:
+mispositioned events fluctuate run to run without sharpening the edge, so
+they add variance. Purity and statistics are exchangeable at this
+protocol, and the two crystals exchange them at par.
 
-The corollary sets the agenda: \textbf{a scatter correction is the
-tiebreaker}. Recovering the trues-level precision is worth a factor $1.7$
-to BGO and $1.4$ to CsI (Table~\ref{tab:k}), so the correction --- or a
-tighter selection exploiting CsI's energy resolution --- is where the
-technology comparison will be decided.
+A scatter correction therefore decides the comparison: recovering the
+trues-level precision is worth a factor $1.7$ to BGO and $1.4$ to CsI
+(Table~\ref{tab:k}). The correction --- or a tighter selection exploiting
+CsI's energy resolution --- is the next step of the technology comparison.
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.49\textwidth]{figs/scatters_profile_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/scatters_profile_csi.png}
   \caption{Whole-plane profile of the scatters-only reconstruction of one
-    acquisition, in the units of the joint (all-events) image: BGO 195\,K
-    (left, $27.4\%$ of events) and CsI (right, $13.3\%$). The red line is
-    a straight fit inside the window; its slope bounds the worst-case
-    effect on $\Rfifty$.}
+    run, in the units of the joint (all-events) image: BGO 195\,K (left,
+    $27.4\%$ of events) and CsI (right, $13.3\%$). The red line is a
+    straight fit inside the window (shaded); its slope bounds the
+    worst-case effect on $\Rfifty$.}
   \label{fig:scatters}
 \end{figure}
 
 \section{Low-dose operation}
 \label{sec:dose}
 
-The dose axis is explored by thinning each stored acquisition with the
-appropriate Bernoulli probability and reconstructing each realisation with
-the identical chain. Figure~\ref{fig:dose} shows $\DR$ for every
-realisation, grouped by dose, and the measured $\sigma_R$ against the
+The dose axis is explored by thinning each stored run with the appropriate
+Bernoulli probability and reconstructing each realisation with the
+identical chain. Figure~\ref{fig:dose} shows $\DR$ for every realisation,
+grouped by dose, and the measured $\sigma_R$ against the
 $1/\sqrt{\text{dose}}$ law anchored at \SI{1}{Gy}; Table~\ref{tab:dose}
-quantifies the two operating points per arm (true coincidences).
+quantifies the two operating points per scanner (true coincidences).
 
 \begin{table}[htb]
   \centering
-  \caption{The two operating points per arm (erfc fit, whole-plane
+  \caption{The two operating points per scanner (erfc fit, whole-plane
     profile, trues). $n$ is the number of independent realisations.}
   \label{tab:dose}
   \vspace{1mm}
-  \begin{tabular}{llS[table-format=2]S[table-format=-2.3]S[table-format=1.3]S[table-format=1.3]S[table-format=1.3]}
+  \begin{tabular}{llS[table-format=2]S[table-format=-2.3]S[table-format=1.3]S[table-format=1.3]}
     \toprule
-    arm & {dose [Gy]} & {$n$} & {$\DR$ [mm]} & {sem [mm]}
-      & {$\sigma_R$ [mm]} & {$\pm$ [mm]} \\
+    scanner & {dose [Gy]} & {$n$} & {$\DR$ [mm]} & {$\sigma_R$ [mm]}
+      & {$\pm$ [mm]} \\
     \midrule
-    BGO 195\,K & 1.0 & 10 & -11.165 & 0.020 & 0.065 & 0.015 \\
-    BGO 195\,K & 0.1 & 20 & -11.192 & 0.036 & 0.159 & 0.026 \\
-    CsI        & 1.0 & 10 & -11.232 & 0.027 & 0.084 & 0.020 \\
-    CsI        & 0.1 & 20 & -11.198 & 0.051 & 0.230 & 0.037 \\
+    BGO 195\,K & 1.0 & 10 & -11.165 & 0.065 & 0.015 \\
+    BGO 195\,K & 0.1 & 20 & -11.192 & 0.159 & 0.026 \\
+    CsI        & 1.0 & 10 & -11.232 & 0.084 & 0.020 \\
+    CsI        & 0.1 & 20 & -11.198 & 0.230 & 0.037 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -377,25 +371,26 @@ quantifies the two operating points per arm (true coincidences).
   \includegraphics[width=0.49\textwidth]{figs/dose_sweep_r50_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/dose_sweep_r50_csi.png}
   \caption{Top panels: $\DR$ for every realisation (circles) grouped by
-    dose, with mean $\pm$ sem; the dashed line is the \SI{1}{Gy} mean.
+    dose, with mean $\pm$ spread $\sigma_R$; the dashed line is the
+    \SI{1}{Gy} mean.
     Bottom panels: the spread $\sigma_R$ per dose against the
     $1/\sqrt{\text{dose}}$ prediction anchored at \SI{1}{Gy} (red line).
     Left: BGO 195\,K; right: CsI.}
   \label{fig:dose}
 \end{figure}
 
-Two facts hold on both arms. The calibration is dose-invariant: the group
-means agree with the \SI{1}{Gy} anchor within one standard error down to
-\SI{0.1}{Gy} --- the reconstruction places the edge at the same depth over
-a factor ten in statistics. And the precision is purely statistical:
-$\sigma_R \propto 1/\sqrt{\text{dose}}$ at every measured point, with no
-onset of fit instability at low counts.
+Two facts hold on both scanners. The calibration is dose-invariant: the
+group means agree with the \SI{1}{Gy} anchor well within the spread
+down to \SI{0.1}{Gy} --- the reconstruction places the edge at the same
+depth over a factor ten in statistics. And the precision is purely
+statistical: $\sigma_R \propto 1/\sqrt{\text{dose}}$ at every measured
+point, with no onset of fit instability at low counts.
 
-The consequence is a mode of operation: an \emph{exploratory dose}. A
-\SI{0.1}{Gy} shot --- a small fraction of a \SIrange{1}{2}{Gy} daily
-fraction --- locates the distal edge with $\sigma_R = 0.16$ (BGO) to
-\SI{0.23}{mm} (CsI) and a calibration known to better than \SI{0.05}{mm},
-an order of magnitude below the millimetre scale that drives clinical
+This permits an \emph{exploratory dose} mode of operation. A \SI{0.1}{Gy}
+run --- a small fraction of a \SIrange{1}{2}{Gy} daily fraction ---
+locates the distal edge with $\sigma_R = 0.16$ (BGO) to \SI{0.23}{mm}
+(CsI) and a calibration known to better than \SI{0.05}{mm}, an order of
+magnitude below the millimetre scale that drives clinical
 margins~\cite{paganetti2012}. The beam range can therefore be verified
 against the plan before the therapeutic dose is delivered, with the same
 scanner and the same analysis.
@@ -403,25 +398,25 @@ scanner and the same analysis.
 \section{Outlook}
 \label{sec:outlook}
 
-Four directions follow directly from this round.
+Four directions follow from this round.
 
-\paragraph{Scatter correction.} The tiebreaker of
+\paragraph{Scatter correction.} The deciding factor of
 Sec.~\ref{sec:tie}: recovering trues-level precision is worth a factor
 $1.7$ (BGO) and $1.4$ (CsI). The scatters-only reconstructions of
 Fig.~\ref{fig:scatters} are the input for designing it, and the
-per-configuration check (window slope vs.\ edge gradient) is standing.
+per-configuration check (window slope against edge gradient) is in place.
 
 \paragraph{Acquisition start time.} The isotope activities
 (Fig.~\ref{fig:decays}) set the trade-off of in-room imaging: a start
 \SIrange{2}{3}{min} after beam-off, rather than one, loses part of the
 $^{15}$O signal but shifts the mix towards $^{11}$C, whose positron
 endpoint energy (\SI{0.96}{MeV}, against \SI{1.73}{MeV} for $^{15}$O)
-carries a correspondingly smaller positron range --- a \emph{sharper}
-intrinsic edge. A high-sensitivity scanner can absorb the count loss, so
-the delayed start may improve the range measurement rather than degrade
-it. The production files carry the absolute decay time of every
-coincidence, so any start time is a pure event selection on the stored
-acquisitions --- statistically exact, randoms included.
+carries a correspondingly smaller positron range --- a sharper intrinsic
+edge. A high-sensitivity scanner can absorb the count loss, so the delayed
+start may improve the range measurement rather than degrade it. The
+production files carry the absolute decay time of every coincidence, so
+any start time is a pure event selection on the stored runs ---
+statistically exact, randoms included.
 
 \paragraph{Isotope-resolved edge model.} The distal fall-off is a
 superposition of per-isotope edges with known relative depths. A composite
@@ -431,14 +426,14 @@ of Eq.~(\ref{eq:erfc}) for the start-time studies.
 
 \paragraph{Geometry axis.} With the crystal contrast measured, the
 remaining scanner axes --- ring length (sensitivity) and open geometries
-(angular coverage) --- run through the identical battery; the analysis is
+(angular coverage) --- run through the identical analysis, which is
 configuration-blind by construction.
 
 \begin{figure}[htb]
   \centering
   \includegraphics[width=0.8\textwidth]{figs/activity.png}
   \caption{Activity of the $\beta^+$ emitters produced by the field, as a
-    function of time: the currency of the acquisition-start trade-off.}
+    function of time after irradiation.}
   \label{fig:decays}
 \end{figure}
 
@@ -447,18 +442,18 @@ configuration-blind by construction.
 The whole-plane erfc fit of the $\beta^+$ depth profile, with $\Rfifty$ as
 the range observable and the activity--dose offset calibrated per scanner
 on the reference simulation, is a robust distal-edge estimator: its
-conventions contribute below \SI{0.1}{mm}, its calibration budget is
-measured to \SIrange{0.01}{0.04}{mm} per term on both arms, and the
-scattered coincidences bias it by no more than \SI{0.04}{mm} without
-correction. The first technology round is a tie: BGO 195\,K and cryogenic
-CsI both measure the distal edge with $\sigma_R = \SI{0.11}{mm}$ per
-\SI{1}{Gy} acquisition at the uncorrected protocol --- statistics against
-purity, at par. The trues-level precisions ($0.065$ vs.\ \SI{0.084}{mm})
-state what a scatter correction would unlock on each arm, making that
-correction the deciding question of the comparison. On both arms the
-precision scales as $1/\sqrt{\text{dose}}$ with a dose-invariant
-calibration, so an exploratory \SI{0.1}{Gy} shot verifies the beam range
-to \SIrange{0.16}{0.23}{mm} before the clinical dose is delivered.
+calibration budget is measured to \SIrange{0.01}{0.04}{mm} per term on
+both scanners, and the scattered coincidences bias it by no more than
+\SI{0.04}{mm} without correction. The first technology round ends level:
+BGO 195\,K and cryogenic CsI both measure the distal edge with
+$\sigma_R = \SI{0.11}{mm}$ per \SI{1}{Gy} run at the working protocol ---
+statistics against purity, at par. The trues-level precisions ($0.065$
+vs.\ \SI{0.084}{mm}) state what a scatter correction would recover on each
+scanner, making that correction the deciding question of the comparison.
+On both scanners the precision scales as $1/\sqrt{\text{dose}}$ with a
+dose-invariant calibration, so an exploratory \SI{0.1}{Gy} run verifies
+the beam range to \SIrange{0.16}{0.23}{mm} before the clinical dose is
+delivered.
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}

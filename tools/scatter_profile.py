@@ -124,18 +124,16 @@ def main():
     fig, ax = plt.subplots(figsize=(9.5, 4.8), facecolor=SURFACE)
     style(ax)
     ax.axvspan(*window, color=GRIDC, alpha=0.5, lw=0)
-    ax.errorbar(z, ps, yerr=np.sqrt(np.clip(ps, 1.0, None)), fmt="o", ms=3,
-                color=INK, mec="none", elinewidth=0.8, capsize=0,
+    ax.errorbar(z, ps, yerr=np.sqrt(np.clip(ps, 1.0, None)), fmt="o", ms=3.5,
+                color=INK, mec="none", elinewidth=0.9, capsize=0,
                 label="scatters-only reconstruction")
     zf = z[inw]
-    ax.plot(zf, level + slope * (zf - zf.mean()), color=RED, lw=1.0,
-            label=f"window line: slope {slope:+.1f}/mm "
-                  f"(≈ {shift:+.3f} mm on R50)")
-    ax.set_xlabel("z [mm]", color=INK)
-    ax.set_ylabel("P(z)", color=INK)
-    ax.set_title(f"{tag}: whole-plane profile of the scatters-only "
-                 f"reconstruction", color=INK, fontsize=11, loc="left")
-    ax.legend(frameon=False, fontsize=9, labelcolor=INK, loc="best")
+    ax.plot(zf, level + slope * (zf - zf.mean()), color=RED, lw=1.4,
+            label=f"window slope {slope:+.1f}/mm "
+                  f"(worst case {shift:+.2f} mm on R50)")
+    ax.set_xlabel("z [mm]", color=INK, fontsize=13)
+    ax.set_ylabel("P(z)", color=INK, fontsize=13)
+    ax.legend(frameon=False, fontsize=12, labelcolor=INK, loc="best")
     fig.tight_layout()
     fpath = os.path.join(figdir, "scatters_activity.png")
     fig.savefig(fpath, dpi=160, facecolor=SURFACE)
