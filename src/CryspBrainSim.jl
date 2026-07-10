@@ -23,7 +23,8 @@ using Random: MersenneTwister
 
 export depth_profile, distal_window, fit_endpoint, sigma_R
 export read_csv_table, leaf_dir, shard_files, shard_attrs, read_shard,
-       pool_shards, scanner_geometry, phantom_region, material_mu, truth_dir
+       shard_t_decay, pool_shards, scanner_geometry, phantom_region,
+       material_mu, truth_dir
 export ShardStats, shard_stats
 export TruthReference, characterize, distal_crossing, windowed_crossing,
        read_depth_dose, read_activity_profile, write_reference

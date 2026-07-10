@@ -165,6 +165,19 @@ end
 # Shared per-scenario inputs: scanner geometry, phantom, truth bundle
 # ---------------------------------------------------------------------------
 """
+    shard_t_decay(file) -> Vector{Float32}
+
+The absolute decay time of every coincidence (`t_decay_s`, seconds from the
+acquisition start; for randoms, gamma 1's decay). Read raw from the file, so
+the vector aligns with `read_shard`'s coincidence list only when no
+degenerate LORs were dropped — assert `n_dropped == 0` before masking with
+it. A delayed acquisition start is the selection `t_decay .>= t_start`.
+"""
+function shard_t_decay(file::AbstractString)
+    return h5open(f -> read(f, "t_decay_s"), file, "r")
+end
+
+"""
     scanner_geometry(scanner_dir) -> NamedTuple
 
 The ring geometry from `<scanner>/scanner_geometry.json`, in mm:

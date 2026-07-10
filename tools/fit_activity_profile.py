@@ -316,14 +316,17 @@ def profile_from_image(image, grid, centre, roi_radius):
     return z, image[mask, :].sum(axis=0)
 
 
-def profile_from_origins(shard_file, grid, centre, roi_radius):
+def profile_from_origins(shard_file, grid, centre, roi_radius, t_start=0.0):
     """P(z) from the detected trues' TRUE annihilation positions: histogram
     z0 on the grid's z bins, within the transverse disc (or the whole plane).
-    Genuinely Poisson counts, and no reconstruction in the chain."""
+    Genuinely Poisson counts, and no reconstruction in the chain. `t_start`
+    applies the delayed-acquisition selection t_decay >= t_start."""
     import h5py
     with h5py.File(shard_file, "r") as f:
         s = float(f.attrs["xyz_scale_mm"])
         keep = f["truth"][:] == 0
+        if t_start > 0:
+            keep &= f["t_decay_s"][:] >= t_start
         x0 = f["x0_mm"][:].astype(np.float64)[keep] * s
         y0 = f["y0_mm"][:].astype(np.float64)[keep] * s
         z0 = f["z0_mm"][:].astype(np.float64)[keep] * s

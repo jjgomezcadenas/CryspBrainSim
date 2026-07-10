@@ -50,7 +50,11 @@ coincidences the scanners separate ($0.065$ vs.\ \SI{0.084}{mm}), which is
 the margin a scatter correction would recover. The precision follows
 $1/\sqrt{\text{dose}}$ with a dose-invariant calibration on both scanners,
 so a \SI{0.1}{Gy} exploratory run locates the edge to
-\SIrange{0.16}{0.23}{mm} before the clinical dose is delivered.
+\SIrange{0.16}{0.23}{mm} before the clinical dose is delivered. The
+precision also survives a realistic acquisition start: delaying to
+\SI{180}{s} after beam-off halves the counts yet leaves
+$\sigma_R \approx \SI{0.11}{mm}$, with the calibration constant walking
+predictably at \SIrange{8}{10}{\micro m} per second of delay.
 \end{abstract}
 
 \section{Setup}
@@ -395,28 +399,90 @@ margins~\cite{paganetti2012}. The beam range can therefore be verified
 against the plan before the therapeutic dose is delivered, with the same
 scanner and the same analysis.
 
+\section{Acquisition start time}
+\label{sec:tstart}
+
+An in-room scanner starts recording one to a few minutes after beam-off,
+not at $t=0$: the results above are therefore the zero-delay limit, and
+the start time is the axis that connects them to a realistic measurement.
+The production files carry the absolute decay time of every coincidence,
+so a delayed start is the pure event selection
+$t_{\text{decay}} \ge t_{\text{start}}$ on the stored runs ---
+statistically exact, with the per-isotope decay laws and the randoms' time
+structure included (Fig.~\ref{fig:decays} shows the isotope activities
+that drive it). Table~\ref{tab:tstart} and Fig.~\ref{fig:tstart} give
+$\DR$ and $\sigma_R$ at $t_{\text{start}} = 60$, $120$ and \SI{180}{s},
+at the working protocol on both scanners.
+
+\begin{table}[htb]
+  \centering
+  \caption{The acquisition-start axis (all events, erfc, whole-plane):
+    the fraction of recorded events surviving the selection --- identical
+    on both scanners, since the cut acts on the shared decay times --- and
+    $\DR$ (mean $\pm$ run-to-run spread $\sigma$) per scanner.}
+  \label{tab:tstart}
+  \vspace{1mm}
+  \begin{tabular}{S[table-format=3]S[table-format=3]ll}
+    \toprule
+    {$t_{\text{start}}$ [s]} & {kept [\%]} & {BGO 195\,K [mm]} & {CsI [mm]} \\
+    \midrule
+      0 & 100 & $-11.144 \pm 0.113$ & $-11.192 \pm 0.114$ \\
+     60 &  77 & $-11.580 \pm 0.102$ & $-11.625 \pm 0.057$ \\
+    120 &  61 & $-12.131 \pm 0.116$ & $-12.167 \pm 0.091$ \\
+    180 &  48 & $-12.725 \pm 0.108$ & $-12.809 \pm 0.112$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/tstart_r50.png}
+  \caption{The acquisition-start trade-off (all events). Top: $\DR$
+    (points, $\pm$ run-to-run spread $\sigma_R$) against the start time;
+    the thin lines connect the points. Bottom: $\sigma_R$ (points, with
+    their uncertainty) against the counting prediction
+    $\sigma_R(0)/\sqrt{\text{kept fraction}}$ (dashed).}
+  \label{fig:tstart}
+\end{figure}
+
+Three facts emerge. First, \textbf{the precision survives the realistic
+start}: at $t_{\text{start}} = \SI{180}{s}$ half the counts are gone,
+yet $\sigma_R$ remains at $\approx\SI{0.11}{mm}$ on both scanners ---
+at or below the counting prediction at every point. The zero-delay
+precision is therefore not an idealisation: an in-room scanner starting
+\SIrange{2}{3}{min} after beam-off delivers it. Second, the calibration
+constant walks with the start time --- $-0.44$, $-0.99$ and
+\SI{-1.6}{mm} at $60$, $120$ and \SI{180}{s}, identically on both
+scanners and at every level of the chain --- as the $^{15}$O component
+(deeper edge, from its lower production threshold) decays out of the mix.
+Calibrated at the operating start time this is bookkeeping; operationally
+it sets a sensitivity of \SIrange{8}{10}{\micro m} per second of start
+time, so timing the acquisition start to one second keeps it at the
+\SI{0.01}{mm} level. Third, the fitted edge width grows mildly with the
+delay ($10.8 \to \SI{11.4}{mm}$ on trues): the smaller positron range of
+the surviving $^{11}$C is invisible under the intrinsic edge width, while
+the deeper-reaching $^{13}$N component gains relative weight and broadens
+the composite fall-off.
+
+\begin{figure}[htb]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/activity.png}
+  \caption{Activity of the $\beta^+$ emitters produced by the field, as a
+    function of time after irradiation.}
+  \label{fig:decays}
+\end{figure}
+
 \section{Outlook}
 \label{sec:outlook}
 
-Four directions follow from this round.
+Three directions follow from this round.
 
-\paragraph{Scatter correction.} The deciding factor of
-Sec.~\ref{sec:tie}: recovering trues-level precision is worth a factor
-$1.7$ (BGO) and $1.4$ (CsI). The scatters-only reconstructions of
-Fig.~\ref{fig:scatters} are the input for designing it, and the
-per-configuration check (window slope against edge gradient) is in place.
-
-\paragraph{Acquisition start time.} The isotope activities
-(Fig.~\ref{fig:decays}) set the trade-off of in-room imaging: a start
-\SIrange{2}{3}{min} after beam-off, rather than one, loses part of the
-$^{15}$O signal but shifts the mix towards $^{11}$C, whose positron
-endpoint energy (\SI{0.96}{MeV}, against \SI{1.73}{MeV} for $^{15}$O)
-carries a correspondingly smaller positron range --- a sharper intrinsic
-edge. A high-sensitivity scanner can absorb the count loss, so the delayed
-start may improve the range measurement rather than degrade it. The
-production files carry the absolute decay time of every coincidence, so
-any start time is a pure event selection on the stored runs ---
-statistically exact, randoms included.
+\paragraph{Scatter correction.} Recovering trues-level precision is worth
+a factor $1.7$ (BGO) and $1.4$ (CsI) (Sec.~\ref{sec:tie}); at the present
+precision, however, the other terms of the calibration dominate and the
+working protocol needs no correction. The scatters-only reconstructions of
+Fig.~\ref{fig:scatters} are the input for designing one when it becomes
+worthwhile.
 
 \paragraph{Isotope-resolved edge model.} The distal fall-off is a
 superposition of per-isotope edges with known relative depths. A composite
@@ -428,14 +494,6 @@ of Eq.~(\ref{eq:erfc}) for the start-time studies.
 remaining scanner axes --- ring length (sensitivity) and open geometries
 (angular coverage) --- run through the identical analysis, which is
 configuration-blind by construction.
-
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=0.8\textwidth]{figs/activity.png}
-  \caption{Activity of the $\beta^+$ emitters produced by the field, as a
-    function of time after irradiation.}
-  \label{fig:decays}
-\end{figure}
 
 \section*{Conclusions}
 
@@ -453,7 +511,11 @@ scanner, making that correction the deciding question of the comparison.
 On both scanners the precision scales as $1/\sqrt{\text{dose}}$ with a
 dose-invariant calibration, so an exploratory \SI{0.1}{Gy} run verifies
 the beam range to \SIrange{0.16}{0.23}{mm} before the clinical dose is
-delivered.
+delivered. The precision also holds under a realistic acquisition start:
+a \SIrange{2}{3}{min} delay after beam-off halves the statistics and
+walks the calibration predictably (\SIrange{8}{10}{\micro m/s}), yet
+$\sigma_R$ stays at \SI{0.11}{mm} --- the in-room measurement delivers
+the zero-delay precision.
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}

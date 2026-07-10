@@ -24,4 +24,5 @@ cp "$BGO/ten_shards/figures/delta_r50_vs_dose.png"      "$FIGS/dose_sweep_r50_bg
 cp "$CSI/one_shard/fits/figures/scatters_activity.png"  "$FIGS/scatters_profile_csi.png"
 cp "$CSI/ten_shards/figures/delta_r50.png"              "$FIGS/ladder_delta_r50_csi.png"
 cp "$CSI/ten_shards/figures/delta_r50_vs_dose.png"      "$FIGS/dose_sweep_r50_csi.png"
-echo "collected 9 figures into $FIGS/"
+cp out/uniform_headep_sobp_1e8/closed/comparison/figures/tstart_r50.png "$FIGS/tstart_r50.png"
+echo "collected 10 figures into $FIGS/"

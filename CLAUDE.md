@@ -169,12 +169,20 @@ Follow `dev/PLAN.md` → "Build order". Done and next:
   buy nothing for R50 (detection sampling dominates; paired std = quadrature sum). Upstream nit:
   the BGO arm's scanner_geometry.json says material BGO_77K while shards say BGO_195K (stale key,
   harmless — constants come from shard attrs).
+- **Delayed-start study: DONE (2026-07-10).** `shard_t_decay` (src/products.jl, asserts zero
+  dropped LORs for alignment), `drivers/ten_shards_tstart.jl` (t_decay ≥ t_start cut, trues + all
+  events, 20 recons/scanner/point), `tools/ten_shards.py --t-start`, `tools/plot_tstart.py`
+  (cross-scanner figure → out/<scenario>/closed/comparison/figures/tstart_r50.png). Results
+  (all events, Δ_R50 mean ± σ): kept 77/61/48% at t_start 60/120/180 s (identical both scanners);
+  **σ_R stays ≈ 0.11 mm through 180 s on both scanners — at/below the counting prediction; the
+  zero-delay precision survives the realistic in-room start.** Calibration walks −0.44/−0.99/−1.6 mm
+  (¹⁵O drains from the mix; its lower threshold = deeper edge) → start-time sensitivity 8–10 μm/s,
+  0.01 mm at 1 s timing. Edge-sharpening hypothesis refuted: w grows 10.8→11.4 mm (¹³N foot gains
+  weight; ¹¹C positron-range gain invisible under the intrinsic width). In the note as §6 +
+  Table 5 + Fig. 7. Scatter-correction stance settled: NOT needed at this level (calibration
+  systematics dominate ≫ 0.1 mm); CsI's point is parity with less scatter sensitivity.
 - **Pending:** (1) latex/cbs.tex: revert eq:sigmaR from R_p back to z0/R50 (R_p keeps the accuracy
-  paragraph); cite Zapien-Campos; fold in the two-arm numbers. (2) Delayed-start study — now
-  unblocked (`t_decay_s` in both new masters): t_start = 1/2/3 min as pure cuts, both arms;
-  hypothesis: later start → ¹¹C-dominated mix → lower positron endpoint (0.96 vs 1.73 MeV) →
-  sharper intrinsic edge, statistics absorbed by sensitivity. (3) Scatter correction assessment —
-  promoted by the two-arm tie: BGO has ×1.7 to gain, CsI ×1.4. (4) Composite-erfc edge model
+  paragraph); cite Zapien-Campos; fold in the two-arm numbers. (2) Composite-erfc edge model
   (2–3 isotope components, offsets/widths frozen from per-isotope truth profiles, free amplitudes
   + global shift); adopt only if σ and rung stability improve incl. at 0.1 Gy.
   (Item done 2026-07-10: endpoint_precision.tex rewritten as the two-scanner note — arms table,

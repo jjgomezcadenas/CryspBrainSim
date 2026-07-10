@@ -379,6 +379,63 @@ def fano(params, centre, window):
     print(f"wrote {fpath}")
 
 
+# --- the acquisition-start axis -------------------------------------------
+def tstart_study(params, centre, window, dose, t_start):
+    """The delayed-acquisition point: fit every shard at t_decay >= t_start
+    (drivers/ten_shards_tstart.jl reconstructions + the origins cut) and
+    report Δ_R50 mean ± σ per level, next to the t_start = 0 baseline from
+    results.toml."""
+    ref = dose["erfc"]["R50_mm"]
+    levels = {}
+    for level, kind in (("origins", None), ("trues", ""), ("all_ev", "_all")):
+        r50, w = [], []
+        for i in SHARDS:
+            if kind is None:
+                z, prof = profile_from_origins(shard_h5(i), params["grid"],
+                                               centre, None, t_start=t_start)
+            else:
+                path = os.path.join(OUT, "recons",
+                                    f"recon_shard{i:03d}_t{t_start:g}{kind}.npz")
+                d = np.load(path)
+                z, prof = profile_from_image(d["image"], params["grid"],
+                                             centre, None)
+            res = analyze(f"{level}_t{t_start:g}_shard{i:03d}", z, prof,
+                          window, 0.0, True, models=("erfc",))
+            r50.append(res["erfc"]["R50_mm"])
+            w.append(res["erfc"]["w_mm"])
+        s = summarize(np.asarray(r50) - ref)
+        levels[level] = dict(R50_mm=r50, w_mm=w,
+                             delta_R50_mean_mm=s["mean"],
+                             delta_R50_std_mm=s["std"],
+                             w_mean_mm=float(np.mean(w)))
+
+    base_path = os.path.join(OUT, "results.toml")
+    base = None
+    if os.path.exists(base_path):
+        with open(base_path, "rb") as f:
+            base = tomllib.load(f)
+    print(f"\n=== t_start = {t_start:g} s (Δ_R50 mean ± σ [mm]; "
+          f"baseline t_start = 0 in parentheses) ===")
+    for level in ("origins", "trues", "all_ev"):
+        v = levels[level]
+        b = ""
+        if base is not None:
+            bl = {"origins": "origins", "trues": "recon",
+                  "all_ev": "all_ev"}[level]
+            b = (f"   (baseline {base[bl]['erfc']['delta_R50_mean_mm']:+.3f}"
+                 f" ± {base[bl]['erfc']['delta_R50_std_mm']:.3f})")
+        print(f"  {level:8s} {v['delta_R50_mean_mm']:+8.3f} ± "
+              f"{v['delta_R50_std_mm']:.3f}   w {v['w_mean_mm']:5.2f}{b}")
+    tree = {"meta": {"t_start_s": t_start, "shards": len(list(SHARDS)),
+                     "roi": "whole-plane", "model": "erfc",
+                     "window_lo_mm": window[0], "window_hi_mm": window[1]},
+            "dose_fit": {"R50_mm": ref}}
+    tree.update(levels)
+    path = os.path.join(OUT, f"tstart_{t_start:g}.toml")
+    toml_dump(path, tree)
+    print(f"wrote {path}")
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--dose-sweep", action="store_true",
@@ -387,12 +444,17 @@ def main():
     p.add_argument("--fano", action="store_true",
                    help="Fano test of the origins bin errors instead of the "
                         "rung ladder")
+    p.add_argument("--t-start", type=float, default=None,
+                   help="fit the delayed-acquisition reconstructions "
+                        "(t_decay >= T seconds) instead of the rung ladder")
     args = p.parse_args()
     params, centre, window, truth_act, dose = setup()
     if args.fano:
         fano(params, centre, window)
     elif args.dose_sweep:
         dose_sweep(params, centre, window, dose)
+    elif args.t_start is not None:
+        tstart_study(params, centre, window, dose, args.t_start)
     else:
         ladder(params, centre, window, truth_act, dose)
 
