@@ -5,7 +5,10 @@ whole chain:
 
 - **Endpoint estimator** — `src/profile.jl` (`depth_profile`, `distal_window`), `src/endpoint.jl`
   (`fit_endpoint`, `sigma_R` — erfc fit, covariance = scipy `absolute_sigma` via `PrecisionWeights`;
-  cross-validated against the frozen py reference `test/data/endpoint_reference.npz`).
+  cross-validated against the frozen py reference `test/data/endpoint_reference.npz`). The chain
+  reads **whole-plane** profiles (the settled protocol; `[roi]` in `run_parameters.toml` carries
+  a centre but no radius since 2026-07-10) and matches the python fit lab to 1e-6 mm on the same
+  image.
 - **Products navigation + provenance** — `src/products.jl` (leaf/shard navigation,
   `REQUIRED_SHARD_ATTRS` verification, pooling, geometry/phantom/truth readers, `shard_t_decay`),
   `src/shard_stats.jl` (`ShardStats`), `src/characterize.jl` (`TruthReference`, `distal_crossing`).
@@ -28,14 +31,16 @@ whole chain:
   material + thickness in X0 from the arm name (`bgo_3X0`, `bgo_195k_2X0`, `csi_2X0`).
 
 **Drivers** (`drivers/`): `one_shard.jl`, `ten_shards_dose.jl`, `ten_shards_tstart.jl`,
-`sigma_r_at_dose.jl`, `sigma_r_sweep_dose.jl`.
+`sigma_r_at_dose.jl`, `sigma_r_sweep_dose.jl` (`--all-events` reconstructs the uncorrected
+working-protocol selection → `sweep_all.toml`; the thin seeds pair with the trues run).
 
 **Python tools** (`tools/`): `fit_activity_profile.py` (the fit lab — `--model erfc|sigmoid|both`,
 `--roi`, `--no-baseline`, `--no-pulls`; whole-plane erfc + free baseline is the default),
 `ten_shards.py` (`--dose-sweep` / `--fano` / `--t-start`), `scatter_profile.py`,
 `recon_scatters.jl`, `plot_recon_projections.py`, `plot_tstart.py`, `plot_one_shard.py`,
-`plot_shard.py`, `plot_truth.py`, `plot_sigma_r.py`, `collect_note_figures.sh`,
-`latex_compile.py`.
+`plot_shard.py`, `plot_truth.py`, `plot_sigma_r.py`, `plot_chs_sigma_r.py` (single-shard
+geometries CHS + R35 vs ring σ_R — six-arm dose sweeps + the ring ten-shard 1 Gy anchors;
+`--crystal bgo|csi` for one-crystal figures), `collect_note_figures.sh`, `latex_compile.py`.
 
 **Switching scanner arm** = one edit of `config/run_parameters.toml` `[configuration]` + rerun the
 chain (~25 min/arm). The Julia and Python sides both resolve the active arm from that block.

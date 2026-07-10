@@ -28,6 +28,8 @@ one curve per scanner geometry. This is the analysis end of the chain
   respond with the answer and stop. Take actions — edit, run, reconstruct, plot, commit — when the
   user gives an explicit instruction to do so ("do it", "run it", "build it", "commit"). When the
   intent reads as a question, answer it and name the next step in words.
+- **YU = "your understanding".** When the user closes a message with "YU", state your understanding
+  of what was said back — verified against the repo/data where possible — and stop there.
 - **Confirm before writing, building, committing, or pushing.** State what you are about to do and
   wait for the go-ahead.
 - **Formulate affirmatively.** Say what to do, in as much detail as the reader needs to do it.
@@ -60,8 +62,13 @@ live in `md/` (see "Read first") — this is the one-paragraph state.
 the distal edge with **σ_R ≈ 0.11 mm per 1 Gy run** at the working protocol; precision scales as
 1/√dose (→ 0.16–0.23 mm at the 0.1 Gy exploratory dose) and survives a realistic in-room
 acquisition start (~0.11 mm at t_start = 180 s). Written up in `latex/endpoint_precision.tex`
-(the two-scanner note, compiles clean). Full numbers + method: [`md/results.md`](md/results.md);
-the toolchain: [`md/infrastructure.md`](md/infrastructure.md).
+(the two-scanner note, compiles clean). Two single-shard geometries are measured against the
+ring — the **compact head scanner (CHS**, r 200 mm) and **R35** (r 350 mm, AFOV 512 mm): on
+trues all three tie per dose despite the compact arms' 0.65× counts; on all-events the BGO
+penalty grows as the bore shrinks (ring < R35 < CHS) while CsI stays flat (see results.md). The
+whole-plane protocol now lives in the Julia chain too (`[roi]` carries no radius). Full numbers
++ method: [`md/results.md`](md/results.md); the toolchain:
+[`md/infrastructure.md`](md/infrastructure.md).
 
 **Current problem: isotope washout (IW)** — all productions are physical-decay-only; IW is the
 missing simulation-to-patient physics. First step (computable now): per-isotope reweighting of the

@@ -89,16 +89,68 @@ intrinsic width). In the note as §6 + Table 5 + Fig. 7.
 **Scatter-correction stance settled:** NOT needed at this level (calibration systematics dominate
 ≫ 0.1 mm); CsI's point is parity with less scatter sensitivity.
 
+## Single-shard geometries — CHS and R35, first look: DONE (2026-07-10)
+
+Upstream published one shard (realization 0, same annihilation set as the ring shards) per arm of
+two new geometries, both with the ring's 2X0 walls and detector constants:
+
+- **CHS** (compact head scanner): r_inner 200 mm, 25 × 7 blocks, axial 358 mm. Per 1 Gy shard:
+  BGO 195 K 10.14 M LORs, CsI 3.94 M — 0.66×/0.65× the ring's counts; true/scatter/random mix
+  identical per crystal (72.5/27.3/0.2 and 86.6/13.3/0.1%).
+- **R35** (half-metre ring): r_inner 350 mm, 43 × 10 blocks, axial 512 mm. Per 1 Gy shard:
+  BGO 9.67 M, CsI 3.83 M; mix 73.9/25.9/0.2 and 87.1/12.9/0.1%.
+
+**Protocol unification first:** the Julia chain (`reconstruct_endpoint`, `one_shard.jl`, the
+`sigma_r_*` drivers) still carried the rung-5 disc ROI while the settled protocol (part a) is
+whole-plane; the ROI is now retired everywhere (`[roi]` in `run_parameters.toml` has no radius).
+Gate: the Julia whole-plane fit reproduces the python campaign fit on the same stored image to
+1e-6 mm, both selections. `sigma_r_sweep_dose.jl` gained `--all-events` (paired thin seeds;
+`sweep_all.toml`).
+
+With one shard per arm, σ_R at 1 Gy is not measurable (thinning is degenerate at fraction 1);
+the deliverables are σ_R measured at exploratory doses and the 1/√dose extrapolation, validated
+on the ring arms where the ten-shard 1 Gy measurement exists. σ_R (whole-plane erfc fit, 50
+thinned realizations, spread known to ±10%), per geometry at matched dose (ring / CHS / R35):
+
+| σ_R [mm] | 0.2 Gy | 0.1 Gy | 0.05 Gy | 1 Gy (extrap) |
+|---|---|---|---|---|
+| BGO trues | 0.129 / 0.122 / 0.124 | 0.184 / 0.177 / 0.147 | 0.221 / 0.223 / 0.260 | 0.054 / 0.053 / 0.052 |
+| BGO all | 0.158 / 0.194 / 0.186 | 0.232 / 0.303 / 0.240 | 0.284 / 0.433 / 0.361 | 0.069 / 0.093 / 0.080 |
+| CsI trues | 0.192 / 0.183 / 0.188 | 0.256 / 0.241 / 0.210 | 0.332 / 0.312 / 0.305 | 0.080 / 0.075 / 0.071 |
+| CsI all | 0.231 / 0.213 / 0.230 | 0.313 / 0.313 / 0.292 | 0.469 / 0.400 / 0.549 | 0.102 / 0.094 / 0.103 |
+
+**Headline: on trues all three geometries are indistinguishable per dose (1 Gy extrapolations
+0.052–0.054 mm BGO, 0.071–0.080 mm CsI) although the compact geometries collect 0.63–0.66× the
+counts — per detected true they are ~1.25× more precise, cancelling the acceptance loss. On the
+all-events working protocol the BGO penalty is monotonic in bore radius (ring 0.069 < R35 0.080 <
+CHS 0.093 mm extrapolated; scatter fractions nearly equal, so the compact ring is more sensitive
+to the background's shape, not its amount), while CsI is geometry-flat (0.094–0.103 mm).**
+Extrapolation validation on the ring: trues agree with the ten-shard 1 Gy measurement (0.054 vs
+0.065 ± 0.015; 0.080 vs 0.084 ± 0.020); all-events agree on CsI (0.102 vs 0.114 ± 0.027) and read
+1.6σ low on BGO (0.069 vs 0.113 ± 0.027) — the thinned method emulates counting statistics only,
+so quote the single-shard 1 Gy all-events extrapolations with that caveat.
+
+Calibration anchors at 1 Gy (single shard, whole-plane; Δ_R50 vs the dose fit −3.580 mm): CHS
+trues/all −11.42/−11.30 (BGO), −11.59/−11.61 (CsI); R35 −11.10/−11.03 (BGO), −11.09/−10.82
+(CsI); ring ten-shard means −11.17/−11.14 and −11.23/−11.19. Per-scanner calibration constants,
+spread 0.4 mm across geometries — as expected, fixed by each scanner's reference simulation.
+Figures: `out/uniform_headep_sobp_1e8/closed/comparison/figures/chs_sigma_r.png` (+ `_bgo`,
+`_csi` single-crystal versions; `tools/plot_chs_sigma_r.py [--crystal]`). A measured σ_R(1 Gy)
+and a shard-spread on the anchors need the remaining nine shards per arm from upstream.
+
 ## Data on disk
 
-Three ten-shard masters under `PtCryspProds/uniform_headep_sobp_1e8/`, all **physical-decay-only**
-(no isotope washout):
+Under `PtCryspProds/uniform_headep_sobp_1e8/`, all **physical-decay-only** (no isotope washout):
 
 - `crysp_ring_1m/bgo/fast_1Gy/` — the frozen reference (174.3 M LORs pooled; **do not** pool/compare
-  with the new arms).
-- `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` — BGO 195 K, 153 M pooled.
-- `crysp_ring_1m_csi_2x0/csi/fast_1Gy/` — CsI, 61 M pooled.
+  with the new arms), ten shards.
+- `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` — BGO 195 K, ten shards, 153 M pooled.
+- `crysp_ring_1m_csi_2x0/csi/fast_1Gy/` — CsI, ten shards, 61 M pooled.
+- `crysp_chs_bgo_2x0/bgo_195k/fast_1Gy/` — CHS BGO 195 K, **shard 000 only**, 10.1 M LORs.
+- `crysp_chs_csi_2x0/csi/fast_1Gy/` — CHS CsI, **shard 000 only**, 3.9 M LORs.
+- `crysp_r35_50cm_bgo_2x0/bgo_195k/fast_1Gy/` — R35 BGO 195 K, **shard 000 only**, 9.7 M LORs.
+- `crysp_r35_50cm_csi_2x0/csi/fast_1Gy/` — R35 CsI, **shard 000 only**, 3.8 M LORs.
 
 Plus the shared `truth/` bundle (`activity_profile_fast.csv` has per-isotope depth columns
-`O15,C11,N13,C10,O14,total`; `depth_dose.csv`). Each new-arm shard carries `t_decay_s`. Config
-`[configuration]` is parked on the BGO 195 K arm.
+`O15,C11,N13,C10,O14,total`; `depth_dose.csv`). Every 2x0 and chs shard carries `t_decay_s`.
+Config `[configuration]` is parked on the ring BGO 195 K arm.
