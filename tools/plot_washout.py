@@ -39,7 +39,54 @@ def load(scanner, crystal, wall):
         return tomllib.load(f)
 
 
+def load_tstart(scanner, crystal, wall):
+    cfg = config_out(SCENARIO, TOPOLOGY, scanner, crystal_label(crystal, wall))
+    with open(os.path.join(cfg, "washout", "sigma_r_washout_tstart.toml"),
+              "rb") as f:
+        return sorted(tomllib.load(f)["point"], key=lambda p: p["t_start_s"])
+
+
+def plot_tstart():
+    """Washout compounded with the in-room start: the shift (which calibrates
+    away) shrinks as ¹⁵O pre-depletes, while σ_R — free at t_start = 0 — inflates
+    once the variance-drain isotope is gone."""
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(8.5, 7.0), facecolor=SURFACE,
+                                 sharex=True, height_ratios=[1, 1.2])
+    for a in (a1, a2):
+        style(a)
+    for name, scanner, crystal, wall, colour in ARMS:
+        pts = load_tstart(scanner, crystal, wall)
+        t = np.array([p["t_start_s"] for p in pts])
+        a1.plot(t, [p["delta_R50_washout_mm"] for p in pts], "-o", color=colour,
+                ms=6, lw=1.3, label=name)
+        sw = np.array([p["washed_sigma_R_mm"] for p in pts])
+        sn = np.array([p["nominal_sigma_R_mm"] for p in pts])
+        a2.plot(t, sw, "-o", color=colour, ms=6, lw=1.4,
+                label=f"{name} washed")
+        a2.plot(t, sn, "--s", color=colour, ms=5, lw=1.0, mfc="none",
+                label=f"{name} nominal")
+    a1.axhline(0, color=MUTED, lw=0.8)
+    a1.set_ylabel("$\\Delta R_{50}^{wo}$ [mm]  (calibrates away)", color=INK,
+                  fontsize=12)
+    a1.set_title("Washout shift shrinks as the delay pre-depletes $^{15}$O",
+                 color=INK, fontsize=11, loc="left")
+    a1.legend(frameon=False, fontsize=11, labelcolor=INK, loc="best")
+    a2.set_ylabel("$\\sigma_R$ [mm]", color=INK, fontsize=13)
+    a2.set_xlabel("acquisition start $t_{start}$ [s]", color=INK, fontsize=13)
+    a2.set_title("Precision: washout free at $t_{start}=0$, costly once "
+                 "compounded", color=INK, fontsize=11, loc="left")
+    a2.legend(frameon=False, fontsize=10, labelcolor=INK, loc="best", ncol=2)
+    fig.tight_layout()
+    out = os.path.join(scenario_out(SCENARIO), TOPOLOGY, "comparison", "figures")
+    os.makedirs(out, exist_ok=True)
+    path = os.path.join(out, "washout_tstart.png")
+    fig.savefig(path, dpi=160, facecolor=SURFACE)
+    plt.close(fig)
+    print(f"wrote {path}")
+
+
 def main():
+    plot_tstart()
     with open(os.path.join(scenario_out(SCENARIO), "washout", "washout.toml"),
               "rb") as f:
         truth = tomllib.load(f)

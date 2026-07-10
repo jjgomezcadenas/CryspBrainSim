@@ -168,13 +168,33 @@ the delayed-start study: washout removes the noisiest counts. Figure:
 `out/uniform_headep_sobp_1e8/closed/comparison/figures/washout_sigma_r.png`
 (`tools/plot_washout.py`).
 
-**Caveats:** this is the **t_start = 0** limit and the **parameter** band only. The realistic
-operational point — washout compounded with the 60–300 s in-room start, where both effects drain
-¹⁵O — is the `washout_sigma_r.jl` t_start sweep (running); and **model-form** uncertainty (spatial
-non-uniformity = the genuine non-calibratable bias route, rabbit→human, per-species) is untouched.
-The n=10 σ_R needs the 50-realization thinned method to firm up. Bottom line so far: with uniform
-brain washout, IW does **not** limit range verification — it calibrates away, its parameter band is
-negligible, and precision survives; the case for going upstream now rests on spatial non-uniformity.
+**Compounded with the in-room start** (`washout_sigma_r.jl` t_start sweep, both arms, g_i
+recomputed per shifted window [120+t_start, 1320]): the two effects stack on ¹⁵O, and the picture
+changes from the t_start = 0 limit:
+
+| t_start [s] | 60 | 120 | 180 | 300 |
+|---|---|---|---|---|
+| kept (washout × delay) | 0.31 | 0.23 | 0.18 | 0.11 |
+| ΔR₅₀^wo BGO / CsI [mm] | +0.22 / +0.30 | +0.18 / +0.20 | +0.19 / +0.06 | +0.10 / −0.00 |
+| σ_R washed BGO / CsI | 0.16 / 0.13 | 0.12 / 0.21 | 0.16 / 0.17 | 0.21 / 0.31 |
+| σ_R nominal BGO / CsI | 0.10 / 0.06 | 0.12 / 0.09 | 0.11 / 0.11 | 0.10 / 0.23 |
+
+Two effects: **(a)** the washout shift shrinks toward zero as the delay pre-depletes ¹⁵O (BGO
++0.22→+0.10, CsI +0.30→−0.00) — still calibrating away, just smaller; **(b)** the precision that
+was free at t_start = 0 **is no longer free** — washed σ_R climbs above nominal (~1.3–2× at the
+operational 180–300 s), because the ¹⁵O that supplied the variance-drain is gone by then, so
+washout's ~57%-per-step count loss now bites like ordinary counting. Figure:
+`out/uniform_headep_sobp_1e8/closed/comparison/figures/washout_tstart.png`. (σ_R here is n=10,
+±24%, with visible wiggle — the 50-realization thinned method is needed to state the inflation
+factors cleanly.)
+
+**Caveats / open:** **model-form** uncertainty is untouched — spatial non-uniformity (the genuine
+non-calibratable bias route), rabbit→human, per-species; the parameter systematic (±0.020 mm at
+t_start = 0) is negligible but the σ_R firm-up is pending. **Bottom line:** with uniform brain
+washout the bias always calibrates away and its parameter band is negligible, so IW does not bias
+range verification; its one real cost is **precision, and only when compounded with a realistic
+delayed start** — at t_start = 0 it is free, at 180–300 s it inflates σ_R ~1.3–2×. The case for
+going upstream still rests on spatial non-uniformity.
 
 ## Data on disk
 
