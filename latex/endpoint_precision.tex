@@ -501,6 +501,77 @@ the composite fall-off.
   \label{fig:decays}
 \end{figure}
 
+\section{Isotope washout}
+\label{sec:washout}
+
+The activity used so far is physical-decay-only: the $\beta^+$ emitters are
+taken to sit where they are produced until they decay. In tissue they do not
+--- perfusion and metabolism clear the radioactive atoms from the irradiated
+volume before they decay (isotope washout). This is the one piece of
+simulation-to-patient physics missing from the productions, and it acts on the
+same isotope--time structure as the acquisition delay of the previous section.
+
+We model washout as loss, with the three-exponential brain clearance of
+Mizuno et al.~\cite{Mizuno2003}. For a spatially uniform clearance the effect
+reduces to a per-isotope survival factor $g_i$ --- the window-integrated
+fraction of species $i$ that decays before it is cleared --- so it enters
+downstream as a reweighting of each isotope's contribution to the frozen
+source, with no re-simulation. The five brain factors are $g_i \approx
+0.4$--$0.5$: washout removes roughly $57\%$ of the counts, nearly uniformly
+across isotopes. Two consequences follow, both measured on the two scanners.
+
+\emph{Bias.} Because the survival is nearly isotope-independent, washout only
+mildly reshapes the mix; it shifts the activity edge by
+$\DR^{\mathrm{wo}} \approx +\SI{0.22}{mm}$ at zero delay (the surviving
+$^{15}$O, which owns the distal edge, is preserved slightly more than
+$^{11}$C), shrinking toward zero as a delayed start pre-depletes $^{15}$O. Like
+every offset in the chain this is a deterministic constant, calibrated away by
+the per-scanner reference simulation provided the reference itself includes
+washout. Its uncertainty from the Mizuno parameters is $\pm\SI{0.02}{mm}$
+(dominated by the medium and slow components; the $90\%$-uncertain fast
+component is spent within seconds), well below $\sigma_R$. Washout therefore
+introduces no range bias.
+
+\emph{Precision.} The $\sim\!57\%$ count loss is the real cost. It inflates
+$\sigma_R$ by $\approx 1.5\times$ --- the ordinary counting penalty
+$1/\sqrt{0.43}$, since the removal is nearly uniform --- roughly independent of
+the start time and the scanner (Table~\ref{tab:washout}), rising to
+$\sim\!2\times$ only at \SI{300}{s}, where the doubly-cut (delay $\times$
+washout) sample becomes count-starved. At \SI{1}{Gy} this takes $\sigma_R$ from
+$\sim\!\SI{0.11}{}$ to $\sim\!\SI{0.16}{mm}$: a real but modest degradation,
+recovered by the same $1/\sqrt{\text{dose}}$ lever as any count loss. (This
+corrects an earlier reading from ten independent runs, whose small sample made
+washout look free at zero delay; the figures here are from many thinned
+realisations.)
+
+\begin{table}[htb]
+  \centering
+  \caption{Washout precision cost: the $\sigma_R$ inflation (washed/nominal),
+    per scanner and start time, from the thinned firm-up ($\pm 13\%$ per point).
+    The edge shift itself calibrates away (text); this is what remains.}
+  \label{tab:washout}
+  \vspace{1mm}
+  \begin{tabular}{lccccc}
+    \toprule
+    {$t_{\text{start}}$ [s]} & {0} & {60} & {120} & {180} & {300} \\
+    \midrule
+    BGO 195\,K & 1.34 & 1.43 & 1.76 & 1.16 & 2.02 \\
+    CsI        & 1.48 & 1.74 & 1.57 & 1.54 & 1.87 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\emph{Spatial non-uniformity is not pursued here.} The result above assumes
+clearance uniform over the irradiated volume. A real perfusion field is
+heterogeneous, and a depth-dependent clearance would make the edge shift
+depth-dependent --- a genuine bias that no single calibration constant absorbs.
+We do not treat it in this work: capturing it needs a perfusion/compartment
+transport model acting on the production points, a downstream development
+independent of the range estimator and of the Monte Carlo, and the
+uniform-clearance result already bounds the loss effect. Should a later study
+find the edge sensitive to the clearance field, that transport model is where
+the work belongs.
+
 \section{Outlook}
 \label{sec:outlook}
 
@@ -544,7 +615,13 @@ delivered. The precision also holds under a realistic acquisition start:
 a \SIrange{2}{3}{min} delay after beam-off halves the statistics and
 walks the calibration predictably (\SIrange{8}{11}{\micro m/s}), yet
 $\sigma_R$ stays at \SI{0.11}{mm} --- the in-room measurement delivers
-the zero-delay precision.
+the zero-delay precision. Isotope washout, folded in as spatially uniform
+brain clearance, adds no range bias --- its edge shift calibrates away like
+any offset (parameter uncertainty $\pm\SI{0.02}{mm}$) --- but costs
+$\approx 1.5\times$ in $\sigma_R$ ($\SI{0.11}{}\to\SI{0.16}{mm}$ at
+\SI{1}{Gy}), the ordinary penalty for its $\sim\!57\%$ count loss; a
+spatially non-uniform clearance, the one route to a genuine washout bias,
+is left to a dedicated perfusion-transport study.
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}
