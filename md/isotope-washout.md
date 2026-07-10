@@ -38,6 +38,12 @@ creation-time columns) is warranted.
 
 ## Related
 
+- **G4 vs downstream — resolved:** [`washout-g4-formulation.md`](washout-g4-formulation.md).
+  The loss study is **fully downstream, zero upstream**: an analytic per-isotope survival scalar
+  g_j (from the Mizuno W we own) reweights the truth isotope columns; the detected-level bias and
+  σ_R follow from the already-measured truth→detected offset and 1/√dose law, because detection is
+  isotope-blind. No column, no clock change, no regeneration, no Geant4. Redistribution deferred
+  (and if revived, a downstream perfusion model, still not Geant4).
 - The **composite-erfc edge model** (per-isotope components) is the same object as the IW
   reweighting — the per-isotope decomposition. Worth building together.
 - **Washout is spatially uniform only to first order** — a real perfusion field is not; if the

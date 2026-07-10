@@ -1,0 +1,202 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+
+% simple isotope helper (avoids the isotope package dependency)
+\newcommand{\iso}[2]{\textsuperscript{#1}#2}
+
+\begin{document}
+
+\subsection*{Biological washout model (brain)}
+
+The positron emitters produced by nuclear interactions of the beam
+(\iso{15}{O}, \iso{11}{C}, \iso{13}{N}, \dots) do not remain at their
+production site: perfusion and metabolism clear the radioactive atoms from the
+irradiated volume. Following Mizuno et al.~\cite{mizuno2003}, this biological
+washout is described by a sum of three exponential components (fast, medium and
+slow), tentatively associated with direct blood flow, the exchange between
+tissue and blood vessels, and the trapping of the nuclide by stable molecules,
+respectively. The fraction of produced nuclei still present in a voxel a time
+$t$ after their creation is
+%
+\begin{equation}
+  W(t) \;=\; \sum_{k=f,m,s} M_k\, e^{-\lambda_k^{\mathrm{bio}}\,t},
+  \qquad \sum_{k} M_k = 1,
+  \qquad \lambda_k^{\mathrm{bio}} = \frac{\ln 2}{T_k^{\mathrm{bio}}},
+  \label{eq:washout}
+\end{equation}
+%
+where $M_k$ is the weight of component $k$ and $T_k^{\mathrm{bio}}$ its
+biological half-life. Combining the washout of Eq.~(\ref{eq:washout}) with the
+physical decay of the radionuclide $i$ (rate
+$\lambda_i^{\mathrm{phys}}=\ln 2 / T_{1/2,i}^{\mathrm{phys}}$), the activity of
+a voxel in which $N_0^{\,i}$ nuclei of species $i$ are created at $t=0$ is
+%
+\begin{equation}
+  A_i(t) \;=\; \lambda_i^{\mathrm{phys}}\, N_0^{\,i}
+  \sum_{k} M_k\,
+  \exp\!\left[-\left(\lambda_i^{\mathrm{phys}}
+  + \lambda_k^{\mathrm{bio}}\right) t\right].
+  \label{eq:activity}
+\end{equation}
+%
+For a finite irradiation and a given acquisition window, the measured signal is
+obtained by convolving the production rate $R_i(t')$ of each species with the
+impulse response of Eq.~(\ref{eq:activity}) and integrating over the
+acquisition interval $[t_1,t_2]$:
+%
+\begin{equation}
+  S_i \;=\; \int_{t_1}^{t_2}\!\! dt
+  \int_{0}^{t}\!\! dt'\; R_i(t')\,
+  \lambda_i^{\mathrm{phys}}
+  \sum_{k} M_k\,
+  \exp\!\left[-\left(\lambda_i^{\mathrm{phys}}
+  + \lambda_k^{\mathrm{bio}}\right)(t-t')\right].
+  \label{eq:measured}
+\end{equation}
+%
+The washout parameters for brain tissue, as measured in
+Ref.~\cite{mizuno2003}, are collected in Table~\ref{tab:washout_brain}.
+
+\begin{table}[ht]
+  \centering
+  \caption{Three-component biological washout parameters for brain tissue
+  (rabbit), from Mizuno et al.~\cite{mizuno2003}. Uncertainties on the last
+  digits are given in parentheses. The decay rates
+  $\lambda_k^{\mathrm{bio}}=\ln2/T_k^{\mathrm{bio}}$ are listed for convenience
+  in both s$^{-1}$ and min$^{-1}$.}
+  \label{tab:washout_brain}
+  \begin{tabular}{lcccc}
+    \hline
+    Component & Fraction $M_k$ & $T_k^{\mathrm{bio}}$ (s) &
+      $\lambda_k^{\mathrm{bio}}$ (s$^{-1}$) &
+      $\lambda_k^{\mathrm{bio}}$ (min$^{-1}$) \\
+    \hline
+    Fast   & $0.35\,(3)$ & $2.0\,(1.8)$    & $3.5\times10^{-1}$ & $2.1\times10^{1}$ \\
+    Medium & $0.30\,(3)$ & $140\,(18)$     & $5.0\times10^{-3}$ & $3.0\times10^{-1}$ \\
+    Slow   & $0.35\,(1)$ & $10191\,(2200)$ & $6.8\times10^{-5}$ & $4.1\times10^{-3}$ \\
+    \hline
+  \end{tabular}
+\end{table}
+
+For reference, the physical half-lives of the dominant proton-induced emitters
+are $T_{1/2}(\iso{15}{O})=122.2$~s, $T_{1/2}(\iso{13}{N})=597.9$~s and
+$T_{1/2}(\iso{11}{C})=1222.8$~s ($20.38$~min).
+
+\subsection*{Evaluation on the frozen source: a per-isotope survival factor}
+
+The productions available to us model physical decay only; each stores, per
+species $i$ and depth, the window-integrated signal \emph{without} washout,
+which is Eq.~(\ref{eq:measured}) with $W\!\equiv\!1$:
+%
+\begin{equation}
+  S_i^{0} \;=\; \int_{t_1}^{t_2}\!\! dt \int_{0}^{t}\!\! dt'\;
+  R_i(t')\,\lambda_i^{\mathrm{phys}}\,
+  e^{-\lambda_i^{\mathrm{phys}}(t-t')}.
+  \label{eq:phys}
+\end{equation}
+%
+Washout therefore enters the measurement only through the ratio of
+Eq.~(\ref{eq:measured}) to Eq.~(\ref{eq:phys}),
+%
+\begin{equation}
+  g_i \;\equiv\; \frac{S_i}{S_i^{0}},
+  \label{eq:gdef}
+\end{equation}
+%
+the fraction of physically recorded $i$-decays that also survive clearance.
+Both signals carry the same annihilation prefactor $\lambda_i^{\mathrm{phys}}$
+and the same production $R_i(t')$ and spatial density, so all of these cancel:
+$g_i$ is a pure number per isotope, independent of the absolute normalisation
+and --- for a spatially uniform $W$ --- of position.
+
+With a uniform production rate over the irradiation, $R_i(t')=R_i$ for
+$t'\in[0,t_{\mathrm{irr}}]$, and an acquisition that opens after the beam
+($t_1>t_{\mathrm{irr}}$), the integrals are elementary. Writing
+%
+\begin{equation}
+  \Phi(a) \;\equiv\;
+  \frac{\bigl(e^{a\,t_{\mathrm{irr}}}-1\bigr)
+        \bigl(e^{-a t_1}-e^{-a t_2}\bigr)}{a^{2}},
+  \label{eq:phifun}
+\end{equation}
+%
+one finds $S_i^{0}=R_i\,\lambda_i^{\mathrm{phys}}\,\Phi(\lambda_i^{\mathrm{phys}})$
+and $S_i=R_i\,\lambda_i^{\mathrm{phys}}\sum_k M_k\,
+\Phi(\lambda_i^{\mathrm{phys}}+\lambda_k^{\mathrm{bio}})$, hence the closed form
+%
+\begin{equation}
+  g_i \;=\; \sum_{k=f,m,s} M_k\,
+  \frac{\Phi\!\left(\lambda_i^{\mathrm{phys}}+\lambda_k^{\mathrm{bio}}\right)}
+       {\Phi\!\left(\lambda_i^{\mathrm{phys}}\right)} .
+  \label{eq:gfactor}
+\end{equation}
+%
+This is a scalar in the Mizuno parameters (Table~\ref{tab:washout_brain}), the
+physical rate, and the timing $t_{\mathrm{irr}},t_1,t_2$. The ratio
+$\Phi(\lambda+\lambda_k^{\mathrm{bio}})/\Phi(\lambda)$ scales as
+$\bigl(\lambda/(\lambda+\lambda_k^{\mathrm{bio}})\bigr)^{2}$ at leading order:
+a component that clears far faster than the nuclide decays
+($\lambda_k^{\mathrm{bio}}\gg\lambda_i^{\mathrm{phys}}$) contributes nothing,
+the atom being gone before it can annihilate. No per-event creation time enters
+anywhere --- the age of each decay is integrated out analytically in
+Eq.~(\ref{eq:gfactor}).
+
+\subsection*{Exactness of the reweighting}
+
+Applying $g_i$ as a constant thinning of the recorded events reproduces not
+only the mean profile but the correct counting noise. Radioactive production is
+a Poisson process and clearance acts independently on each nucleus, so by the
+thinning theorem the washout-recorded events form a Poisson process whose
+intensity is the physical intensity times the survival. Thinning the physical
+process by the true age-dependent survival $W(\tau)$ and thinning it by the
+constant $g_i$ yield Poisson processes of the \emph{same} intensity $S_i$, and
+hence the same distribution --- including the run-to-run spread $\sigma_R$. The
+per-event age therefore carries no information the scalar $g_i$ lacks: a plain
+Bernoulli keep with probability $g_i$, identical for every event of species
+$i$, is exact for the ensemble of independent acquisitions. Three assumptions
+underlie this: Poisson production; clearance independent across nuclei (the
+single-nucleus picture behind Eq.~(\ref{eq:washout})); and, for a
+position-independent $g_i$, spatially uniform $W$.
+
+\subsection*{The measured effect: an isotope-mix reweighting}
+
+Because each $g_i$ multiplies its species' entire depth profile $P_i(z)$ by a
+constant, the washed and physical profiles are
+%
+\begin{equation}
+  P^{\mathrm{wo}}(z) = \sum_i g_i\,P_i(z),
+  \qquad
+  P^{0}(z) = \sum_i P_i(z),
+  \label{eq:mix}
+\end{equation}
+%
+so washout distorts no single isotope's shape and acts purely by re-weighting
+the mixture. The range endpoint $R_{50}$ moves only insofar as the species
+occupy different depths: \iso{15}{O}, with the lowest production threshold,
+reaches deepest and owns the distal edge, while \iso{11}{C} lies shallower. The
+direction follows from Eq.~(\ref{eq:gfactor}): every recorded nucleus has age
+$\ge t_1-t_{\mathrm{irr}}$, far beyond the $2$~s fast scale, so the fast
+component is spent for all species and washout roughly halves the signal; the
+differential survival comes from the age distribution, and the short-lived
+\iso{15}{O} (recorded decays bunched at small age, higher $W$) is suppressed
+\emph{less} than the long-lived \iso{11}{C} (decays spread across the window,
+more medium and slow clearance). The deep-edge contributor is thus relatively
+preserved, and the resulting $R_{50}$ shift partly opposes the proximal walk a
+delayed acquisition start produces. Its sign and magnitude follow from
+evaluating Eq.~(\ref{eq:gfactor}) for the five species and refitting
+$P^{\mathrm{wo}}(z)$ --- a computation on the stored physical-decay columns
+alone, with no re-simulation and no per-event data.
+
+\begin{thebibliography}{9}
+
+\bibitem{mizuno2003}
+H.~Mizuno, T.~Tomitani, M.~Kanazawa, A.~Kitagawa, T.~Kanai, R.~Kohno,
+T.~Nishio, et al.,
+\newblock Washout measurement of radioisotope implanted by radioactive beams in
+the rabbit,
+\newblock \emph{Phys. Med. Biol.} \textbf{48}, 2269--2281 (2003).
+
+\end{thebibliography}
+
+\end{document}
