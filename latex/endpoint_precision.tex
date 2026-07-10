@@ -74,7 +74,7 @@ and $^{11}$C channels), the activity ends about \SI{11}{mm} upstream of the
 dose edge. The offset is a property of the beam and the tissue; the
 reference simulation calibrates it.
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.46\textwidth]{figs/sobp_plateau.png}
   \includegraphics[width=0.46\textwidth]{figs/dose_activity.png}
@@ -135,7 +135,7 @@ from $10^{9}$ sampled lines of response. Figure~\ref{fig:projections}
 shows the orthogonal projections of one reconstructed BGO run; the CsI
 image is identical in geometry, with $2.1\times$ fewer counts.
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.55\textwidth]{figs/phantom.png}\\[2mm]
   \includegraphics[width=\textwidth]{figs/recon_projections_bgo.png}
@@ -212,7 +212,7 @@ refinement (Sec.~\ref{sec:outlook}).
 Figure~\ref{fig:fits} shows the fit on one run of each scanner, at the
 working protocol (all recorded events, no corrections).
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.49\textwidth]{figs/fit_all_events_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/fit_all_events_csi.png}
@@ -260,7 +260,7 @@ calibration: the run-to-run reproducibility of $R$ at each level.
   \end{tabular}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.49\textwidth]{figs/ladder_delta_r50_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/ladder_delta_r50_csi.png}
@@ -333,7 +333,7 @@ trues-level precision is worth a factor $1.7$ to BGO and $1.4$ to CsI
 (Table~\ref{tab:k}). The correction --- or a tighter selection exploiting
 CsI's energy resolution --- is the next step of the technology comparison.
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.49\textwidth]{figs/scatters_profile_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/scatters_profile_csi.png}
@@ -381,7 +381,7 @@ Table~\ref{tab:dose} quantifies the two operating points per scanner
   \end{tabular}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.49\textwidth]{figs/dose_sweep_r50_bgo.png}
   \includegraphics[width=0.49\textwidth]{figs/dose_sweep_r50_csi.png}
@@ -428,6 +428,14 @@ that drive it). Table~\ref{tab:tstart} and Fig.~\ref{fig:tstart} give
 $\DR$ and $\sigma_R$ at $t_{\text{start}} = 60$, $120$, $180$ and
 \SI{300}{s}, at the working protocol on both scanners.
 
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figs/activity.png}
+  \caption{Activity of the $\beta^+$ emitters produced by the field, as a
+    function of time after irradiation.}
+  \label{fig:decays}
+\end{figure}
+
 \begin{table}[htb]
   \centering
   \caption{The acquisition-start axis (all events, erfc, whole-plane):
@@ -449,7 +457,7 @@ $\DR$ and $\sigma_R$ at $t_{\text{start}} = 60$, $120$, $180$ and
   \end{tabular}
 \end{table}
 
-\begin{figure}[htb]
+\begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.8\textwidth]{figs/tstart_r50.png}
   \caption{The acquisition-start trade-off (all events). Top: $\DR$
@@ -492,14 +500,6 @@ delay ($10.8 \to \SI{11.4}{mm}$ on trues): the smaller positron range of
 the surviving $^{11}$C is invisible under the intrinsic edge width, while
 the deeper-reaching $^{13}$N component gains relative weight and broadens
 the composite fall-off.
-
-\begin{figure}[htb]
-  \centering
-  \includegraphics[width=0.8\textwidth]{figs/activity.png}
-  \caption{Activity of the $\beta^+$ emitters produced by the field, as a
-    function of time after irradiation.}
-  \label{fig:decays}
-\end{figure}
 
 \section{Isotope washout}
 \label{sec:washout}
@@ -561,17 +561,6 @@ realisations.)
   \end{tabular}
 \end{table}
 
-\emph{Spatial non-uniformity is not pursued here.} The result above assumes
-clearance uniform over the irradiated volume. A real perfusion field is
-heterogeneous, and a depth-dependent clearance would make the edge shift
-depth-dependent --- a genuine bias that no single calibration constant absorbs.
-We do not treat it in this work: capturing it needs a perfusion/compartment
-transport model acting on the production points, a downstream development
-independent of the range estimator and of the Monte Carlo, and the
-uniform-clearance result already bounds the loss effect. Should a later study
-find the edge sensitive to the clearance field, that transport model is where
-the work belongs.
-
 \section{Outlook}
 \label{sec:outlook}
 
@@ -619,9 +608,7 @@ the zero-delay precision. Isotope washout, folded in as spatially uniform
 brain clearance, adds no range bias --- its edge shift calibrates away like
 any offset (parameter uncertainty $\pm\SI{0.02}{mm}$) --- but costs
 $\approx 1.5\times$ in $\sigma_R$ ($\SI{0.11}{}\to\SI{0.16}{mm}$ at
-\SI{1}{Gy}), the ordinary penalty for its $\sim\!57\%$ count loss; a
-spatially non-uniform clearance, the one route to a genuine washout bias,
-is left to a dedicated perfusion-transport study.
+\SI{1}{Gy}), the ordinary penalty for its $\sim\!57\%$ count loss.
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}
