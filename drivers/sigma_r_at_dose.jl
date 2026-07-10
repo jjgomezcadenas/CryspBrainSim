@@ -88,7 +88,7 @@ function from_shards(ctx)
     p = ctx.params
     out = config_sigma_r(ctx)
     println("$(length(ctx.files)) shards; niter $(p.niter), " *
-            "ROI $(p.roi.radius_mm) mm, window $(round.(ctx.ref.window; digits=2))")
+            "whole-plane profile, window $(round.(ctx.ref.window; digits=2))")
     results = NamedTuple[]
     t_total = @elapsed for f in ctx.files
         r = read_shard(f)

@@ -1,10 +1,10 @@
 # drivers/one_shard.jl — the single-shard chain (build step 5, ladder
 # rung 5): reconstruct one stored shard's trues at full statistics on the
-# corridor grid, profile over the fixed disc ROI, fit the distal erfc
-# endpoint in the fixed window, and score R against the rung-1 truth
-# reference. Sweeps R50 vs MLEM iteration (semi-convergence plateau),
-# perturbs ROI and window (stability), and records the wall-clock that sizes
-# the sweep. This run is what freezes the run parameters.
+# corridor grid, profile over the whole transverse plane (the settled
+# protocol), fit the distal erfc endpoint in the fixed window, and score R
+# against the rung-1 truth reference. Sweeps R50 vs MLEM iteration
+# (semi-convergence plateau), perturbs the window (stability), and records
+# the wall-clock that sizes the sweep.
 #
 # Run:  julia -t auto --project=. drivers/one_shard.jl [shard_index] [--all-uncorr]
 # Default selection is the frozen trues-only run parameter. `--all-uncorr` is the
@@ -37,7 +37,7 @@ const N = PARAMS.grid.n
 const VS = PARAMS.grid.voxsize
 const ORG = PARAMS.grid.img_origin
 
-const ROI_MM = PARAMS.roi.radius_mm
+const ROI_MM = PARAMS.roi.radius_mm    # nothing = whole plane (the settled protocol)
 const NITER_MAX = 2 * PARAMS.niter
 const CHECK_EVERY = 10
 
@@ -107,9 +107,6 @@ function main()
     fin = fit_r50(img, ref.window)
     cross = windowed_crossing(fin.z, fin.prof, ref.window)
     stab = Dict{String,Float64}()
-    for roi in (12.0, 15.0)
-        stab["roi_$(roi)mm"] = fit_r50(img, ref.window; roi=roi).fit.z0
-    end
     for dz in (-2.0, 2.0)
         w = (ref.window[1] + dz, ref.window[2] + dz)
         stab["window_$(dz)mm"] = fit_r50(img, w).fit.z0
@@ -120,7 +117,7 @@ function main()
             PARAMS.niter, fin.fit.z0, fin.fit.z0_err, cross)
     @printf("reference:  truth fit = %.3f mm | truth crossing = %.3f mm | dose-R80 = %.3f mm\n",
             ref.activity_R50_fit, ref.activity_R50, ref.dose_R80)
-    @printf("stability spread (ROI 12/15, window ±2 mm): %.3f mm\n", spread)
+    @printf("stability spread (window ±2 mm): %.3f mm\n", spread)
     @printf("timing: attenuation %.2f s | %d MLEM iters (with checkpoints) %.1f s\n",
             t_att, NITER_MAX, t_recon)
 
@@ -138,7 +135,7 @@ function main()
             "out_of_grid_frac" => out_frac,
             "grid" => Dict("n" => collect(N), "img_origin" => Float64.(collect(ORG)),
                            "voxsize" => Float64.(collect(VS))),
-            "roi_mm" => ROI_MM, "niter" => PARAMS.niter,
+            "profile" => "whole-plane", "niter" => PARAMS.niter,
             "niter_plateau_check" => NITER_MAX,
             "window_mm" => collect(ref.window),
             "sens" => Dict("cache" => cache, "n_sens" => n_sens,

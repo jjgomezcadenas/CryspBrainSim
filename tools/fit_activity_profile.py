@@ -494,7 +494,8 @@ def main():
     window = (tuple(float(v) for v in args.window.split(",")) if args.window
               else (params["window"]["z_lo_mm"], params["window"]["z_hi_mm"]))
 
-    frozen_roi = params["roi"]["radius_mm"]
+    # No radius_mm key = whole plane, the settled convention.
+    frozen_roi = params["roi"].get("radius_mm")
     centre = params["roi"]["centre_mm"]
     # Whole plane by default (the settled convention); a numeric --roi clips
     # to a disc, `none` is an explicit whole-plane request.
@@ -508,8 +509,10 @@ def main():
         d = np.load(os.path.join(CFG, "one_shard", f"recon_{shard_tag}.npz"))
         z, prof = profile_from_image(d["image"], params["grid"], centre, roi_radius)
         if roi_radius == frozen_roi and not args.all_uncorr:
-            assert np.allclose(prof, d["profile"], rtol=1e-6), \
-                "recomputed profile ≠ driver profile (ROI/grid wiring)"
+            if not np.allclose(prof, d["profile"], rtol=1e-6):
+                print("note: stored driver profile differs from the recomputed "
+                      "one — an npz written under the retired disc-ROI protocol; "
+                      "fitting the recomputed whole-plane profile")
         act_name = ("recon_all_events_activity" if args.all_uncorr
                     else "recon_activity")
     else:

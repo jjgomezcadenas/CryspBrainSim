@@ -27,8 +27,9 @@
 #
 # The chain is frozen in config/run_parameters.toml and identical for every run:
 # scale the sensitivity to the list's count → MLEM at the frozen iteration count
-# → sum the image over the fixed disc ROI at each depth → fit the distal edge
-# with an erfc. R is read two ways — the fit's half-height (the primary,
+# → sum the image over the whole transverse plane at each depth (the settled
+# protocol; `[roi]` carries no radius) → fit the distal edge with an erfc,
+# free baseline. R is read two ways — the fit's half-height (the primary,
 # noise-averaged value) and the profile's half-height crossing (a direct read).
 
 # Short filename tag for a dose: 1.0 → "1Gy", 0.5 → "0p5Gy", 0.05 → "0p05Gy".
@@ -118,8 +119,8 @@ lor_attenuation(ctx, xs, xe) =
 
 Run the frozen reconstruction chain on one list of coincidences (`xs`/`xe`
 endpoints in mm, `mult` the per-LOR attenuation) and read its range endpoint.
-Scales the sensitivity to this list's count, runs MLEM, sums the image over the
-disc ROI into a depth profile, and fits the distal edge. Pass `device =
+Scales the sensitivity to this list's count, runs MLEM, sums the image over
+the whole transverse plane into a depth profile, and fits the distal edge. Pass `device =
 MtlArray` (with Metal loaded) to run on the GPU. Returns
 `(nev, r50_fit, z0_err, w, r50_cross)`: the count, R in both conventions, the
 fitted edge width, and the fit's own error estimate.

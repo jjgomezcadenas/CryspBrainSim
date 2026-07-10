@@ -388,7 +388,8 @@ end
         @test k.grid.n == (64, 64, 96)
         @test k.grid.img_origin == (-47.25f0, -47.25f0, -119.25f0)
         @test k.grid.voxsize == (1.5f0, 1.5f0, 1.5f0)
-        @test k.roi.radius_mm == 13.0 && k.roi.centre_mm == (0.0, 0.0)
+        # No radius: the profile read is whole-plane (the settled protocol).
+        @test k.roi.radius_mm === nothing && k.roi.centre_mm == (0.0, 0.0)
         @test k.window[1] < k.window[2] < 0
         @test k.niter == 50
         @test k.n_sens == 1_000_000_000

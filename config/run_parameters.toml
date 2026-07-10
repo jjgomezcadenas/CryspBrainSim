@@ -17,8 +17,9 @@ n = [64, 64, 96]
 img_origin_mm = [-47.25, -47.25, -119.25]   # voxel-centre origin; z spans -119.25..+23.25
 voxsize_mm = [1.5, 1.5, 1.5]
 
-[roi]                        # fixed transverse disc, centred on the beam axis
-radius_mm = 13.0             # ρ ≈ 3·√(σ_spot² + σ_PSF²) + R_β⁺
+[roi]                        # profile read: the whole transverse plane (the
+                             # part-(a) settled protocol — no radius_mm key);
+                             # centre kept for the fit lab's optional disc
 centre_mm = [0.0, 0.0]
 
 [window]                     # fixed distal fit window, from the truth activity edge

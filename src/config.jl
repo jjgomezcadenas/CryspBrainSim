@@ -7,7 +7,8 @@
         -> NamedTuple
 
 The frozen run parameters as typed values: `grid = (n, img_origin, voxsize)` (tuples,
-Float32 where the projectors want them), `roi = (radius_mm, centre_mm)`,
+Float32 where the projectors want them), `roi = (radius_mm, centre_mm)` —
+`radius_mm` is `nothing` when absent from the file (the whole-plane protocol),
 `window = (z_lo, z_hi)`, `niter`, `n_sens`, `chunk`, `truth_selection`, and
 `config = (scenario, topology, scanner, crystal, leaf)` — the active arm of the
 products tree that every driver and tool reads.
@@ -23,7 +24,8 @@ function load_run_parameters(path::AbstractString=joinpath(pkgdir(CryspBrainSim)
             grid=(n=Tuple(Int.(g["n"])),
                   img_origin=Tuple(Float32.(g["img_origin_mm"])),
                   voxsize=Tuple(Float32.(g["voxsize_mm"]))),
-            roi=(radius_mm=Float64(k["roi"]["radius_mm"]),
+            roi=(radius_mm=haskey(k["roi"], "radius_mm") ?
+                     Float64(k["roi"]["radius_mm"]) : nothing,
                  centre_mm=Tuple(Float64.(k["roi"]["centre_mm"]))),
             window=(Float64(k["window"]["z_lo_mm"]),
                     Float64(k["window"]["z_hi_mm"])),

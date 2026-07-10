@@ -14,6 +14,13 @@
 #                        first. Activity scales with dose, so a lower dose keeps
 #                        a smaller fraction of the pooled coincidences.
 #
+#   --all-events         Reconstruct every kept coincidence — scatters and
+#                        randoms in, uncorrected (the working protocol). The
+#                        default is the trues-only selection. The thin draw is
+#                        seeded identically either way, so the two selections
+#                        pair realization by realization. Outputs carry the
+#                        `_all` suffix (sweep_all.toml/npz).
+#
 # σ_R rises as the dose falls, because fewer counts make a noisier edge. The
 # nominal-dose point reproduces the sigma_r_at_dose result; the fall-off maps
 # how the range precision degrades with dose for this scanner. A different
@@ -38,6 +45,7 @@ end
 const DOSES = let i = findfirst(==("--doses"), ARGS)
     i === nothing ? [1.0, 0.5, 0.2, 0.1] : parse.(Float64, split(ARGS[i+1], ","))
 end
+const ALL_EVENTS = "--all-events" in ARGS
 
 
 const DEV = Metal.functional() ? MtlArray : identity
@@ -62,10 +70,11 @@ function sweep(ctx)
     t_pool = @elapsed pool = pool_shards(ctx.files)
     M_total = length(pool.coinc)
     n_shards = length(ctx.files)
-    tmask = is_true(pool.coinc)
+    selection = ALL_EVENTS ? "all-uncorrected" : "trues-only"
+    tmask = ALL_EVENTS ? trues(M_total) : is_true(pool.coinc)
     a_all = lor_attenuation(ctx, pool.coinc.xstart, pool.coinc.xend)
-    @printf("pooled %d coincidences in %.0f s; %d doses × %d realizations\n",
-            M_total, t_pool, length(DOSES), REALIZATIONS)
+    @printf("pooled %d coincidences in %.0f s; %d doses × %d realizations; %s\n",
+            M_total, t_pool, length(DOSES), REALIZATIONS, selection)
 
     points = NamedTuple[]
     for dose in DOSES
@@ -85,8 +94,9 @@ function sweep(ctx)
                 dose, target, sf.sigma, sc.sigma, sf.n_ok, sf.n_fail, t)
     end
 
+    stem = ALL_EVENTS ? "sweep_all" : "sweep"
     mkpath(out)
-    npzwrite(joinpath(out, "sweep.npz"),
+    npzwrite(joinpath(out, "$(stem).npz"),
              Dict("dose_Gy" => [p.dose for p in points],
                   "target_counts" => Float64.([p.target for p in points]),
                   "sigma_fit_mm" => [p.sf.sigma for p in points],
@@ -94,10 +104,11 @@ function sweep(ctx)
                   "mean_fit_mm" => [p.sf.mean for p in points],
                   "n_ok" => Float64.([p.sf.n_ok for p in points]),
                   "n_fail" => Float64.([p.sf.n_fail for p in points])))
-    open(joinpath(out, "sweep.toml"), "w") do io
+    open(joinpath(out, "$(stem).toml"), "w") do io
         TOML.print(io, Dict(
             "realizations" => REALIZATIONS, "doses_Gy" => DOSES,
             "M_total" => M_total, "n_shards" => n_shards,
+            "selection" => selection, "profile" => "whole-plane",
             "seed_base" => THINNING_SEED_BASE,
             "point" => [Dict("dose_Gy" => p.dose, "target_counts" => p.target,
                              "sigma_fit_mm" => p.sf.sigma,
@@ -106,7 +117,7 @@ function sweep(ctx)
                              "n_ok" => p.sf.n_ok, "n_fail" => p.sf.n_fail)
                         for p in points]))
     end
-    println("wrote $(joinpath(out, "sweep.toml")) (+ sweep.npz)")
+    println("wrote $(joinpath(out, "$(stem).toml")) (+ $(stem).npz)")
 end
 
 sweep(context())
