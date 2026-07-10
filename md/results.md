@@ -142,7 +142,7 @@ Figures: `out/uniform_headep_sobp_1e8/closed/comparison/figures/chs_sigma_r.png`
 `_csi` single-crystal versions; `tools/plot_chs_sigma_r.py [--crystal]`). A measured σ_R(1 Gy)
 and a shard-spread on the anchors need the remaining nine shards per arm from upstream.
 
-## Isotope washout (IW), first result: DONE at t_start = 0 (2026-07-10)
+## Isotope washout (IW): DONE — no bias, ~1.5× σ_R cost (2026-07-10)
 
 Washout modelled as loss (perfusion/metabolism clears emitters before they decay) reduces — for a
 spatially-uniform brain — to a **per-isotope survival scalar** g_i (`latex/washout_brain.tex`
@@ -160,41 +160,38 @@ below σ_R ≈ 0.11 mm, and the fast component's ~90% error barely propagates (s
 ages). So within this model washout is a **benign calibrated constant**, not a systematic limit.
 
 **Detected level** (`drivers/washout_sigma_r.jl`, per-event thinning by w(z₀,t_decay) =
-Σ_i P(i|z₀,t_decay) g_i, all events, ten shards). Bias transfers scanner-independently:
-BGO +0.200, CsI +0.209 mm (vs truth +0.218). **Precision essentially untouched despite losing 57%
-of counts** — σ_R BGO 0.113→0.126 (1.11×), CsI 0.114→0.110 (0.96×, dropping one n=10 fit outlier;
-all-10 gives 0.237/2.08×), both far below the naïve 1/√f = 1.53× — the same ¹⁵O variance-drain as
-the delayed-start study: washout removes the noisiest counts. Figure:
-`out/uniform_headep_sobp_1e8/closed/comparison/figures/washout_sigma_r.png`
-(`tools/plot_washout.py`).
+Σ_i P(i|z₀,t_decay) g_i, all events). **Bias** transfers scanner-independently and calibrates
+away: ΔR₅₀^wo(t_start=0) ≈ +0.20–0.25 mm, matching truth +0.218; the shift shrinks toward zero as
+the delay pre-depletes ¹⁵O (CsI +0.25 at 60 s → ~0 by 300 s). Washout adds **no bias** the
+reference does not absorb.
 
-**Compounded with the in-room start** (`washout_sigma_r.jl` t_start sweep, both arms, g_i
-recomputed per shifted window [120+t_start, 1320]): the two effects stack on ¹⁵O, and the picture
-changes from the t_start = 0 limit:
+**Precision — CORRECTED (2026-07-10).** Washout **inflates σ_R by ~1.5×; it is not free.** An
+earlier claim here ("precision essentially untouched — BGO 1.11×, CsI 0.96×") was an **n=10
+artifact**: the CsI 0.96× came only from dropping a legitimate shard as an "outlier" in the
+ten-shard from_shards run. The robust **thinned** method (30 realizations, ±13%; dose-adaptive
+0.2–0.5 Gy to keep the count-starved washed corner in the stable-fit regime — the 0.1 Gy corner was
+verified to fail, σ_R blowing to 1.6 mm at 68 k events; dose-independence checked: CsI t=0 gives
+**1.48× at 1 Gy vs 1.68× at 0.2 Gy, consistent**) measures the CsI inflation curve (scaled to 1 Gy):
 
-| t_start [s] | 60 | 120 | 180 | 300 |
-|---|---|---|---|---|
-| kept (washout × delay) | 0.31 | 0.23 | 0.18 | 0.11 |
-| ΔR₅₀^wo BGO / CsI [mm] | +0.22 / +0.30 | +0.18 / +0.20 | +0.19 / +0.06 | +0.10 / −0.00 |
-| σ_R washed BGO / CsI | 0.16 / 0.13 | 0.12 / 0.21 | 0.16 / 0.17 | 0.21 / 0.31 |
-| σ_R nominal BGO / CsI | 0.10 / 0.06 | 0.12 / 0.09 | 0.11 / 0.11 | 0.10 / 0.23 |
+| t_start [s] | 0 | 60 | 120 | 180 | 300 |
+|---|---|---|---|---|---|
+| CsI σ_R inflation (±13%) | 1.48 | 1.74 | 1.57 | 1.54 | 1.87 |
 
-Two effects: **(a)** the washout shift shrinks toward zero as the delay pre-depletes ¹⁵O (BGO
-+0.22→+0.10, CsI +0.30→−0.00) — still calibrating away, just smaller; **(b)** the precision that
-was free at t_start = 0 **is no longer free** — washed σ_R climbs above nominal (~1.3–2× at the
-operational 180–300 s), because the ¹⁵O that supplied the variance-drain is gone by then, so
-washout's ~57%-per-step count loss now bites like ordinary counting. Figure:
-`out/uniform_headep_sobp_1e8/closed/comparison/figures/washout_tstart.png`. (σ_R here is n=10,
-±24%, with visible wiggle — the 50-realization thinned method is needed to state the inflation
-factors cleanly.)
+— **roughly flat at ~1.5–1.6×**, with a rise at the count-starved 300 s end, **not** rising from
+1.0. The physics: washout removes ~57% of counts **roughly uniformly** (all g_i ≈ 0.4–0.5, ~0.07
+spread), so it is close to a uniform count cut → σ_R × ~1/√0.43 ≈ 1.5× (counting), independent of
+t_start. This is the ordinary count penalty, **not** the ¹⁵O variance-drain that protects the
+*delayed start* — that drain removes early ¹⁵O; washout removes late decays roughly uniformly (the
+two were conflated in the first pass). At 1 Gy this takes CsI σ_R from 0.11 to ~0.16 mm. BGO thinned
+curve in progress; the inflation is a count-removal *fraction* with the same g_i on both arms, so
+arm-independence predicts ~the same ~1.5×. (The superseded n=10 figures `washout_sigma_r.png` /
+`washout_tstart.png` and their "free at t=0" framing are to be regenerated from the thinned data.)
 
-**Caveats / open:** **model-form** uncertainty is untouched — spatial non-uniformity (the genuine
-non-calibratable bias route), rabbit→human, per-species; the parameter systematic (±0.020 mm at
-t_start = 0) is negligible but the σ_R firm-up is pending. **Bottom line:** with uniform brain
-washout the bias always calibrates away and its parameter band is negligible, so IW does not bias
-range verification; its one real cost is **precision, and only when compounded with a realistic
-delayed start** — at t_start = 0 it is free, at 180–300 s it inflates σ_R ~1.3–2×. The case for
-going upstream still rests on spatial non-uniformity.
+**Caveats / open:** model-form uncertainty untouched — spatial non-uniformity (the genuine
+non-calibratable bias route), rabbit→human, per-species. **Bottom line (corrected):** uniform brain
+washout adds **no bias** (calibrates away; parameter band ±0.02 mm ≪ σ_R) but costs **~1.5× in σ_R
+(0.11 → ~0.16 mm at 1 Gy), roughly independent of start time** — the ordinary penalty for losing
+~57% of the counts. The case for going upstream rests on spatial non-uniformity.
 
 ## Data on disk
 
