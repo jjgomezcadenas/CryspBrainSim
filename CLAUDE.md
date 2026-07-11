@@ -32,6 +32,10 @@ one curve per scanner geometry. This is the analysis end of the chain
   of what was said back — verified against the repo/data where possible — and stop there.
 - **Confirm before writing, building, committing, or pushing.** State what you are about to do and
   wait for the go-ahead.
+- **Check when in doubt.** If carrying out an instruction literally would move, delete, rename, or
+  overwrite something that already exists — or the literal reading might not be the intended one —
+  ask first. Noticing the ambiguity and proceeding anyway is the error; a one-line question is cheap.
+  Don't manufacture trivial doubts where an obvious default exists.
 - **Formulate affirmatively.** Say what to do, in as much detail as the reader needs to do it.
   Describe the action to take and the outcome to reach; let the obvious non-actions stay unsaid. This
   applies to plans, code comments, docstrings, and commit messages alike — `dev/PLAN.md` is written
