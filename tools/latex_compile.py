@@ -8,16 +8,16 @@ so citations and cross-references resolve, then deletes the auxiliary files
 LaTeX scatters (.aux, .log, .bbl, …). The .pdf is a build product and is not
 tracked; regenerate it here.
 
-Run:  python3 latex/compile.py [name ...]   (or, from latex/, python3 compile.py cbs)
-With no argument, compiles every .tex in this directory. A name may be a bare
-stem (`cbs`), a file (`cbs.tex`) or a path.
+Run:  python3 tools/latex_compile.py [name ...]
+With no argument, compiles every .tex in latex/. A name may be a bare stem
+(`cbs`), a file (`cbs.tex`) or a path.
 """
 import os
 import subprocess
 import sys
 
-LATEX = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(LATEX)
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LATEX = os.path.join(REPO, "latex")
 
 AUX_EXT = (".aux", ".log", ".out", ".toc", ".lof", ".lot", ".bbl", ".blg",
            ".fls", ".fdb_latexmk", ".synctex.gz", ".nav", ".snm", ".vrb",

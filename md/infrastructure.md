@@ -43,7 +43,7 @@ working-protocol selection → `sweep_all.toml`; the thin seeds pair with the tr
 `recon_scatters.jl`, `plot_recon_projections.py`, `plot_tstart.py`, `plot_one_shard.py`,
 `plot_shard.py`, `plot_truth.py`, `plot_sigma_r.py`, `plot_chs_sigma_r.py` (single-shard
 geometries CHS + R35 vs ring σ_R — six-arm dose sweeps + the ring ten-shard 1 Gy anchors;
-`--crystal bgo|csi` for one-crystal figures), `collect_note_figures.sh`, `latex/compile.py`.
+`--crystal bgo|csi` for one-crystal figures), `collect_note_figures.sh`, `latex_compile.py`.
 
 **Switching scanner arm** = activate the ready-made per-arm config,
 `cp config/run_parameters_{bgo,csi}.toml config/run_parameters.toml`, then rerun the chain
