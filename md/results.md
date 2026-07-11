@@ -190,6 +190,22 @@ penalty, **not** the ¹⁵O variance-drain that protects the *delayed start* —
 (`tools/plot_washout_thinned.py`); the superseded n=10 figures `washout_sigma_r.png` /
 `washout_tstart.png` are retired.
 
+**R35 (r 350 mm, 50 cm AFOV) — same cost in a smaller bore (2026-07-11).** Repeated the thinned
+firm-up on both R35 arms (`crysp_r35_50cm_{bgo,csi}_2x0`, 10 shards each, 0.63× the ring's counts)
+at the two mid-range starts, N=50 (±10%), dose-adaptive (BGO 0.3 Gy; CsI 0.5 Gy to clear the
+fit-stability floor — at CsI 0.3 Gy the 180 s washed arm dropped to 204 k events and read 2.08,
+settling to 1.92 at 0.5 Gy / 340 k). Inflation (washed/nominal, scaled to 1 Gy):
+
+| t_start [s] | 120 | 180 |
+|---|---|---|
+| BGO σ_R inflation (±10%) | 1.74 | 1.90 |
+| CsI σ_R inflation (±10%) | 1.74 | 1.92 |
+
+— both arms tie (~1.74 at 120 s, ~1.9 at 180 s), consistent with the reference ring within the
+point-to-point scatter: the ~1.7–1.9× cost tracks the count loss, not the bore. Nominal σ_R at 1 Gy
+0.10–0.15 mm (just above the reference 0.11 mm, expected for the larger ring radius); washed
+0.20–0.29 mm. In note §7 Table 6. Configs `config/run_parameters_r35_{bgo,csi}.toml`.
+
 **Caveats / open:** model-form uncertainty untouched — spatial non-uniformity (the genuine
 non-calibratable bias route), rabbit→human, per-species. **Bottom line (corrected):** uniform brain
 washout adds **no bias** (calibrates away; parameter band ±0.02 mm ≪ σ_R) but costs **~1.5× in σ_R

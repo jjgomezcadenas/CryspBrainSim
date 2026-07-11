@@ -541,24 +541,35 @@ the start time and the scanner (Table~\ref{tab:washout}), rising to
 $\sim\!2\times$ only at \SI{300}{s}, where the doubly-cut (delay $\times$
 washout) sample becomes count-starved. At \SI{1}{Gy} this takes $\sigma_R$ from
 $\sim\!\SI{0.11}{}$ to $\sim\!\SI{0.16}{mm}$: a real but modest degradation,
-recovered by the same $1/\sqrt{\text{dose}}$ lever as any count loss. (This
-corrects an earlier reading from ten independent runs, whose small sample made
-washout look free at zero delay; the figures here are from many thinned
-realisations.)
+recovered by the same $1/\sqrt{\text{dose}}$ lever as any count loss. A
+smaller-bore scanner (R35, $r=\SI{350}{mm}$, $0.63\times$ the ring's counts)
+gives the same $\approx\!1.7$--$1.9\times$ inflation at the two mid-range
+starts, both arms tying (Table~\ref{tab:washout}), so the cost tracks the count
+loss, not the geometry. (This corrects an earlier reading from ten independent
+runs, whose small sample made washout look free at zero delay; the figures here
+are from many thinned realisations.)
 
 \begin{table}[htb]
   \centering
   \caption{Washout precision cost: the $\sigma_R$ inflation (washed/nominal),
-    per scanner and start time, from the thinned firm-up ($\pm 13\%$ per point).
-    The edge shift itself calibrates away (text); this is what remains.}
+    per scanner and start time, from the thinned firm-up. The reference ring is
+    measured across the full start-time axis ($N=30$, $\pm13\%$); the
+    smaller-bore R35 ($0.63\times$ the counts) at the two mid-range starts
+    ($N=50$, $\pm10\%$). The edge shift itself calibrates away (text); this is
+    what remains.}
   \label{tab:washout}
   \vspace{1mm}
   \begin{tabular}{lccccc}
     \toprule
     {$t_{\text{start}}$ [s]} & {0} & {60} & {120} & {180} & {300} \\
     \midrule
+    \multicolumn{6}{l}{\emph{Reference ring} ($r=\SI{500}{mm}$)}\\
     BGO 195\,K & 1.34 & 1.43 & 1.76 & 1.16 & 2.02 \\
     CsI        & 1.48 & 1.74 & 1.57 & 1.54 & 1.87 \\
+    \midrule
+    \multicolumn{6}{l}{\emph{R35} ($r=\SI{350}{mm}$, \SI{50}{cm} AFOV)}\\
+    BGO 195\,K & --- & --- & 1.74 & 1.90 & --- \\
+    CsI        & --- & --- & 1.74 & 1.92 & --- \\
     \bottomrule
   \end{tabular}
 \end{table}
