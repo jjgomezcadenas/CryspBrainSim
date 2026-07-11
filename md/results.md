@@ -8,7 +8,7 @@ working protocol (all events, no corrections); precision scales as 1/√dose (0.
 ~0.11 mm at t_start = 180 s). The activity–dose offset is a per-scanner calibration constant
 measured to 0.01–0.04 mm/term; scatters bias it ≤ 0.04 mm (no correction needed at this level —
 other calibration terms dominate). Written up in `latex/endpoint_precision.tex` (8 pages, compiles
-clean via `tools/latex_compile.py endpoint_precision`).
+clean via `latex/compile.py endpoint_precision`).
 
 ## Endpoint study, part (a): distal-edge estimation — DONE (2026-07-08)
 
