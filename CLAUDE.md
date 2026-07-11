@@ -40,7 +40,9 @@ one curve per scanner geometry. This is the analysis end of the chain
   Describe the action to take and the outcome to reach; let the obvious non-actions stay unsaid. This
   applies to plans, code comments, docstrings, and commit messages alike — `dev/PLAN.md` is written
   this way and stays that way.
-- **Ask plainly, in prose.** State what you need to know directly, as a sentence.
+- **Ask plainly, in prose. NEVER show me a menu.** State what you need to know directly, as a
+  sentence — never as a multiple-choice picker or options menu. If there are choices, name them in a
+  sentence and let me answer in my own words.
 - **Lead with measured numbers.** Give the figures first and the adjectives after; list the relevant
   options before any comparative claim.
 - **State the path of any figure or artifact you produce** (e.g. `out/one_shard/figures/profile.png`)
