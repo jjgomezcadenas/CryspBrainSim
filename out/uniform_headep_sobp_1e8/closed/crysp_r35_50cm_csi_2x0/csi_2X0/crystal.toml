@@ -1,0 +1,12 @@
+label = "csi_2X0"
+material = "CSI"
+thickness_X0 = 2.0
+wall_mm = 37.2
+arm = "csi"
+X0_mm = 18.6
+
+[detector]
+sigma_xyz_mm = 1.486
+tau_ns = 1.5
+energy_resolution_fwhm = 0.06
+emin_keV = 472.0

@@ -1,0 +1,35 @@
+profile = "whole-plane"
+n_shards = 10
+doses_Gy = [0.2, 0.1, 0.05]
+M_total = 60599043
+selection = "trues-only"
+seed_base = 1000000
+realizations = 50
+
+[[point]]
+offset_mm = -9.268404397360161
+mean_fit_mm = -14.852329703219787
+target_counts = 1211981
+sigma_fit_mm = 0.19216532646263107
+n_fail = 0
+n_ok = 50
+dose_Gy = 0.2
+sigma_crossing_mm = 0.4786814341597136
+[[point]]
+offset_mm = -9.281267000898147
+mean_fit_mm = -14.865192306757773
+target_counts = 605990
+sigma_fit_mm = 0.25642152863127954
+n_fail = 0
+n_ok = 50
+dose_Gy = 0.1
+sigma_crossing_mm = 0.5864208601241983
+[[point]]
+offset_mm = -9.288368439779607
+mean_fit_mm = -14.872293745639233
+target_counts = 302995
+sigma_fit_mm = 0.3321720741540681
+n_fail = 0
+n_ok = 50
+dose_Gy = 0.05
+sigma_crossing_mm = 0.6035167130565684

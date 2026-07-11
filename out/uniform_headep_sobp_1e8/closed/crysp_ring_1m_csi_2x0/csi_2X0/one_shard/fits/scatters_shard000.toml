@@ -1,0 +1,22 @@
+shard = 0
+window_lo_mm = -36.452
+window_hi_mm = -1.452
+
+[scatter]
+n_events = 805616
+n_all = 6063026
+scale = 0.13287358490628276
+window_level = 588.0482111391814
+window_slope_per_mm = -3.30326891510855
+window_slope_err = 0.594668548535235
+distal_pedestal = 474.03912353515625
+
+[all_events]
+plateau = 9379.359375
+edge_gradient_per_mm = 406.6471252441406
+
+[ratios]
+pedestal_over_plateau = 0.05054067176471274
+window_level_over_plateau = 0.06269598888668038
+worst_case_R50_shift_mm = -0.28431139642112874
+measured_shift_mm = 0.04011353720405175

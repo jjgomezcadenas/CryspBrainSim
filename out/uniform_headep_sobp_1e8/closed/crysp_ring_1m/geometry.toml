@@ -1,0 +1,13 @@
+half_length_mm = 512.0
+name = "crysp_ring_1m"
+shape = "cyl_shell"
+length_mm = 1024.0
+n_z = 20
+n_crystals = 960
+n_phi = 48
+r_inner_mm = 387.0
+r_outer_mm = 424.0
+crystal_radial_mm = 37.0
+wall_mm = 37.0
+crystal_transverse_mm = 50.65818153913542
+crystal_axial_mm = 51.2

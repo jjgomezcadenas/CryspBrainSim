@@ -1,0 +1,19 @@
+
+[meta]
+shards = 10
+min_mean_counts = 100.0
+per_bin_se = 0.4714045207910317
+window_lo_mm = -36.452
+window_hi_mm = -1.452
+
+[window]
+n_bins = 23
+fano_mean = 0.9426193337552057
+fano_se = 0.09245308842868177
+expected_se = 0.0982946374365981
+
+[all_bins]
+n_bins = 84
+fano_mean = 0.9887807079963118
+fano_se = 0.05791062899814736
+expected_se = 0.05143444998736397

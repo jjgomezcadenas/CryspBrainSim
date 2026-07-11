@@ -1,0 +1,11 @@
+label = "bgo_3X0"
+material = "BGO"
+thickness_X0 = 3.309481216457961
+wall_mm = 37.0
+X0_mm = 11.18
+
+[detector]
+sigma_xyz_mm = 1.7
+tau_ns = 3.0
+energy_resolution_fwhm = 0.1
+emin_keV = 450.0

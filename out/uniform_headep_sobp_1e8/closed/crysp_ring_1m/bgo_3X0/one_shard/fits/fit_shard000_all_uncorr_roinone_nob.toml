@@ -1,0 +1,191 @@
+
+[meta]
+tag = "shard000_all_uncorr_roinone_nob"
+source = "recon"
+roi_mm = -1.0
+sigma_blur_recon_mm = 1.7
+window_lo_mm = -36.452
+window_hi_mm = -1.452
+models = "erfc,sigmoid"
+baseline = false
+float_sigma = false
+
+[recon_all_events_activity]
+window_lo_mm = -36.452
+window_hi_mm = -1.452
+sigma_blur_mm = 1.7
+
+[recon_all_events_activity.erfc]
+b = 0.0
+a = 9100.860145730803
+z0_mm = -14.904044137393328
+w_mm = 10.401475815050711
+z0_err_mm = 0.1339102039061318
+chi2 = 28.84738055905083
+ndf = 20
+chi2_ndf = 1.4423690279525414
+baseline = false
+zero_fraction = 0.01
+R50_mm = -14.904044137393328
+R20_mm = -6.149941230951514
+R20_err_mm = 0.07575831851418913
+Rp_mm = -1.8677274494450078
+Rp_err_mm = 0.08986612986561981
+Rx_mm = 9.293407011837118
+Rx_err_mm = 0.19948923033475963
+z_zero_mm = nan
+
+[recon_all_events_activity.sigmoid]
+b = 0.0
+a = 9188.52183619145
+z0_mm = -15.030826379368527
+r_mm = 6.30783070026761
+z0_err_mm = 0.12955278163297215
+chi2 = 38.32682323658336
+ndf = 20
+chi2_ndf = 1.916341161829168
+baseline = false
+zero_fraction = 0.01
+R50_mm = -15.030826379368527
+R20_mm = -6.286316248688609
+R20_err_mm = 0.07741000494113888
+Rp_mm = -2.4151649788333067
+Rp_err_mm = 0.09202026818893287
+Rx_mm = 13.954411682719538
+Rx_err_mm = 0.26103933104896815
+w_equiv_mm = 10.065841455803707
+z_zero_mm = nan
+
+[recon_all_events_activity.ramp]
+b = 977.3510790416663
+a = 7708.744548362173
+z_end_mm = -3.490837794930882
+L_mm = 24.93400850844374
+z_end_err_mm = 0.18973897641753673
+chi2 = 117.39469990739336
+ndf = 19
+chi2_ndf = 6.178668416178598
+
+[truth_activity]
+window_lo_mm = -36.452
+window_hi_mm = -1.452
+sigma_blur_mm = 0.0
+
+[truth_activity.erfc]
+b = 0.0
+a = 955635.2578228317
+z0_mm = -14.759524961676211
+w_mm = 8.432728145495703
+z0_err_mm = 0.0071553445456214474
+chi2 = 18338.86828060566
+ndf = 32
+chi2_ndf = 573.0896337689269
+baseline = false
+zero_fraction = 0.01
+R50_mm = -14.759524961676211
+R20_mm = -7.662361897479084
+R20_err_mm = 0.00455157936131882
+Rp_mm = -4.1906675607881265
+Rp_err_mm = 0.005151914692646689
+Rx_mm = 4.857934231962085
+Rx_err_mm = 0.01028353886003282
+z_zero_mm = nan
+
+[truth_activity.sigmoid]
+b = 0.0
+a = 957161.0135610031
+z0_mm = -14.735080640372914
+r_mm = 4.960971738771512
+z0_err_mm = 0.006926906538776059
+chi2 = 32113.060878769487
+ndf = 32
+chi2_ndf = 1003.5331524615465
+baseline = false
+zero_fraction = 0.01
+R50_mm = -14.735080640372914
+R20_mm = -7.857713493238828
+R20_err_mm = 0.004657996008033074
+Rp_mm = -4.813137162829889
+Rp_err_mm = 0.005315805730726507
+Rx_mm = 8.061179072412774
+Rx_err_mm = 0.013396208771356066
+w_equiv_mm = 7.916565513890271
+z_zero_mm = nan
+
+[truth_activity.ramp]
+b = 52819.9680857315
+a = 889976.5758358429
+z_end_mm = -3.1753319929632378
+L_mm = 24.583099279430794
+z_end_err_mm = 0.00641471660395208
+chi2 = 40389.85009923829
+ndf = 31
+chi2_ndf = 1302.8983902980094
+
+[truth_dose]
+window_lo_mm = -23.637235609844225
+window_hi_mm = 11.362764390155776
+sigma_blur_mm = 0.0
+
+[truth_dose.erfc]
+b = 0.0
+a = 0.015507949242006151
+z0_mm = -3.5810708859956266
+w_mm = 2.140572564507371
+z0_err_mm = 0.0274000974294504
+chi2 = 6.446121873811981e-07
+ndf = 31
+chi2_ndf = 2.0793941528425744e-08
+baseline = false
+zero_fraction = 0.01
+R50_mm = -3.5810708859956266
+R20_mm = -1.7795195637025962
+R20_err_mm = 0.04021762528050491
+Rp_mm = -0.8982610289488431
+Rp_err_mm = 0.0527787110146532
+Rx_mm = 1.3986455486762477
+Rx_err_mm = 0.09015523148073085
+z_zero_mm = nan
+
+[truth_dose.sigmoid]
+b = 0.0
+a = 0.015535458800079869
+z0_mm = -3.5862667603973253
+r_mm = 1.2677240851358926
+z0_err_mm = 0.022834100376404702
+chi2 = 4.4699692259462186e-07
+ndf = 31
+chi2_ndf = 1.4419255567568447e-08
+baseline = false
+zero_fraction = 0.01
+R50_mm = -3.5862667603973253
+R20_mm = -1.8288280097175653
+R20_err_mm = 0.033977375869631406
+Rp_mm = -1.05081859012554
+Rp_err_mm = 0.04380058053732988
+Rx_mm = 2.239077347704328
+Rx_err_mm = 0.0918226381711728
+w_equiv_mm = 2.022994949775732
+z_zero_mm = nan
+
+[truth_dose.ramp]
+b = 6.326916511142911e-05
+a = 0.015405414726779061
+z_end_mm = -0.2529789312672498
+L_mm = 6.679845631089511
+z_end_err_mm = 0.10823023060528444
+chi2 = 3.0567883580764443e-06
+ndf = 30
+chi2_ndf = 1.0189294526921481e-07
+
+[comparison]
+R50_act_minus_dose_mm = -11.322973251397702
+R50_truthact_minus_dose_mm = -11.178454075680584
+Rp_act_minus_dose_mm = -0.9694664204961647
+Rp_truthact_minus_dose_mm = -3.2924065318392834
+sigmoid_R50_act_minus_dose_mm = -11.444559618971201
+sigmoid_R50_truthact_minus_dose_mm = -11.148813879975588
+sigmoid_Rp_act_minus_dose_mm = -1.3643463887077667
+sigmoid_Rp_truthact_minus_dose_mm = -3.7623185727043493
+z_end_act_minus_dose_mm = -3.2378588636636323
+z_end_truthact_minus_dose_mm = -2.922353061695988

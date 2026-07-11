@@ -1,0 +1,25 @@
+threads = 6
+recocrysp_sha = "a6d900e9818aa27bda9bb2ef43ef21f54f1d5bb6"
+chunk = 20000000
+metal_functional = true
+
+[memory_gib]
+master_struct = 8.927964917384088
+chunk = 0.521540641784668
+master_recon = 4.5451457761228085
+machine = 48.0
+
+[minutes_extrapolated]
+cpu_5e8 = 0.3886131079166667
+gpu_1e8 = 0.05743612500000001
+gpu_5e8 = 0.287180625
+
+[grid]
+voxsize = [1.5, 1.5, 1.5]
+n = [64, 64, 96]
+
+[seconds]
+sample_lors = 0.585103459
+attenuation = 0.021417791
+back_cpu = 0.326150209
+back_metal = 0.08271225

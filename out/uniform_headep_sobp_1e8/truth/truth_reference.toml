@@ -1,0 +1,8 @@
+scenario = "uniform_headep_sobp_1e8"
+dose_R80_mm = -5.583925305859627
+offset_mm = -10.868185678244362
+activity_w_fit_mm = 9.971507566925505
+activity_R50_fit_mm = -14.323083184884254
+window_mm = [-36.45211098410399, -1.4521109841039888]
+budget = "fast"
+activity_R50_mm = -16.45211098410399

@@ -1,0 +1,12 @@
+label = "bgo_195k_2X0"
+material = "BGO"
+thickness_X0 = 2.0000000000000004
+wall_mm = 22.360000000000003
+arm = "bgo_195k"
+X0_mm = 11.18
+
+[detector]
+sigma_xyz_mm = 1.486
+tau_ns = 5.0
+energy_resolution_fwhm = 0.15
+emin_keV = 413.0

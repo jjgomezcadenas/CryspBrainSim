@@ -1,0 +1,24 @@
+n_shards = 10
+method = "thinned realizations of the pooled master"
+seed_base = 1000000
+timing_s = 631.218959458
+target_counts = 17429690
+M_total = 174296897
+realizations = 50
+dose_Gy = 1.0
+
+[sigma_R_fit]
+sigma_mm = 0.07827048215432364
+offset_mm = -9.970881188361776
+sem_mm = 0.01106911773961258
+mean_mm = -15.554806494221403
+
+[gate]
+reference_sigma_mm = 0.06548018943916803
+band_2sigma = 0.5128728387747147
+ratio = 1.1953307225391883
+pass = true
+
+[sigma_R_crossing]
+sigma_mm = 0.2468414140592201
+mean_mm = -15.868556008181672

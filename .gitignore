@@ -25,11 +25,14 @@ __pycache__/
 *.jl.cov
 *.jl.mem
 
-# Analysis outputs (regenerable; not committed)
-/out/
+# Analysis outputs: the result files under out/ (toml, png) ARE committed; the
+# .npz volume caches (recon/dose-sweep) are regenerable and stay untracked via
+# the global *.npz rule below — so out/ is tracked except its heavy caches.
 *.npz
 # The frozen cross-validation reference is committed (see test/make_reference.py)
 !/test/data/endpoint_reference.npz
+# Detector sensitivity maps under out/: ~1e9-sample, expensive to rebuild — kept.
+!/out/**/sensitivity/*.npz
 
 # Reference papers (copyrighted; kept locally, not committed)
 /papers/
