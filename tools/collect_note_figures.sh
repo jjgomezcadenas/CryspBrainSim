@@ -4,6 +4,7 @@
 # compiles from a fresh clone. Both scanner arms are collected regardless of
 # the active [configuration]. Regenerate the sources first when needed (per
 # arm, with that arm active):
+#   tools/plot_activity_time.py                       (induced-activity vs time)
 #   tools/fit_activity_profile.py --no-pulls          (fit figure)
 #   tools/plot_recon_projections.py                   (projections)
 #   tools/ten_shards.py  /  --dose-sweep              (ladder, dose sweep)
@@ -12,8 +13,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 FIGS=latex/figs
+TRUTH=out/uniform_headep_sobp_1e8/truth
 BGO=out/uniform_headep_sobp_1e8/closed/crysp_ring_1m_bgo_2x0/bgo_195k_2X0
 CSI=out/uniform_headep_sobp_1e8/closed/crysp_ring_1m_csi_2x0/csi_2X0
+
+cp "$TRUTH/figures/activity_time.png"                   "$FIGS/activity_time.png"
 
 cp "$BGO/one_shard/fits/figures/recon_all_events_activity.png" "$FIGS/fit_all_events_bgo.png"
 cp "$CSI/one_shard/fits/figures/recon_all_events_activity.png" "$FIGS/fit_all_events_csi.png"
@@ -25,4 +29,4 @@ cp "$CSI/one_shard/fits/figures/scatters_activity.png"  "$FIGS/scatters_profile_
 cp "$CSI/ten_shards/figures/delta_r50.png"              "$FIGS/ladder_delta_r50_csi.png"
 cp "$CSI/ten_shards/figures/delta_r50_vs_dose.png"      "$FIGS/dose_sweep_r50_csi.png"
 cp out/uniform_headep_sobp_1e8/closed/comparison/figures/tstart_r50.png "$FIGS/tstart_r50.png"
-echo "collected 10 figures into $FIGS/"
+echo "collected 11 figures into $FIGS/"

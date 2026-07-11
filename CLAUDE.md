@@ -45,6 +45,12 @@ one curve per scanner geometry. This is the analysis end of the chain
   figure, a reference file, a cache — lives in the repo (`tools/`, `test/`), so the artifact can be
   regenerated from a committed path. A scratchpad script that made a kept artifact is a lost
   provenance chain. When in doubt about where a script belongs, ask.
+- **Every plot comes from a committed tool — never one on the fly.** No figure in a note (or anywhere
+  kept) may exist that a committed `tools/` script does not produce and reproduce from its inputs.
+  NEVER generate a plot ad hoc and drop the image into `latex/` or a note — that orphans it from its
+  provenance. NEVER make a plot on the fly at all: always write (or extend) a tool, and **always
+  check with me before making the plot.** Wire the figure into `tools/collect_note_figures.sh` so a
+  fresh clone regenerates it.
 - **Always check before deleting; prefer rename over delete+add.** Never remove a file (or bundle a
   delete into a wider command) without first inspecting what is being removed and stating it. To
   rename or move a file, use `git mv` so the history reads as a rename, then apply new content on
