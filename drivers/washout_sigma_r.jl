@@ -35,7 +35,9 @@ const REPO = dirname(@__DIR__)
 const PARAMS = load_run_parameters()
 const CFG = PARAMS.config
 const SCENARIO, TOPOLOGY, RING = CFG.scenario, CFG.topology, CFG.scanner
-const WASHOUT_SEED_BASE = 2_000_000
+const WASHOUT_SEED_BASE = let i = findfirst(==("--seed"), ARGS)
+    i === nothing ? 2_000_000 : parse(Int, ARGS[i+1])
+end
 const LN2 = log(2.0)
 const DEV = Metal.functional() ? MtlArray : identity
 const THINNED = "--thinned" in ARGS
