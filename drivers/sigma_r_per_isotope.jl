@@ -136,7 +136,7 @@ function main()
         tcut = td .>= ts
         w = WASHED ? washout_weight(cfg, ts, z0, td, rates, den) : ones(Float64, M)
         for (ii, iso) in enumerate(ISOTOPES)
-            post = rates[iso] ./ den
+            post = iso == "ALL" ? ones(Float64, M) : rates[iso] ./ den   # ALL = combined mix
             keepp = p_dose .* post .* w              # natural isotope-i statistics (× w if washed)
             r50 = Float64[]; nevs = Int[]
             t = @elapsed for z in 1:REALIZATIONS
@@ -157,7 +157,9 @@ function main()
     end
 
     out = joinpath(cfgdir, "washout"); mkpath(out)
-    fname = WASHED ? "sigma_r_per_isotope_washed.toml" : "sigma_r_per_isotope.toml"
+    # one file per (t_start set, selection) so runs accumulate instead of clobbering
+    tag = "t" * join(string.(Int.(round.(T_STARTS))), "_")
+    fname = WASHED ? "sigma_r_per_isotope_washed_$(tag).toml" : "sigma_r_per_isotope_$(tag).toml"
     open(joinpath(out, fname), "w") do io
         TOML.print(io, Dict(
             "scanner" => RING, "crystal" => CFG.crystal, "dose_Gy" => THIN_DOSE,

@@ -85,7 +85,10 @@ difference is a lower bound); it only sees range that is actually in the annihil
   ~7% ~1σ hint; soft-selector leakage means the true term could be a bit larger, still small). This
   matches the earlier truth-profile read (O-15 edge not broader than C-11). N-13/O-14 fits blew up
   (posterior-selected edges outside the fit window / too few counts) — only O-15 vs C-11 is clean.
-  Result: `…/crysp_ring_1m_csi_2x0/…/washout/sigma_r_per_isotope.toml`.
+  Results per t_start: `…/crysp_ring_1m_csi_2x0/…/washout/sigma_r_per_isotope_t{tstart}[_washed].toml`
+  (one file per start time / selection, so runs accumulate — combine by globbing). The combined
+  all-isotope σ_R at each t_start is the ring-CsI washout **nominal** already on disk (t=0 → 0.105,
+  t=120 → 0.119 at 1 Gy).
 - **Phase 2 (planned):** t=120/180, nominal AND washed — watch each isotope's σ_R and the mix as
   O-15 drains and washout bites.
 

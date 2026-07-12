@@ -3,8 +3,8 @@
 # every scanner, crystal, dose, and realization — keeping them common-mode is
 # what makes σ_R differences purely geometric. A change here re-runs rung 5.
 #
-# Per-arm ready-to-run config (ring BGO 195 K). Activate with:
-#   cp config/run_parameters_bgo.toml config/run_parameters.toml
+# Per-arm ready-to-run config (ring cryogenic CsI). Activate with:
+#   cp config/run_parameters_csi.toml config/run_parameters.toml
 # The _bgo and _csi variants differ ONLY in [configuration]; keep the frozen
 # blocks below identical across both and with the active run_parameters.toml.
 
@@ -13,8 +13,8 @@
                              # Python tools read
 scenario = "uniform_headep_sobp_1e8"
 topology = "closed"
-scanner = "crysp_ring_1m_bgo_2x0"
-crystal = "bgo_195k"         # crystal arm under the scanner (products name)
+scanner = "crysp_ring_1m_csi_2x0"
+crystal = "csi"              # crystal arm under the scanner (products name)
 leaf = "fast_1Gy"
 
 [grid]                       # activity grid on the beam corridor
