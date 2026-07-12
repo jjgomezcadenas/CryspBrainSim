@@ -9,6 +9,8 @@
 #   tools/plot_recon_projections.py                   (projections)
 #   tools/ten_shards.py  /  --dose-sweep              (ladder, dose sweep)
 #   tools/recon_scatters.jl + tools/scatter_profile.py (scatter profile)
+#   drivers/sigma_r_v2.jl + tools/plot_sigma_r_v2.py  (v2 washout + per-isotope,
+#                                                      ring CsI v2 arm active)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -29,4 +31,6 @@ cp "$CSI/one_shard/fits/figures/scatters_activity.png"  "$FIGS/scatters_profile_
 cp "$CSI/ten_shards/figures/delta_r50.png"              "$FIGS/ladder_delta_r50_csi.png"
 cp "$CSI/ten_shards/figures/delta_r50_vs_dose.png"      "$FIGS/dose_sweep_r50_csi.png"
 cp out/uniform_headep_sobp_1e8/closed/comparison/figures/tstart_r50.png "$FIGS/tstart_r50.png"
-echo "collected 11 figures into $FIGS/"
+cp "$CSI/washout_v2/figures/washout_v2.png"     "$FIGS/washout_v2.png"
+cp "$CSI/washout_v2/figures/per_isotope_v2.png" "$FIGS/per_isotope_v2.png"
+echo "collected 13 figures into $FIGS/"

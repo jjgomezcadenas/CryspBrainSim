@@ -574,6 +574,125 @@ are from many thinned realisations.)
   \end{tabular}
 \end{table}
 
+\section{Generation-2 products: exact washout and per-isotope precision}
+\label{sec:v2}
+
+The washout of Sec.~\ref{sec:washout} and the start-time axis of
+Sec.~\ref{sec:tstart} are re-measured here on the generation-2 products, which
+carry three things the earlier masters did not: the emitting isotope of every
+coincidence; a decay clock zeroed at beam-off, with the acquisition delivered as
+fixed \SI{300}{s} windows sliding with the arrival delay $t_{\text{del}}$
+(scenarios \texttt{del120}, \texttt{del180}, \texttt{del300}); and the phantom
+centred on the tumour. With the isotope label present, washout is applied as the
+\emph{exact} per-species keep --- each recorded decay of species $i$ retained
+with its stamped survival $g_i$ (the recommended path of the companion note),
+not the label-free marginalised weight --- and the per-isotope precision is read
+from a \emph{pure} single-species sub-sample selected on the label, removing the
+enriched-posterior lower bound of the earlier test. Both use the thinned firm-up
+at \SI{1}{Gy}, $N = 100$ realisations ($\pm7\%$), on the ring CsI arm; the
+tumour-centred edge sits at world-frame $z \approx +\SI{9.1}{mm}$.
+
+\emph{Washout cost.} The exact keep reproduces the picture of
+Sec.~\ref{sec:washout} on the clean fixed-scenario windows
+(Table~\ref{tab:v2washout}, Fig.~\ref{fig:v2washout}). The nominal precision
+degrades smoothly with the delay ($0.113 \to 0.174 \to \SI{0.228}{mm}$) as the
+window loses counts; washout removes a further $\sim\!55\%$ nearly uniformly
+(survival $0.46$--$0.39$), inflating $\sigma_R$ by the counting factor
+$1/\sqrt{\text{survival}} \approx 1.5$, with a run-to-run scatter across the
+three windows ($2.05$, $1.15$, $1.35$) that brackets it. The edge shift is
+$\DR^{\text{wo}} = +0.02$ to \SI{-0.06}{mm} across the three delays --- far
+below the \SI{+0.22}{mm} of the zero-delay measurement, because the stamped
+$g_i$ are nearly isotope-independent ($0.47$/$0.45$/$0.45$/$0.53$/$0.48$ for
+$^{15}$O/$^{11}$C/$^{13}$N/$^{10}$C/$^{14}$O) and, at these
+delays, $^{15}$O is already pre-depleted, so the surviving mix is barely
+reweighted. Washout again introduces no range bias and costs the ordinary
+$\sim\!1.5\times$ in precision.
+
+\begin{table}[htb]
+  \centering
+  \caption{Generation-2 washout precision on the ring CsI arm (all events,
+    \SI{1}{Gy}, $N = 100$): nominal vs.\ exact-washed $\sigma_R$, their
+    inflation, the calibratable edge shift $\DR^{\text{wo}}$, and the near-uniform
+    survival, per acquisition-delay scenario.}
+  \label{tab:v2washout}
+  \vspace{1mm}
+  \begin{tabular}{S[table-format=3] S[table-format=1.3] S[table-format=1.3]
+                  S[table-format=1.2] S[table-format=+1.3] S[table-format=1.3]}
+    \toprule
+    {$t_{\text{del}}$ [s]} & {nominal $\sigma_R$} & {washed $\sigma_R$}
+      & {inflation} & {$\DR^{\text{wo}}$ [mm]} & {survival} \\
+    \midrule
+    120 & 0.113 & 0.232 & 2.05 & +0.024 & 0.464 \\
+    180 & 0.174 & 0.199 & 1.15 & +0.046 & 0.431 \\
+    300 & 0.228 & 0.309 & 1.35 & -0.056 & 0.388 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figs/washout_v2.png}
+  \caption{Washout $\sigma_R$ cost vs.\ acquisition delay (ring CsI, v2,
+    \SI{1}{Gy}). Top: nominal and exact-washed $\sigma_R$ (points,
+    $\pm1/\sqrt{2(N-1)}$). Bottom: the inflation against the counting
+    expectation $1/\sqrt{\text{survival}}$ (dotted); the three windows scatter
+    around it. From \texttt{drivers/sigma\_r\_v2.jl} +
+    \texttt{tools/plot\_sigma\_r\_v2.py}.}
+  \label{fig:v2washout}
+\end{figure}
+
+\emph{Per-isotope precision.} The pure single-species selection settles the
+positron-range question the earlier soft posterior could only bound
+(Table~\ref{tab:v2iso}, Fig.~\ref{fig:v2iso}). $^{15}$O, with the longest
+$\beta^+$ range ($\approx\!\SI{2.5}{mm}$, vs.\ $\approx\!\SI{1.1}{mm}$ for
+$^{11}$C), enters with $\sim\!5\times$ the counts and is the more precise
+species at every delay ($\sigma_R = 0.146$--\SI{0.233}{mm} vs.\
+$0.42$--\SI{0.50}{mm}). Normalising out the count difference, the per-count
+precision $k = \sigma_R\sqrt{N}$ is \emph{flat and lowest} for $^{15}$O
+($k \approx 224$ across the three delays) and $\sim\!25$--$40\%$ higher for
+$^{11}$C ($k \approx 277$--$319$): the long-range species is not penalised ---
+it is the sharper measurement, owning the deep, steep edge ($R_{50} \approx
++\SI{12.1}{mm}$) while $^{11}$C sits shallower ($+\SI{4.2}{mm}$). Positron
+range therefore sets no $\sigma_R$ floor here; the earlier negative result holds,
+now without the leakage caveat.
+
+\begin{table}[htb]
+  \centering
+  \caption{Generation-2 per-isotope precision on the ring CsI arm (pure
+    label selection, \SI{1}{Gy}, $N = 100$): $\sigma_R$, the mean events per
+    realisation, and the per-count precision $k = \sigma_R\sqrt{N}$, for
+    $^{15}$O and $^{11}$C per delay. $^{15}$O is the more precise
+    species, and the more precise \emph{per count}.}
+  \label{tab:v2iso}
+  \vspace{1mm}
+  \begin{tabular}{S[table-format=3] S[table-format=1.3] S[table-format=1.2]
+                  S[table-format=3] S[table-format=1.3] S[table-format=1.2]
+                  S[table-format=3]}
+    \toprule
+    & \multicolumn{3}{c}{$^{15}$O} & \multicolumn{3}{c}{$^{11}$C} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    {$t_{\text{del}}$ [s]} & {$\sigma_R$ [mm]} & {$N$ [M]} & {$k$}
+      & {$\sigma_R$ [mm]} & {$N$ [M]} & {$k$} \\
+    \midrule
+    120 & 0.146 & 2.45 & 228 & 0.449 & 0.46 & 304 \\
+    180 & 0.171 & 1.74 & 226 & 0.416 & 0.44 & 277 \\
+    300 & 0.233 & 0.88 & 219 & 0.496 & 0.41 & 319 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figs/per_isotope_v2.png}
+  \caption{Per-isotope range precision vs.\ delay (ring CsI, v2, exact
+    selection, \SI{1}{Gy}). Top: $\sigma_R$ for $^{15}$O, $^{11}$C and the
+    combined mix. Bottom: the per-count precision $k = \sigma_R\sqrt{N}$ ---
+    flat and lowest for the long-range $^{15}$O, refuting a positron-range
+    penalty. From \texttt{drivers/sigma\_r\_v2.jl} +
+    \texttt{tools/plot\_sigma\_r\_v2.py}.}
+  \label{fig:v2iso}
+\end{figure}
+
 \section{Outlook}
 \label{sec:outlook}
 
