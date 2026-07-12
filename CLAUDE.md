@@ -15,7 +15,9 @@ one curve per scanner geometry. This is the analysis end of the chain
 - **`md/`** — the project state, kept out of this file so it stays lean:
   [`infrastructure.md`](md/infrastructure.md) (package, drivers, tools),
   [`results.md`](md/results.md) (the science done + numbers + data on disk),
-  [`isotope-washout.md`](md/isotope-washout.md) (the **current problem**),
+  [`sigma-r-investigation.md`](md/sigma-r-investigation.md) (the **current investigation** —
+  four-geometry σ_R + the positron-range variance test),
+  [`isotope-washout.md`](md/isotope-washout.md) (the washout loss study, done),
   [`pending.md`](md/pending.md) (smaller items). Keep these current; this file points to them.
 - **`dev/PLAN.md`** — the build plan: structure, dependencies, the consume-vs-write code inventory,
   the frozen run parameters, the validation ladder, the deferred register, and the build order.
