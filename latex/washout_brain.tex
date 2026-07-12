@@ -7,6 +7,21 @@
 
 \begin{document}
 
+\begin{center}
+  {\large\textbf{Isotope washout for in-beam PET range verification:}}\\[2pt]
+  {\large\textbf{model, evaluation, and implementation}}
+\end{center}
+\medskip
+
+\noindent
+This note specifies the biological washout of the $\beta^+$ emitters and how to
+implement it. The model and its window-integrated per-isotope survival factor are
+derived first (Secs.~1--4); the implementation recipe for the production chain,
+the label-free downstream evaluation actually used here, the per-species selector,
+and the one genuine bias route follow (Secs.~5--8). The recommended upstream
+implementation is a single Bernoulli keep per recorded decay with probability
+$g_i$ (Sec.~5), which is exact for a spatially uniform clearance.
+
 \subsection*{Biological washout model (brain)}
 
 The positron emitters produced by nuclear interactions of the beam
@@ -187,6 +202,94 @@ delayed acquisition start produces. Its sign and magnitude follow from
 evaluating Eq.~(\ref{eq:gfactor}) for the five species and refitting
 $P^{\mathrm{wo}}(z)$ --- a computation on the stored physical-decay columns
 alone, with no re-simulation and no per-event data.
+
+\subsection*{Implementation in the production chain}
+
+The exactness result above fixes the recipe, and it is deliberately light: washout
+is applied as a \emph{thinning of the already-recorded decay list}, with no
+re-simulation of transport and no change to geometry or physics list. In the Monte
+Carlo each recorded annihilation carries its emitting species $i$ and its creation
+and decay times, which is all that is needed. Two equivalent forms:
+
+\paragraph{Constant per-species thinning (window-integrated) --- recommended.}
+Keep each recorded $i$-decay with probability $g_i$ [Eq.~(\ref{eq:gfactor})],
+computed once per species from the Mizuno parameters (Table~\ref{tab:washout_brain}),
+the physical rate $\lambda_i^{\mathrm{phys}}$, and the timing
+$(t_{\mathrm{irr}},t_1,t_2)$. By the thinning theorem this reproduces the exact
+washed spatial profile \emph{and} its Poisson noise; no per-event age is used. It
+is the simplest complete implementation.
+
+\paragraph{Age-resolved thinning (general).}
+Keep each recorded decay with probability $W(\tau)$ [Eq.~(\ref{eq:washout})]
+evaluated at its age $\tau=t_{\mathrm{decay}}-t_{\mathrm{creation}}$. For a uniform
+$W$ and a fixed window this is statistically identical to the constant-$g_i$ form,
+but it needs no recomputation of $g_i$ when the window changes and ---
+replacing $W(\tau)\to W(\tau;\mathbf{x})$ with a position-dependent clearance ---
+it is the hook for a spatially non-uniform perfusion field (Sec.~8).
+
+Either form is a single Bernoulli keep per event. Because the survival is
+position-independent (uniform $W$), it commutes with the detector response: it may
+be applied to the truth decay list before photon transport or to the recorded
+coincidence list afterwards, with identical result.
+
+\subsection*{Evaluation without the species label}
+
+The reconstruction here is isotope-blind: the detector records only $511$~keV
+coincidences, with no species tag, so the per-species $g_i$ cannot be applied
+directly. It is recovered by thinning each event with the
+isotope-\emph{marginalised} survival
+%
+\begin{equation}
+  w(z_0,t_{\mathrm{d}}) \;=\; \sum_i P(i\,|\,z_0,t_{\mathrm{d}})\; g_i,
+  \label{eq:wmarg}
+\end{equation}
+%
+where the posterior that a recorded decay at origin depth $z_0$ and decay time
+$t_{\mathrm{d}}$ belongs to species $i$ is
+%
+\begin{equation}
+  P(i\,|\,z_0,t_{\mathrm{d}}) \;=\;
+  \frac{P_i(z_0)\,\lambda_i^{\mathrm{phys}}\,
+        e^{-\lambda_i^{\mathrm{phys}} t_{\mathrm{d}}}\,\big/\,
+        \bigl(1-e^{-\lambda_i^{\mathrm{phys}} t_{\mathrm{meas}}}\bigr)}
+       {\sum_j P_j(z_0)\,\lambda_j^{\mathrm{phys}}\,
+        e^{-\lambda_j^{\mathrm{phys}} t_{\mathrm{d}}}\,\big/\,
+        \bigl(1-e^{-\lambda_j^{\mathrm{phys}} t_{\mathrm{meas}}}\bigr)},
+  \label{eq:posterior}
+\end{equation}
+%
+built from the per-species truth profiles $P_i(z)$ and the decay laws, with
+$t_{\mathrm{meas}}=t_2-t_1$. Only the origin depth $z_0$ and the decay time
+$t_{\mathrm{d}}$ enter --- both recorded per coincidence --- so the marginalised
+thinning needs \emph{no} species tag and no new upstream quantity. Averaged over
+events it reproduces the mix reweighting Eq.~(\ref{eq:mix}); event by event it is
+the label-free surrogate for the constant-$g_i$ keep. With the species label
+available upstream, the direct $g_i$ thinning of Sec.~5 is both simpler and exact
+and is the recommended path; Eq.~(\ref{eq:posterior}) is what makes the effect
+recoverable downstream when the label is absent.
+
+\subsection*{Isolating a single species}
+
+Replacing the marginalised weight Eq.~(\ref{eq:wmarg}) by a single species'
+posterior $P(i\,|\,z_0,t_{\mathrm{d}})$ (times a dose factor, no count matching)
+selects an ``$i$-like'' sub-sample at its natural abundance. Reconstructing it
+yields the per-species range precision $\sigma_R^{(i)}$ --- used, for instance, to
+test whether the longer positron range of \iso{15}{O} inflates its $\sigma_R$
+relative to \iso{11}{C}. The selection is soft (the sample is enriched, not pure,
+so isotope leakage dilutes any contrast into a lower bound).
+
+\subsection*{Spatial non-uniformity: the one genuine bias}
+
+All of the above assumes a spatially uniform clearance $W$, for which washout is a
+deterministic, calibratable shift of $R_{50}$ --- it cancels against a per-scanner
+reference that itself includes washout. A heterogeneous perfusion field breaks
+this: the survival becomes depth-dependent, $g_i\to g_i(z)$, the washed profile is
+$\sum_i g_i(z)\,P_i(z)$, and the endpoint shift no longer cancels against a single
+constant --- a genuine range bias. Capturing it requires a perfusion/compartment
+transport model supplying $W(\tau;\mathbf{x})$ in the age-resolved thinning of
+Sec.~5. This is the natural point for an upstream, spatially-resolved treatment,
+and is the one part of the effect that the constant-$g_i$ (or marginalised-$w$)
+reweighting cannot reproduce.
 
 \begin{thebibliography}{9}
 

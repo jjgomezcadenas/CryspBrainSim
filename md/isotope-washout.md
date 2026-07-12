@@ -3,8 +3,17 @@
 Productions model **physical decay only**; in tissue perfusion/metabolism clears the β⁺ emitters
 (¹⁵O, ¹¹C, ¹³N…) before they decay. Washout **as loss** is now measured, fully downstream, both
 1 m arms. Numbers + method: [`md/results.md`](results.md) ("Isotope washout"); the note carries it
-as §7 of `latex/endpoint_precision.tex`; the derivation is in `latex/washout_brain.tex`; the
-G4-vs-downstream exchange in [`washout-g4-formulation.md`](washout-g4-formulation.md).
+as §7 of `latex/endpoint_precision.tex`; the G4-vs-downstream exchange in
+[`washout-g4-formulation.md`](washout-g4-formulation.md).
+
+**`latex/washout_brain.tex` is the complete, self-contained methodology spec — written to send
+upstream to implement washout in the production chain.** It carries: the Mizuno brain model and the
+window-integrated per-isotope survival g_i (closed form); the Poisson-thinning exactness proof; the
+mix reweighting; and the **implementation recipe** — the recommended upstream form is a single
+**per-decay Bernoulli keep with probability g_i(species)** (exact for uniform clearance, no per-event
+age, no re-simulation), with the age-resolved W(τ) variant, the label-free marginalised weight
+w(z₀,t_decay) = Σ_i P(i|z₀,t_decay) g_i we use downstream (posterior derived), the per-species
+posterior selector for σ_R^(i), and the spatial-non-uniformity route to the one genuine bias.
 
 ## The result (uniform Mizuno brain clearance)
 
