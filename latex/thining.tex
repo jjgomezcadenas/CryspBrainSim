@@ -1,0 +1,184 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% simple isotope helper (avoids the isotope package dependency)
+\newcommand{\iso}[2]{\textsuperscript{#1}#2}
+
+\begin{document}
+
+\begin{center}
+  {\large\textbf{Statistical thinning of pooled shards:}}\\[2pt]
+  {\large\textbf{dose, acquisition start, washout, and per-species sampling}}
+\end{center}
+\medskip
+
+\noindent
+The range precision $\sigma_R$ --- the run-to-run spread of the reconstructed
+endpoint $R_{50}$ at a given dose --- is a statistical quantity: it must be
+estimated from an ensemble of acquisitions. Generating that ensemble by direct
+simulation is expensive (each member is a full Monte Carlo plus reconstruction),
+and the productions supply only a handful of independent realizations
+(``shards''). Thinning is the technique that turns a small pool of shards into a
+large ensemble of realizations, and, through the same operation, applies the
+acquisition-start cut, the isotope washout, and the per-species selection. This
+note sets out the method, why it is valid, what it buys, and where it fails.
+
+\subsection*{The operation}
+
+Let there be $n$ statistically independent shards, each a complete acquisition at
+the reference dose (here $1$~Gy), produced with independent random seeds. Pool
+them into one master list of $M$ recorded coincidences --- physically $n$~Gy of
+events. A \emph{thinned realization} keeps each event $e$ of the pool
+independently with a probability $q_e$: draw $u_e\sim\mathcal{U}[0,1)$ and keep
+$e$ iff $u_e<q_e$. The kept subset is reconstructed exactly as a real
+acquisition --- depth profile, erfc edge fit --- yielding one endpoint $R_{50}$.
+Repeating with independent draws $N$ times gives $N$ values $\{R_{50}^{(1)},\dots,
+R_{50}^{(N)}\}$, and
+%
+\begin{equation}
+  \sigma_R \;=\; \mathrm{std}\bigl(R_{50}^{(1)},\dots,R_{50}^{(N)}\bigr),
+  \qquad
+  \frac{\delta\sigma_R}{\sigma_R}\;\simeq\;\frac{1}{\sqrt{2(N-1)}}.
+  \label{eq:sigmaR}
+\end{equation}
+%
+Everything specific to a study lives in the keep-probability $q_e$.
+
+\subsection*{The keep-probability: dose, acquisition start, washout}
+
+For a realization of dose $D$, acquisition start $t_s$, with washout, the
+keep-probability factorises into independent effects,
+%
+\begin{equation}
+  q_e \;=\; \underbrace{\mathbf{1}\!\left[t_{\mathrm{d}}(e)\ge t_s\right]}
+              _{\text{acquisition start}}
+        \;\times\; \underbrace{p_{\mathrm{dose}}}_{\text{dose}}
+        \;\times\; \underbrace{w\bigl(z_0(e),t_{\mathrm{d}}(e)\bigr)}
+              _{\text{washout}},
+  \qquad
+  p_{\mathrm{dose}} = \frac{D}{n},
+  \label{eq:keep}
+\end{equation}
+%
+where $z_0(e)$ is the event's origin depth and $t_{\mathrm{d}}(e)$ its decay
+time, both recorded per coincidence.
+
+\paragraph{Dose.}
+Keeping a fraction $p_{\mathrm{dose}}=D/n$ of an $n$-Gy pool produces $D$~Gy of
+events. This is the statistical sub-sampling that dials the dose and lets
+$\sigma_R(D)$ be mapped without new simulation; scaling a measured $\sigma_R(D)$
+to $1$~Gy uses $\sigma_R\propto 1/\sqrt{D}$.
+
+\paragraph{Acquisition start.}
+The hard cut $t_{\mathrm{d}}\ge t_s$ drops decays occurring before the scan opens;
+a later start keeps fewer, later-decaying events.
+
+\paragraph{Washout.}
+$w(z_0,t_{\mathrm{d}})=\sum_i P(i\,|\,z_0,t_{\mathrm{d}})\,g_i$ is the
+isotope-marginalised survival: $g_i$ is the per-species washout survival factor
+and $P(i\,|\,z_0,t_{\mathrm{d}})$ the posterior that a recorded decay of depth
+$z_0$ and decay time $t_{\mathrm{d}}$ belongs to species $i$ (both derived in the
+companion washout note). Keeping each event with probability $w$ applies washout
+as a per-event loss. Where the emitting species is known (as it is in the
+production Monte Carlo), the marginalisation is unnecessary and $w$ is replaced
+directly by the event's $g_i$.
+
+Two variants replace the washout factor by a different third factor:
+%
+\begin{itemize}
+  \item \emph{Nominal} (no washout): $w\equiv 1$.
+  \item \emph{Per-species}: $w \to P(i\,|\,z_0,t_{\mathrm{d}})$ for a single
+        species $i$, selecting an ``$i$-like'' sub-sample at its natural
+        abundance --- used to measure the per-species precision
+        $\sigma_R^{(i)}$.
+\end{itemize}
+%
+A single machine --- a product of independent Bernoulli keep-factors on the
+pooled list --- thus produces the dose sweep, the start-time axis, the washout
+study, and the per-species study.
+
+\subsection*{Why the sub-samples are valid, independent acquisitions}
+
+Two facts, both consequences of the thinning theorem for Poisson processes,
+underpin the method.
+
+\paragraph{Thinned Poisson is Poisson.}
+Radioactive production is a Poisson process, and independent Bernoulli thinning of
+a Poisson process is again Poisson, with intensity scaled by the keep-probability.
+In the large-pool limit a thinned realization is therefore a genuine lower-dose
+(and/or washed) Poisson acquisition, not an approximation. This is why a
+\emph{constant} per-species keep $g_i$ reproduces not only the mean washed profile
+but its correct counting noise, with no per-event age required.
+
+\paragraph{Realizations are mutually independent given the pool.}
+Realization $A$ is a function only of its selection variables $\{u_e^{A}\}$ and
+$B$ only of $\{u_e^{B}\}$; these are independent draws, and the pool positions
+$\{z_e\}$ are fixed. Hence $R_{50}^{A}$ and $R_{50}^{B}$ are independent ---
+sharing events does not correlate them, because the shared quantities are not
+random within the estimate. The $N$ endpoints are therefore $N$ independent
+samples of the $R_{50}$ distribution, and Eq.~(\ref{eq:sigmaR}) carries genuine
+$N$-sample precision: $\pm10\%$ at $N=50$, $\pm5\%$ at $N=200$.
+
+\subsection*{What thinning buys against direct shard statistics}
+
+The direct alternative --- ``from-shards'' --- reconstructs each of the $n$ shards
+once and takes $\sigma_R=\mathrm{std}(R_{50}^{(1)},\dots,R_{50}^{(n)})$ with error
+$1/\sqrt{2(n-1)}$. For $n=10$ this is $\pm24\%$. It is statistically wasteful ---
+it collapses each shard's millions of events into a single $R_{50}$ and estimates
+$\sigma_R$ from $n$ numbers --- and fragile: at $n=10$ one atypical shard swings
+the estimate (an $n=10$ artifact of exactly this kind produced a spurious
+``washout is free'' reading early in this work). Thinning instead uses all the
+pooled events to characterise the counting fluctuation, drawing $N\gg n$
+independent realizations of it, and tightens $\sigma_R$ to $\pm10\%$ ($N=50$) or
+$\pm5\%$ ($N=200$) --- enough to resolve configurations whose $\sigma_R$ differ at
+the $10$--$20\%$ level, which $\pm24\%$ cannot.
+
+The gain is real, not manufactured, because $\sigma_R$ is dominated by counting
+noise, which the large pool determines precisely, and because the shards are
+i.i.d.\ acquisitions of one fixed truth --- there is no shard-to-shard systematic
+beyond counting. That last point is the single assumption the direct estimate
+would protect against and thinning would not: were there a seed-dependent bias,
+from-shards would see it in the spread of the $n$ endpoints while the thinned
+realizations, sharing one pool, would not. Here there is none, so the tighter
+estimate is honest.
+
+\subsection*{Assumptions and regime of validity}
+
+\begin{itemize}
+  \item \emph{Poisson production; clearance independent per nucleus; spatially
+        uniform survival} (needed for a position-independent $g_i$ and $w$). A
+        non-uniform perfusion field breaks the last assumption and is the one
+        route to a genuine, non-calibratable bias.
+  \item \emph{Pool much larger than each realization} ($p_{\mathrm{dose}}$
+        small). Sub-sampling a \emph{fixed} set of $M$ points is binomial
+        (variance $\propto p(1-p)$), not Poisson ($\propto p$), so the thinned
+        $\sigma_R$ is low by $\sqrt{1-p}$: negligible at $p\lesssim0.1$
+        ($\le5\%$), but severe as $p\to1$, where every realization approaches the
+        whole pool and $\sigma_R\to0$.
+  \item \emph{Realization above the fit-stability floor} ($\sim\!300$--$400$k
+        events). Below it the erfc edge fit destabilises on the noisy profile and
+        $\sigma_R$ inflates spuriously (upward), not as a true spread.
+  \item \emph{Thinning sharpens the spread, not the mean.} The pool's own edge
+        differs from the truth by a $\sqrt{n}$-level fluctuation; that is the
+        floor on the mean $R_{50}$ (the calibration / bias), which thinning does
+        not reduce. Only $\sigma_R$ benefits.
+\end{itemize}
+
+\subsection*{The shrinking-pool corner}
+
+The two count-dependent effects above pull in opposite directions, and at the
+corner of small detector, long delay, and heavy washout --- where the surviving
+events (pool $\times\,p_{\mathrm{dose}}\times w\times$ the start cut) collapse ---
+they cannot be satisfied together. Clearing the fit floor demands a larger
+$p_{\mathrm{dose}}$; keeping the fixed-pool bias $\sqrt{1-p}$ small demands a
+smaller one. On a small pool there is no setting that does both, and $\sigma_R$
+there is genuinely ill-determined: too large from fit instability, or too small
+from the fixed-pool correction. The only clean remedy is a larger pool --- more
+shards --- which buys headroom on both sides at once. A single-shard geometry
+($p_{\mathrm{dose}}=D$ with no pool to thin) therefore cannot be treated this way,
+and count-starved corners should be flagged rather than quoted at the nominal
+$\pm10\%$.
+
+\end{document}
