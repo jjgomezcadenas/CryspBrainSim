@@ -37,6 +37,8 @@ CONFIGS = [
                 ("crysp_ring_1m_csi_2x0", "csi_2X0")),
     ("R35/50",  ("crysp_r35_50cm_bgo_2x0", "bgo_195k_2X0"),
                 ("crysp_r35_50cm_csi_2x0", "csi_2X0")),
+    ("R35/35",  ("crysp_r35_35cm_bgo_2x0", "bgo_195k_2X0"),
+                ("crysp_r35_35cm_csi_2x0", "csi_2X0")),
     ("CHS",     ("crysp_chs_bgo_2x0", "bgo_195k_2X0"),
                 ("crysp_chs_csi_2x0", "csi_2X0")),
 ]

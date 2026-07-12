@@ -1,0 +1,45 @@
+# The frozen common-mode run parameters (dev/PLAN.md → Fixed run parameters), set at the
+# single-shard stage on shard 0 (ladder rung 5, 2026-07-05). Identical across
+# every scanner, crystal, dose, and realization — keeping them common-mode is
+# what makes σ_R differences purely geometric. A change here re-runs rung 5.
+#
+# Per-arm ready-to-run config (R35 35 cm AFOV, BGO 195 K). Activate with:
+#   cp config/run_parameters_r35_35_bgo.toml config/run_parameters.toml
+# The r35_35 _bgo and _csi variants differ ONLY in [configuration]; keep the
+# frozen blocks below identical across both and with the active run_parameters.toml.
+
+[configuration]              # the active arm of the products tree — the one
+                             # place naming which scanner the drivers and the
+                             # Python tools read
+scenario = "uniform_headep_sobp_1e8"
+topology = "closed"
+scanner = "crysp_r35_35cm_bgo_2x0"
+crystal = "bgo_195k"         # crystal arm under the scanner (products name)
+leaf = "fast_1Gy"
+
+[grid]                       # activity grid on the beam corridor
+n = [64, 64, 96]
+img_origin_mm = [-47.25, -47.25, -119.25]   # voxel-centre origin; z spans -119.25..+23.25
+voxsize_mm = [1.5, 1.5, 1.5]
+
+[roi]                        # profile read: the whole transverse plane (the
+                             # part-(a) settled protocol — no radius_mm key);
+                             # centre kept for the fit lab's optional disc
+centre_mm = [0.0, 0.0]
+
+[window]                     # fixed distal fit window, from the truth activity edge
+z_lo_mm = -36.452
+z_hi_mm = -1.452
+nominal_edge_mm = -16.452    # truth activity-R50 (rung 1)
+proximal_margin_mm = 20.0
+distal_margin_mm = 15.0
+
+[mlem]
+niter = 50                   # on the R50-vs-iterations plateau (<0.01 mm / 10 iters past 40)
+
+[sensitivity]
+n_sens = 1000000000
+chunk = 20000000
+
+[selection]
+truth = "trues-only"         # truth == 0, first pass
