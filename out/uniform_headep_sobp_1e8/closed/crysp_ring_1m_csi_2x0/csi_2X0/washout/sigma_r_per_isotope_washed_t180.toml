@@ -1,0 +1,20 @@
+crystal = "csi"
+realizations = 100
+dose_Gy = 1.0
+washed = true
+scanner = "crysp_ring_1m_csi_2x0"
+
+[[point]]
+mean_R50_mm = -12.894199311948023
+n_fail = 0
+mean_events = 551824.44
+t_start_s = 180.0
+isotope = "O15"
+sigma_R_mm = 0.3303092132464849
+[[point]]
+mean_R50_mm = -21.079341144585836
+n_fail = 0
+mean_events = 427658.56
+t_start_s = 180.0
+isotope = "C11"
+sigma_R_mm = 0.4068697124871582
