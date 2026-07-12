@@ -594,7 +594,7 @@ tumour-centred edge sits at world-frame $z \approx +\SI{9.1}{mm}$.
 
 \emph{Washout cost.} The exact keep reproduces the picture of
 Sec.~\ref{sec:washout} on the clean fixed-scenario windows
-(Table~\ref{tab:v2washout}, Fig.~\ref{fig:v2washout}). The nominal precision
+(Table~\ref{tab:v2washout}, Fig.~\ref{fig:v2}). The nominal precision
 degrades smoothly with the delay ($0.113 \to 0.174 \to \SI{0.228}{mm}$) as the
 window loses counts; washout removes a further $\sim\!55\%$ nearly uniformly
 (survival $0.46$--$0.39$), inflating $\sigma_R$ by the counting factor
@@ -629,21 +629,9 @@ $\sim\!1.5\times$ in precision.
   \end{tabular}
 \end{table}
 
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.72\textwidth]{figs/washout_v2.png}
-  \caption{Washout $\sigma_R$ cost vs.\ acquisition delay (ring CsI, v2,
-    \SI{1}{Gy}). Top: nominal and exact-washed $\sigma_R$ (points,
-    $\pm1/\sqrt{2(N-1)}$). Bottom: the inflation against the counting
-    expectation $1/\sqrt{\text{survival}}$ (dotted); the three windows scatter
-    around it. From \texttt{drivers/sigma\_r\_v2.jl} +
-    \texttt{tools/plot\_sigma\_r\_v2.py}.}
-  \label{fig:v2washout}
-\end{figure}
-
 \emph{Per-isotope precision.} The pure single-species selection settles the
 positron-range question the earlier soft posterior could only bound
-(Table~\ref{tab:v2iso}, Fig.~\ref{fig:v2iso}). $^{15}$O, with the longest
+(Table~\ref{tab:v2iso}, Fig.~\ref{fig:v2}). $^{15}$O, with the longest
 $\beta^+$ range ($\approx\!\SI{2.5}{mm}$, vs.\ $\approx\!\SI{1.1}{mm}$ for
 $^{11}$C), enters with $\sim\!5\times$ the counts and is the more precise
 species at every delay ($\sigma_R = 0.146$--\SI{0.233}{mm} vs.\
@@ -683,14 +671,39 @@ now without the leakage caveat.
 
 \begin{figure}[htbp!]
   \centering
-  \includegraphics[width=0.72\textwidth]{figs/per_isotope_v2.png}
-  \caption{Per-isotope range precision vs.\ delay (ring CsI, v2, exact
-    selection, \SI{1}{Gy}). Top: $\sigma_R$ for $^{15}$O, $^{11}$C and the
-    combined mix. Bottom: the per-count precision $k = \sigma_R\sqrt{N}$ ---
-    flat and lowest for the long-range $^{15}$O, refuting a positron-range
-    penalty. From \texttt{drivers/sigma\_r\_v2.jl} +
+  \includegraphics[width=0.78\textwidth]{figs/sigma_r_v2.png}
+  \caption{Generation-2 range precision vs.\ acquisition delay (ring CsI, v2,
+    \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$). Top: nominal vs.\ exact-washed
+    $\sigma_R$ --- the washout cost of Table~\ref{tab:v2washout}. Bottom: the
+    pure per-isotope $\sigma_R$ for $^{15}$O and $^{11}$C and the combined mix
+    (Table~\ref{tab:v2iso}); $^{15}$O, the longest-range species, is the more
+    precise. From \texttt{drivers/sigma\_r\_v2.jl} +
     \texttt{tools/plot\_sigma\_r\_v2.py}.}
-  \label{fig:v2iso}
+  \label{fig:v2}
+\end{figure}
+
+\emph{Geometry.} The washout study repeats on two smaller-bore CsI arms at the
+same protocol --- R35/50 ($r=\SI{350}{mm}$, \SI{500}{mm} AFOV) and R35/35
+($r=\SI{350}{mm}$, \SI{350}{mm} AFOV), carrying $0.63$ and $0.48$ of the ring's
+counts. Figure~\ref{fig:v2scanners} collects the washed $\sigma_R$ across the
+three bores. The precision generally worsens as the bore shrinks --- the smaller
+AFOV simply records fewer counts --- with the arms tying at the shortest delay,
+where the delayed-start protection offsets the count difference. The washout
+physics itself is unchanged across bores: the inflation stays
+$\approx\!1.2$--$1.7$ around $1/\sqrt{\text{survival}}$ and the edge shift within
+$\pm\SI{0.08}{mm}$ on every arm, so the washout cost tracks the count loss, not
+the geometry.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figs/washed_sigma_r_scanners_v2.png}
+  \caption{Washed $\sigma_R$ vs.\ acquisition delay for the three CsI bores
+    (v2, \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$, offset in $t_{\text{del}}$
+    for legibility). The precision follows the available counts (ring $>$
+    R35/50 $>$ R35/35, tying at the shortest delay), while the washout cost is
+    geometry-independent. From \texttt{drivers/sigma\_r\_v2.jl} +
+    \texttt{tools/plot\_washed\_v2\_scanners.py}.}
+  \label{fig:v2scanners}
 \end{figure}
 
 \section{Outlook}
