@@ -78,37 +78,42 @@ difference is a lower bound); it only sees range that is actually in the annihil
 - Scanner: **ring 1 m CsI** (both crystals have the same spatial resolution; BGO has more
   sensitivity + a bit more MS — my earlier "CsI better resolution" was wrong). CsI first because the
   effects show up more clearly there.
-- **Phase 1 (DONE, ring 1 m CsI, t=0, nominal, N=100):** O-15 N=4.13M σ_R **0.134 ± 0.010**;
-  C-11 N=1.47M σ_R **0.209 ± 0.015**. Count ratio 2.82× → counting predicts σ_R(O-15)=0.125;
-  observed 0.134 (≈1σ, ~7% high). Observed σ_R(O-15)/σ_R(C-11)=0.64 vs counting-only 0.60. So
-  **O-15 tracks its count advantage — the range penalty is small and not significant** (at most a
-  ~7% ~1σ hint; soft-selector leakage means the true term could be a bit larger, still small). This
-  matches the earlier truth-profile read (O-15 edge not broader than C-11). N-13/O-14 fits blew up
-  (posterior-selected edges outside the fit window / too few counts) — only O-15 vs C-11 is clean.
-  Results per t_start: `…/crysp_ring_1m_csi_2x0/…/washout/sigma_r_per_isotope_t{tstart}[_washed].toml`
-  (one file per start time / selection, so runs accumulate — combine by globbing). The combined
-  all-isotope σ_R at each t_start is the ring-CsI washout **nominal** already on disk (t=0 → 0.105,
-  t=120 → 0.119 at 1 Gy).
-- **Phase 2 (planned):** t=120/180, nominal AND washed — watch each isotope's σ_R and the mix as
-  O-15 drains and washout bites.
+**DONE — ring 1 m CsI, N=100, 1 Gy** (O-15/C-11 only; N-13/O-14 fits blow up — posterior-selected
+edges outside the fit window / too few counts). Figure
+`…/comparison/figures/sigma_r_per_isotope.png` (`tools/plot_sigma_r_per_isotope.py`); data
+`…/washout/sigma_r_per_isotope[_washed]_t{tstart}.toml`; combined = the ring-CsI washout nominal/washed.
+
+- **Nominal σ_R vs t_start (t=0/120/180/300):** O-15 0.134/0.159/0.205/0.253 (rises as it drains —
+  loses 5.5× its counts, 4.13M→749k), C-11 0.209/0.259/0.247/0.259 (flat after t=120 — barely loses
+  counts), combined 0.105/0.119/0.158/0.209. O-15 < C-11 at every t_start (its counts).
+- **Per-count precision k = σ_R·√N:** O-15 272/230/250/219, C-11 253/292/268/259 — no stable range
+  penalty: the ~7% O-15 excess at t=0 (272 vs 253) reverses by t=120/180. Both ~260 ± ~20 (N=100 noise).
+- **Washed, t=120/180:** inflation O-15 1.52/1.61, C-11 1.65/1.65, combined 1.57/1.54. Survival ~0.38
+  → counting inflation ≈ 1/√0.38 ≈ 1.64; both isotopes sit there, **no isotope selectivity, no growing
+  protection**; the ring's combined washed rises with the nominal (no "flat-washed" protection).
+
+**Conclusion (Thread B): the positron-range hypothesis is NOT supported.** O-15 is never significantly
+worse per count than C-11 (a ~7% t=0 hint that reverses), and washout is a plain ~1/√survival penalty
+for both with no selectivity. So the R35/35 "protection" (Thread A) is **not** an isotope/range effect
+— it is not reproduced on the ring, and is most likely R35/35 N=50 noise (R35/50 CsI N=200 would
+confirm). The method and this negative result also motivate the per-species selector now in the
+upstream washout spec (`latex/washout_brain.tex`, Sec. 7).
 
 ## State / provenance
 
-- **Committed:** `ed6a3f5` (R35/35 geometry + R35/50 CsI 1 Gy), `27dad1a` (niter diagnostic + a
-  `--seed` flag on `washout_sigma_r.jl`).
-- **Uncommitted:** N=200 R35/35 CsI toml (overwrote the N=50 on disk); `drivers/sigma_r_per_isotope.jl`;
-  the 4-config figure not yet regenerated with the N=200 R35/35 point.
+- **Committed:** R35/35 geometry + R35/50 CsI 1 Gy; niter diagnostic + `--seed`; per-isotope driver +
+  investigation doc; per-t_start filename convention; the per-isotope tomls (t=0/120/180/300 nominal,
+  washed 120/180); and the upstream washout spec `latex/washout_brain.tex`.
 - Drivers take `--tstart --dose --realizations [--seed] [--washed] [--isotopes]`; per-arm configs
   `config/run_parameters_{bgo,csi,r35_bgo,r35_csi,r35_35_bgo,r35_35_csi,chs_bgo,chs_csi}.toml`
-  (`cp` to activate). Config is parked on ring BGO after each run.
+  (`cp` to activate). Config stays on the arm under study (ring CsI for the per-isotope work) — the
+  earlier BGO-restore habit was dropped.
 
-## Next steps
+## Next steps (optional / open)
 
-1. Read Phase 1 (per-isotope t=0) → does ¹⁵O reach the ~0.6× that counting predicts, or does range
-   erode it?
-2. Phase 2: t=120/180 ± washout, per isotope.
-3. Optionally R35/50 CsI N=200 (confirm the protection's universality).
-4. Regenerate `sigma_r_configs.png` with the N=200 R35/35 point; commit the per-isotope driver +
-   results.
+1. R35/50 CsI N=200 — confirm whether the R35/35 protection is real/universal or N=50 noise (the one
+   loose end left by Thread B's negative result).
+2. Regenerate `sigma_r_configs.png` with the N=200 R35/35 point; fold the four-geometry comparison
+   into the note.
 5. If a real range effect emerges: one clean upstream question on whether the sim annihilates at the
    decay point or after positron transport.
