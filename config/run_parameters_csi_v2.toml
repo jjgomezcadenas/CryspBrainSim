@@ -1,0 +1,48 @@
+# Generation-2 (v2) common-mode run parameters — ring cryogenic CsI.
+# Activate with:  cp config/run_parameters_csi_v2.toml config/run_parameters.toml
+#
+# What v2 changes vs run_parameters_csi.toml (see PTCryspMC.jl/dev/generation2_plan.md):
+#   * leaf token is the acquisition-scenario `del<t_del>s_ac<t_ac>s_<dose>` (three
+#     leaves per crystal, one per delay); this file names del120 as the default,
+#     the v2 drivers loop all three.
+#   * the phantom is tumour-centred (`center_on="tumour"`, `source_z_offset_mm` =
+#     25.5840): the activity distal edge sits at world z ≈ +9.13 mm, not −16.45.
+#     The [grid] and [window] below are the frozen CsI values shifted by +25.5840
+#     so the edge keeps its position in the grid and the fit margins are unchanged.
+#   * shards carry the isotope column + stamped Mizuno washout_g — the v2 drivers
+#     apply the exact per-species g_i keep (washout_brain.tex §5).
+# The frozen blocks (grid geometry, margins, niter, sensitivity, selection) are the
+# legacy CsI values, only translated in z; keep this file and the sensitivity cache
+# it drives consistent.
+
+[configuration]
+scenario = "uniform_headep_sobp_1e8"
+topology = "closed"
+scanner = "crysp_ring_1m_csi_2x0"
+crystal = "csi"
+leaf = "del120s_ac300s_1Gy"   # default single leaf; the v2 drivers loop del120/180/300
+
+[grid]                        # activity grid on the beam corridor, tumour-centred frame
+n = [64, 64, 96]
+img_origin_mm = [-47.25, -47.25, -93.666]   # z spans -93.666..+48.834 (legacy -119.25 + 25.584)
+voxsize_mm = [1.5, 1.5, 1.5]
+
+[roi]                         # whole transverse plane (no radius_mm key)
+centre_mm = [0.0, 0.0]
+
+[window]                      # fixed distal fit window = legacy window + source_z_offset (25.584)
+z_lo_mm = -10.868
+z_hi_mm = 24.132
+nominal_edge_mm = 9.132       # v2 world-frame activity-R50 (legacy -16.452 + 25.584)
+proximal_margin_mm = 20.0
+distal_margin_mm = 15.0
+
+[mlem]
+niter = 50
+
+[sensitivity]
+n_sens = 1000000000
+chunk = 20000000
+
+[selection]
+truth = "trues-only"

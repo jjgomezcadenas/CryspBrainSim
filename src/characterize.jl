@@ -111,30 +111,40 @@ end
 
 """
     characterize(scenario_dir; budget="fast", proximal_margin_mm=20.0,
-                 distal_margin_mm=15.0) -> TruthReference
+                 distal_margin_mm=15.0, z_offset_mm=0.0) -> TruthReference
 
 Lock the starting-point reference from the `truth/` bundle: dose-R80,
 true activity-R50 (interpolated crossing, with the windowed erfc fit as a
 cross-check), their offset, and the fixed distal window built from the
 interpolated activity edge. Runs before any reconstruction.
+
+`z_offset_mm` rigidly shifts the truth z-frame to match the reconstructed
+image. The truth bundle is written in the native scenario frame; generation-2
+shards place the phantom tumour-centred (`source_z_offset_mm`), so the
+reconstructed edge sits `z_offset_mm` distal of the truth. Pass that offset
+here and dose-R80, activity-R50 and the fit window all land in the world frame
+the image lives in (the offset between them, a difference, is unchanged).
 """
 function characterize(scenario_dir::AbstractString; budget::AbstractString="fast",
-                      proximal_margin_mm::Real=20.0, distal_margin_mm::Real=15.0)
+                      proximal_margin_mm::Real=20.0, distal_margin_mm::Real=15.0,
+                      z_offset_mm::Real=0.0)
     tdir = truth_dir(scenario_dir)
     dose = read_depth_dose(tdir)
     act = read_activity_profile(tdir; budget=budget)
     act.z_mm == dose.z_mm ||
         error("characterize: activity and dose z-frames differ — broken bundle")
+    zdose = dose.z_mm .+ z_offset_mm      # native → world frame (v2 tumour centring)
+    zact = act.z_mm .+ z_offset_mm
 
-    dose_R80 = distal_crossing(dose.z_mm, dose.dose_core_Gy; level=0.8)
-    activity_R50 = distal_crossing(act.z_mm, act.total; level=0.5)
+    dose_R80 = distal_crossing(zdose, dose.dose_core_Gy; level=0.8)
+    activity_R50 = distal_crossing(zact, act.total; level=0.5)
     (isnan(dose_R80) || isnan(activity_R50)) &&
         error("characterize: no distal crossing found (dose_R80=$dose_R80, " *
               "activity_R50=$activity_R50)")
 
     window = distal_window(activity_R50; proximal_margin_mm=proximal_margin_mm,
                            distal_margin_mm=distal_margin_mm)
-    fit = fit_endpoint(act.z_mm, act.total; window=window, weighted=true)
+    fit = fit_endpoint(zact, act.total; window=window, weighted=true)
 
     return TruthReference(basename(abspath(scenario_dir)), String(budget),
                           dose_R80, activity_R50, fit.z0, fit.w,

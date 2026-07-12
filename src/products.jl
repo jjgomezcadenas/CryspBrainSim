@@ -148,6 +148,12 @@ function pool_shards(files::AbstractVector{<:AbstractString})
                 "($(s.attrs[k]) vs $(ref[k])) — not one master")
         end
     end
+    # Refuse to mix products generations: the v2 shards moved the `t_decay_s`
+    # zero to irradiation end and re-centred the phantom, so a v2/legacy pool is
+    # meaningless (generation2_plan.md §5). Legacy shards carry no `generation`.
+    gens = [shard_generation(s.attrs) for s in shards]
+    allequal(gens) ||
+        error("pool_shards: mixed products generations $(unique(gens)) — refuse to mix")
     reals = [Int(s.attrs["realization"]) for s in shards]
     allunique(reals) ||
         error("pool_shards: duplicate realization indices $reals — not one master")
@@ -165,16 +171,40 @@ end
 # Shared per-scenario inputs: scanner geometry, phantom, truth bundle
 # ---------------------------------------------------------------------------
 """
+    shard_generation(attrs) -> String
+
+The products generation of a shard, `"v2"` for generation-2 shards and
+`"legacy"` for the off-centre masters that carry no `generation` attr. The v2
+guard: consumers must refuse to mix generations, since v2 moved the `t_decay_s`
+zero to irradiation end and re-centred the phantom (generation2_plan.md §5).
+"""
+shard_generation(attrs::AbstractDict) = String(get(attrs, "generation", "legacy"))
+
+"""
     shard_t_decay(file) -> Vector{Float32}
 
-The absolute decay time of every coincidence (`t_decay_s`, seconds from the
-acquisition start; for randoms, gamma 1's decay). Read raw from the file, so
-the vector aligns with `read_shard`'s coincidence list only when no
-degenerate LORs were dropped — assert `n_dropped == 0` before masking with
-it. A delayed acquisition start is the selection `t_decay .>= t_start`.
+The absolute decay time of every coincidence (`t_decay_s`, for randoms gamma 1's
+decay). The zero is the `t_decay_zero` attr — `acquisition_start` in legacy
+shards, `irradiation_end` in v2 (where each leaf is already band-cut to its
+scenario window `[t_del, t_del+t_ac]`). Read raw from the file, so the vector
+aligns with `read_shard`'s coincidence list only when no degenerate LORs were
+dropped — assert `n_dropped == 0` before masking with it.
 """
 function shard_t_decay(file::AbstractString)
     return h5open(f -> read(f, "t_decay_s"), file, "r")
+end
+
+"""
+    shard_isotope(file) -> Vector{Int8}
+
+The emitting isotope id of every coincidence (`isotope` column, v2 only:
+0=O15, 1=C11, 2=N13, 3=C10, 4=O14; for randoms gamma 1's decay). Read raw, so it
+aligns with `read_shard`'s coincidence list only when `n_dropped == 0`. Enables
+the exact per-species σ_R and the exact per-species washout keep (`washout_g`),
+replacing the label-free posterior surrogate.
+"""
+function shard_isotope(file::AbstractString)
+    return h5open(f -> read(f, "isotope"), file, "r")
 end
 
 """

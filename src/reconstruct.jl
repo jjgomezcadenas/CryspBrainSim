@@ -65,7 +65,14 @@ function load_run_context(; products_root::AbstractString, scenario::AbstractStr
                           leaf::AbstractString, sens_cache::AbstractString,
                           params=load_run_parameters())
     scen = joinpath(products_root, scenario)
-    ref = characterize(scen)
+    files = shard_files(leaf_dir(products_root; scenario=scenario, scanner=scanner,
+                                 crystal=crystal, leaf=leaf))
+    # v2 shards centre the phantom on the tumour; shift the truth reference by the
+    # stamped offset so its window/edges land in the reconstructed image's frame.
+    zoff = let a = shard_attrs(files[1])
+        shard_generation(a) == "v2" ? Float64(a["source_z_offset_mm"]) : 0.0
+    end
+    ref = characterize(scen; z_offset_mm=zoff)
     base, meta = load_sensitivity(sens_cache)
     g = meta["grid"]
     (g["n"] == collect(params.grid.n) &&
@@ -74,8 +81,6 @@ function load_run_context(; products_root::AbstractString, scenario::AbstractStr
         error("load_run_context: sensitivity cache grid ≠ frozen run-parameter grid")
     ph = phantom_attenuation(scen)
     geo = scanner_geometry(joinpath(scen, scanner))
-    files = shard_files(leaf_dir(products_root; scenario=scenario, scanner=scanner,
-                                 crystal=crystal, leaf=leaf))
     return (ref=ref, base=base, meta=meta, phantom=ph, files=files, params=params,
             geo=geo, scenario=scenario, topology=topology, ring=scanner,
             crystal_material=crystal, crystal=crystal_label(crystal, geo.wall_mm))

@@ -1,0 +1,55 @@
+method = "pure per-species selection by the isotope column"
+generation = "v2"
+crystal = "csi"
+realizations = 100
+dose_Gy = 1.0
+scanner = "crysp_ring_1m_csi_2x0"
+
+[[point]]
+mean_R50_mm = 12.097948818682648
+n_fail = 0
+mean_events = 2.44930483e6
+t_del_s = 120.0
+isotope = "O15"
+sigma_R_mm = 0.145687992056624
+leaf = "del120s_ac300s_1Gy"
+[[point]]
+mean_R50_mm = 4.224149580826551
+n_fail = 0
+mean_events = 457530.57
+t_del_s = 120.0
+isotope = "C11"
+sigma_R_mm = 0.4491306895177102
+leaf = "del120s_ac300s_1Gy"
+[[point]]
+mean_R50_mm = 12.11681822841739
+n_fail = 0
+mean_events = 1.74221021e6
+t_del_s = 180.0
+isotope = "O15"
+sigma_R_mm = 0.17140305278686058
+leaf = "del180s_ac300s_1Gy"
+[[point]]
+mean_R50_mm = 4.225936799104576
+n_fail = 0
+mean_events = 442320.84
+t_del_s = 180.0
+isotope = "C11"
+sigma_R_mm = 0.4157796129768202
+leaf = "del180s_ac300s_1Gy"
+[[point]]
+mean_R50_mm = 12.171277773158868
+n_fail = 0
+mean_events = 882417.01
+t_del_s = 300.0
+isotope = "O15"
+sigma_R_mm = 0.23297665957639252
+leaf = "del300s_ac300s_1Gy"
+[[point]]
+mean_R50_mm = 4.065209681438688
+n_fail = 0
+mean_events = 413671.2
+t_del_s = 300.0
+isotope = "C11"
+sigma_R_mm = 0.4962230692271134
+leaf = "del300s_ac300s_1Gy"

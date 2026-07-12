@@ -1,0 +1,22 @@
+recocrysp_sha = "a6d900e9818aa27bda9bb2ef43ef21f54f1d5bb6"
+
+[draw]
+n_sens = 1000000000
+seed = 1
+chunk = 20000000
+
+[attenuation]
+material = "G4_BRAIN_ICRP"
+route = "ellipsoid"
+centre = [0.0, -30.0, 0.0]
+semi_axes = [72.0, 87.0, 102.0]
+mu_mm_inv = 0.009913219138979912
+
+[scanner]
+half_length_mm = 512.0
+r_inner_mm = 387.0
+
+[grid]
+img_origin = [-47.25, -47.25, -93.66600036621094]
+voxsize = [1.5, 1.5, 1.5]
+n = [64, 64, 96]
