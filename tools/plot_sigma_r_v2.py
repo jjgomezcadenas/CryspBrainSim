@@ -34,6 +34,17 @@ def load(name):
         return tomllib.load(f)
 
 
+def arm_label():
+    """Display name of the active arm, e.g. 'ring 1 m CsI', 'ring 1 m BGO'."""
+    ac = active_config()
+    sc = ac.scanner
+    scan = ("ring 1 m" if "ring_1m" in sc else "R35/50" if "r35_50cm" in sc else
+            "R35/35" if "r35_35cm" in sc else "r40/50" if "r40_50cm" in sc else
+            "r40/35" if "r40_35cm" in sc else sc)
+    cry = "CsI" if ac.crystal == "csi" else "BGO" if "bgo" in ac.crystal else ac.crystal
+    return f"{scan} {cry}"
+
+
 def main():
     dw = load("sigma_r_washout_v2.toml")
     di = load("sigma_r_per_isotope_v2.toml")
@@ -63,7 +74,7 @@ def main():
     a1.set_ylabel("$\\sigma_R$ at 1 Gy [mm]", color=INK, fontsize=13)
     a1.set_ylim(0.0, None)
     a1.legend(frameon=False, fontsize=10, labelcolor=INK, loc="upper left")
-    a1.set_title("Range precision vs acquisition delay (ring 1 m CsI, v2, 1 Gy)",
+    a1.set_title(f"Range precision vs acquisition delay ({arm_label()}, v2, 1 Gy)",
                  color=INK, fontsize=11, loc="left")
 
     # bottom: per-isotope σ_R (points only)

@@ -671,7 +671,7 @@ now without the leakage caveat.
 
 \begin{figure}[htbp!]
   \centering
-  \includegraphics[width=0.78\textwidth]{figs/sigma_r_v2.png}
+  \includegraphics[width=0.78\textwidth]{figs/sigma_r_v2_csi.png}
   \caption{Generation-2 range precision vs.\ acquisition delay (ring CsI, v2,
     \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$). Top: nominal vs.\ exact-washed
     $\sigma_R$ --- the washout cost of Table~\ref{tab:v2washout}. Bottom: the
@@ -696,7 +696,7 @@ the geometry.
 
 \begin{figure}[htbp!]
   \centering
-  \includegraphics[width=0.72\textwidth]{figs/washed_sigma_r_scanners_v2.png}
+  \includegraphics[width=0.72\textwidth]{figs/washed_sigma_r_scanners_v2_csi.png}
   \caption{Washed $\sigma_R$ vs.\ acquisition delay for the three CsI bores
     (v2, \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$, offset in $t_{\text{del}}$
     for legibility). The precision follows the available counts (ring $>$
@@ -704,6 +704,111 @@ the geometry.
     geometry-independent. From \texttt{drivers/sigma\_r\_v2.jl} +
     \texttt{tools/plot\_washed\_v2\_scanners.py}.}
   \label{fig:v2scanners}
+\end{figure}
+
+\subsection*{The BGO arm}
+
+The same v2 study runs on the BGO scanner --- the ring and the two r40 bores.
+BGO's cryostat sets it $\approx\!\SI{50}{mm}$ larger in radius than the CsI
+counterpart at each AFOV ($r=\SI{437}{mm}$ on the ring, \SI{400}{mm} on the
+compact bores), and it records $\approx\!2.1\times$ the coincidences. The extra
+statistics show directly: the ring washed $\sigma_R$ is \SIrange{0.13}{0.23}{mm}
+(Table~\ref{tab:v2washout_bgo}, Fig.~\ref{fig:v2_bgo}) against
+\SIrange{0.20}{0.31}{mm} for CsI, and every per-species sample clears the
+fit-stability floor --- including $^{11}$C, count-starved on the compact CsI
+bores --- so BGO gives a clean per-isotope reading (Table~\ref{tab:v2iso_bgo}).
+Washout again adds no bias ($\DR^{\text{wo}} \le +\SI{0.07}{mm}$) and inflates
+$\sigma_R$ by $\approx\!1.3$--$1.9\times$, and the per-count precision again
+favours the long-range $^{15}$O ($k \approx 240$ vs.\ $\approx 315$ for
+$^{11}$C) --- now with a clean $^{11}$C reference, confirming the positron-range
+null on both crystals.
+
+\begin{table}[htb]
+  \centering
+  \caption{Generation-2 washout precision on the ring BGO arm (all events,
+    \SI{1}{Gy}, $N = 100$): nominal vs.\ exact-washed $\sigma_R$, the inflation,
+    the edge shift $\DR^{\text{wo}}$, and the survival, per delay.}
+  \label{tab:v2washout_bgo}
+  \vspace{1mm}
+  \begin{tabular}{S[table-format=3] S[table-format=1.3] S[table-format=1.3]
+                  S[table-format=1.2] S[table-format=+1.3] S[table-format=1.3]}
+    \toprule
+    {$t_{\text{del}}$ [s]} & {nominal $\sigma_R$} & {washed $\sigma_R$}
+      & {inflation} & {$\DR^{\text{wo}}$ [mm]} & {survival} \\
+    \midrule
+    120 & 0.100 & 0.133 & 1.33 & +0.019 & 0.464 \\
+    180 & 0.113 & 0.168 & 1.48 & +0.021 & 0.431 \\
+    300 & 0.141 & 0.232 & 1.65 & +0.027 & 0.388 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.78\textwidth]{figs/sigma_r_v2_bgo.png}
+  \caption{Generation-2 range precision vs.\ acquisition delay (ring BGO, v2,
+    \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$). Top: nominal vs.\ exact-washed
+    $\sigma_R$ (Table~\ref{tab:v2washout_bgo}). Bottom: the pure per-isotope
+    $\sigma_R$ for $^{15}$O, $^{11}$C and the combined mix
+    (Table~\ref{tab:v2iso_bgo}). From \texttt{drivers/sigma\_r\_v2.jl} +
+    \texttt{tools/plot\_sigma\_r\_v2.py}.}
+  \label{fig:v2_bgo}
+\end{figure}
+
+\begin{table}[htb]
+  \centering
+  \caption{Generation-2 per-isotope precision on the ring BGO arm (pure label
+    selection, \SI{1}{Gy}, $N = 100$). Unlike the CsI compact bores, every
+    sample --- $^{11}$C included --- clears the fit floor, so this is a clean
+    per-species reading. $^{15}$O is the more precise, and the more precise
+    \emph{per count}.}
+  \label{tab:v2iso_bgo}
+  \vspace{1mm}
+  \begin{tabular}{S[table-format=3] S[table-format=1.3] S[table-format=1.2]
+                  S[table-format=3] S[table-format=1.3] S[table-format=1.2]
+                  S[table-format=3]}
+    \toprule
+    & \multicolumn{3}{c}{$^{15}$O} & \multicolumn{3}{c}{$^{11}$C} \\
+    \cmidrule(lr){2-4}\cmidrule(lr){5-7}
+    {$t_{\text{del}}$ [s]} & {$\sigma_R$ [mm]} & {$N$ [M]} & {$k$}
+      & {$\sigma_R$ [mm]} & {$N$ [M]} & {$k$} \\
+    \midrule
+    120 & 0.098 & 5.84 & 237 & 0.306 & 1.09 & 319 \\
+    180 & 0.117 & 4.15 & 238 & 0.309 & 1.05 & 317 \\
+    300 & 0.168 & 2.10 & 243 & 0.312 & 0.98 & 309 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.72\textwidth]{figs/washed_sigma_r_scanners_v2_bgo.png}
+  \caption{Washed $\sigma_R$ vs.\ acquisition delay for the three BGO bores
+    (v2, \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$). As on CsI, the precision
+    follows the counts (ring $>$ r40/50 $>$ r40/35). From
+    \texttt{drivers/sigma\_r\_v2.jl} +
+    \texttt{tools/plot\_washed\_v2\_scanners.py}.}
+  \label{fig:v2scanners_bgo}
+\end{figure}
+
+\subsection*{BGO versus CsI}
+
+Figure~\ref{fig:bgovscsi} places the two crystals side by side at each
+size-class. BGO's washed $\sigma_R$ is below CsI's at every scanner and delay:
+the counting advantage of its higher sensitivity outweighs both its larger
+scatter fraction and the cryostat radius, with the margin narrowing on the
+smallest bore as both approach the count-starved regime. Purity (CsI) does not
+overtake statistics (BGO) anywhere in this washout-limited comparison --- the
+scatter correction of Sec.~\ref{sec:outlook} is what would close the gap.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=\textwidth]{figs/washed_bgo_vs_csi_v2.png}
+  \caption{Washed $\sigma_R$, BGO vs.\ CsI, at the three scanner size-classes
+    (v2, \SI{1}{Gy}; points, $\pm1/\sqrt{2(N-1)}$, offset in $t_{\text{del}}$
+    for legibility). BGO is the more precise at every scanner and delay. From
+    \texttt{drivers/sigma\_r\_v2.jl} + \texttt{tools/plot\_washed\_bgo\_vs\_csi.py}.}
+  \label{fig:bgovscsi}
 \end{figure}
 
 \section{Outlook}

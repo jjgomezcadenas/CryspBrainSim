@@ -31,6 +31,10 @@ cp "$CSI/one_shard/fits/figures/scatters_activity.png"  "$FIGS/scatters_profile_
 cp "$CSI/ten_shards/figures/delta_r50.png"              "$FIGS/ladder_delta_r50_csi.png"
 cp "$CSI/ten_shards/figures/delta_r50_vs_dose.png"      "$FIGS/dose_sweep_r50_csi.png"
 cp out/uniform_headep_sobp_1e8/closed/comparison/figures/tstart_r50.png "$FIGS/tstart_r50.png"
-cp "$CSI/washout_v2/figures/sigma_r_v2.png"     "$FIGS/sigma_r_v2.png"
-cp out/uniform_headep_sobp_1e8/closed/comparison/figures/washed_sigma_r_scanners_v2.png "$FIGS/washed_sigma_r_scanners_v2.png"
-echo "collected 13 figures into $FIGS/"
+CMP=out/uniform_headep_sobp_1e8/closed/comparison/figures
+cp "$CSI/washout_v2/figures/sigma_r_v2.png"     "$FIGS/sigma_r_v2_csi.png"
+cp "$BGO/washout_v2/figures/sigma_r_v2.png"     "$FIGS/sigma_r_v2_bgo.png"
+cp "$CMP/washed_sigma_r_scanners_v2_csi.png"    "$FIGS/washed_sigma_r_scanners_v2_csi.png"
+cp "$CMP/washed_sigma_r_scanners_v2_bgo.png"    "$FIGS/washed_sigma_r_scanners_v2_bgo.png"
+cp "$CMP/washed_bgo_vs_csi_v2.png"              "$FIGS/washed_bgo_vs_csi_v2.png"
+echo "collected 16 figures into $FIGS/"

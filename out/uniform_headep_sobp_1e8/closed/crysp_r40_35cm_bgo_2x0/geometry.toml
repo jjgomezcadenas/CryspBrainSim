@@ -1,0 +1,13 @@
+half_length_mm = 179.20000000000002
+name = "crysp_r40_35cm_bgo_2x0"
+shape = "cyl_shell"
+length_mm = 358.40000000000003
+n_z = 7
+n_crystals = 343
+n_phi = 49
+r_inner_mm = 400.0
+r_outer_mm = 422.36
+crystal_radial_mm = 22.360000000000003
+wall_mm = 22.360000000000003
+crystal_transverse_mm = 51.29130863003744
+crystal_axial_mm = 51.2
