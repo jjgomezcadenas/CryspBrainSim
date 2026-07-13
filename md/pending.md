@@ -1,8 +1,11 @@
 # Pending (smaller items, independent of the isotope-washout study)
 
-- **CHS + R35: remaining nine shards per arm** — request from upstream (PTCryspMC.jl) to turn the
-  extrapolated σ_R(1 Gy) into a measurement and put a shard spread on the calibration anchors
-  (md/results.md → "Single-shard geometries").
+- **Ring-CsI del180 washed σ_R N=200 firm-up** — the v2 ring-CsI del180 washed point (0.199) dips
+  ~2σ below trend at N=100 (the small bores are smooth); N=200 halves the band (±7%→±5%) and would
+  either pull it into line or confirm it. Re-run `drivers/sigma_r_v2.jl --realizations 200` on the
+  ring-CsI v2 arm (md/results.md → "Generation-2 σ_R study").
+- **CHS + R35: remaining nine shards per arm** — obsolete for v2 (the v2 R35/40 arms already ship
+  10 shards); kept only for the legacy single-shard CHS/R35 extrapolations of §1–7.
 - **BGO all-events bore-radius sensitivity** — at matched dose the BGO all-events penalty grows
   monotonically as the bore shrinks (ring < R35 < CHS) while trues match everywhere, with near-equal
   event mix; understand the scatter background shape in compact geometries. Related: the ring BGO

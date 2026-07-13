@@ -49,3 +49,34 @@ geometries CHS + R35 vs ring σ_R — six-arm dose sweeps + the ring ten-shard 1
 `cp config/run_parameters_{bgo,csi}.toml config/run_parameters.toml`, then rerun the chain
 (~25 min/arm). The two variants differ only in `[configuration]`; the frozen blocks are kept
 identical (verified by md5). Everything resolves the active arm from `run_parameters.toml`.
+
+## Generation-2 (v2) additions — DONE (2026-07-13)
+
+To consume the v2 products (`dev/reference/generation2_plan.md`: tumour-centred phantom,
+irradiation-end clock, per-LOR isotope column, stamped `washout_g`, `del…` scenario leaves):
+
+- **Loader** — `src/products.jl`: `shard_isotope(file)` and `shard_generation(attrs)` readers;
+  `pool_shards` now refuses to mix generations (a v2/legacy pool errors). Legacy loading is
+  unchanged (`generation` absent ⇒ `"legacy"`).
+- **Frame** — `src/characterize.jl`: `characterize(…; z_offset_mm=0.0)` rigidly shifts the truth
+  z-frame (dose-R80, activity-R50, the fit window) into the reconstructed image frame.
+  `src/reconstruct.jl`: `load_run_context` reads `source_z_offset_mm` from the shard (v2 only) and
+  passes it — so the fit window lands on the tumour-centred edge (world z ≈ +9.13 mm) instead of the
+  legacy −16.45. **Must-fix**: without it every v2 fit targets an empty window.
+- **Grid/sensitivity** — the v2 configs carry the recentred grid (`img_origin` z −93.666, window
+  `−10.868/24.132`, edge 9.132 = legacy + `source_z_offset_mm`); sensitivities rebuilt per scanner
+  at that origin (cache `…orgm47.25_m47.25_m93.67…`, ~35 s each; `tools/make_sensitivity.jl`).
+- **Driver** — `drivers/sigma_r_v2.jl`: loops the three `del…` leaves, pools each once, and produces
+  in one pass the washout σ_R (nominal vs the **exact per-species g_i keep** — `p_dose·g_i[isotope]`
+  from the isotope column + stamped `washout_g`, cross-checked vs a recompute from the stamped Mizuno
+  params) and the **pure per-isotope** σ_R (isotope-column selection). Flags:
+  `--realizations --dose --isotopes --leaves`.
+- **Tools** — `tools/plot_sigma_r_v2.py` (the combined two-panel figure: nominal/washed σ_R + pure
+  per-isotope, points-only; title reads the active arm), `tools/plot_washed_v2_scanners.py [csi|bgo]`
+  (three-bore washed σ_R per crystal), `tools/plot_washed_bgo_vs_csi.py` (BGO-vs-CsI washed at the
+  three size-classes). Wired into `collect_note_figures.sh` (16 figures).
+- **Configs** — the two flagship reference arms are `config/run_parameters_csi_v2.toml`
+  (ring CsI) and `config/run_parameters_ring_bgo_v2.toml` (ring BGO); small bores
+  `run_parameters_{r35_35_csi,r35_50_csi,r40_35_bgo,r40_50_bgo}_v2.toml`. The 8 legacy off-centre
+  configs are kept as archival provenance of the §1–7 results (their `fast_1Gy` products are gone;
+  not re-runnable).

@@ -212,19 +212,72 @@ washout adds **no bias** (calibrates away; parameter band ±0.02 mm ≪ σ_R) bu
 (0.11 → ~0.16 mm at 1 Gy), roughly independent of start time** — the ordinary penalty for losing
 ~57% of the counts. The case for going upstream rests on spatial non-uniformity.
 
+## Generation-2 σ_R study: exact washout + per-isotope, six scanners — DONE (2026-07-13)
+
+Upstream regenerated the products as **generation v2** (`dev/reference/generation2_plan.md`):
+tumour-centred phantom (`source_z_offset_mm` +25.58 → activity edge at world z ≈ **+9.13 mm**, not
+−16.45), an **irradiation-end clock**, fixed acquisition scenarios (leaves
+`del{120,180,300}s_ac300s_1Gy` = window `[t_del, t_del+300] s`, the delay axis is now the leaf
+axis), an **isotope column** per LOR, and the stamped Mizuno **`washout_g`** per isotope. Guarded by
+`generation="v2"` (`pool_shards` refuses to mix generations). The legacy off-centre `fast_1Gy`
+products are superseded — gone from disk.
+
+**Method** (`drivers/sigma_r_v2.jl`, N=100 thinned realizations, 1 Gy): pool each leaf and
+reconstruct on the **recentred grid** (`img_origin` z −93.666, window `[−10.868, 24.132]` — the
+legacy grid/window shifted +25.58; `characterize` gained a `z_offset_mm` kwarg, `load_run_context`
+reads it from the shard, so the truth reference lands in the reconstructed frame — the must-fix,
+else every fit targets an empty window). Washout is the **exact per-species Bernoulli keep** — keep
+event with prob `p_dose·g_i[isotope(e)]` from the isotope column + stamped `washout_g` (the
+recommended path of `latex/washout_brain.tex` §5, replacing the label-free marginalised w),
+cross-checked vs a recompute from the stamped Mizuno params. Per-isotope σ_R from **pure**
+isotope-column selection (no posterior-leakage lower bound). Zero fit failures anywhere.
+
+**Six scanners:** CsI ring / R35-50 / R35-35, and BGO ring / r40-50 / r40-35. BGO carries a
+cryostat → **+50 mm radius** at each AFOV class (ring r437, r40 bores r400) — the fair real-scanner
+counterpart to CsI's R35 at each size-class.
+
+**Washed σ_R [mm]** (all events, working protocol, ±7%):
+
+| scanner | del120 | del180 | del300 |
+|---|---|---|---|
+| CsI ring    | 0.232 | 0.199* | 0.309 |
+| CsI R35/50  | 0.235 | 0.266  | 0.395 |
+| CsI R35/35  | 0.241 | 0.290  | 0.405 |
+| BGO ring    | 0.133 | 0.168  | 0.232 |
+| BGO r40/50  | 0.182 | 0.217  | 0.285 |
+| BGO r40/35  | 0.218 | 0.236  | 0.278 |
+
+(*ring-CsI del180 dips ~2σ below trend — an N=100 wobble; the small bores are smooth; N=200 would
+tighten it, deferred.)
+
+- **No bias, any scanner:** ΔR₅₀^wo within **±0.08 mm** — the near-uniform g_i (0.47/0.45/0.45/0.53/
+  0.48) barely reweight the pre-depleted mix; calibrates away (far below the legacy +0.22 mm at t=0,
+  since these windows already pre-deplete ¹⁵O).
+- **Washout ~1.5×:** inflation 1.2–2.05 around the counting 1/√survival (survival ~0.39–0.46);
+  tracks the count loss, not the geometry.
+- **BGO wins on precision:** below CsI at every size-class (ring del120 washed 0.133 vs 0.232) — its
+  2.1× counts outweigh the larger scatter fraction and the cryostat radius. Nominal σ_R BGO ring
+  0.100/0.113/0.141 vs CsI 0.113/0.174/0.228.
+- **Positron-range hypothesis definitively refuted (exact test):** ¹⁵O (longest β⁺ range) is *more*
+  precise **per count** than ¹¹C on every scanner — ring ¹⁵O k = σ√N ≈ 236 vs ¹¹C ≈ 319. BGO
+  delivers the first **clean ¹¹C** per-isotope point (0.4–1.1 M events, above the ~350 k fit floor on
+  all three bores; count-starved 170–310 k on the CsI compact bores). Closes the Thread-B
+  investigation ([`md/sigma-r-investigation.md`](sigma-r-investigation.md)).
+
+In the note as **§8** (CsI + BGO v2 subsections + the BGO-vs-CsI comparison; Figs 9–13, Tables
+7–10). Outputs `out/…/<scanner>/<label>/washout_v2/{sigma_r_washout_v2,sigma_r_per_isotope_v2}.toml`;
+figures via `tools/plot_sigma_r_v2.py`, `plot_washed_v2_scanners.py`, `plot_washed_bgo_vs_csi.py`.
+The two flagship reference configs are `config/run_parameters_{csi_v2,ring_bgo_v2}.toml`.
+
 ## Data on disk
 
-Under `PtCryspProds/uniform_headep_sobp_1e8/`, all **physical-decay-only** (no isotope washout):
-
-- `crysp_ring_1m/bgo/fast_1Gy/` — the frozen reference (174.3 M LORs pooled; **do not** pool/compare
-  with the new arms), ten shards.
-- `crysp_ring_1m_bgo_2x0/bgo_195k/fast_1Gy/` — BGO 195 K, ten shards, 153 M pooled.
-- `crysp_ring_1m_csi_2x0/csi/fast_1Gy/` — CsI, ten shards, 61 M pooled.
-- `crysp_chs_bgo_2x0/bgo_195k/fast_1Gy/` — CHS BGO 195 K, **shard 000 only**, 10.1 M LORs.
-- `crysp_chs_csi_2x0/csi/fast_1Gy/` — CHS CsI, **shard 000 only**, 3.9 M LORs.
-- `crysp_r35_50cm_bgo_2x0/bgo_195k/fast_1Gy/` — R35 BGO 195 K, **shard 000 only**, 9.7 M LORs.
-- `crysp_r35_50cm_csi_2x0/csi/fast_1Gy/` — R35 CsI, **shard 000 only**, 3.8 M LORs.
-
-Plus the shared `truth/` bundle (`activity_profile_fast.csv` has per-isotope depth columns
-`O15,C11,N13,C10,O14,total`; `depth_dose.csv`). Every 2x0 and chs shard carries `t_decay_s`.
-Config `[configuration]` is parked on the ring BGO 195 K arm.
+Products at `PtCryspProds/uniform_headep_sobp_1e8/` are now **generation v2** (self-describing:
+`generation`, `t_decay_zero=irradiation_end`, `center_on=tumour`, isotope column, `washout_g`;
+schema `dev/reference/SCHEMA.md`). Per scanner+crystal, three 10-shard scenario leaves
+`del{120,180,300}s_ac300s_1Gy` — for the six arms **ring / R35-50(CsI) / R35-35(CsI) / r40-50(BGO) /
+r40-35(BGO)** in both flagship crystals (CsI ring, BGO ring) plus the four small bores. The legacy
+off-centre `fast_1Gy` masters are **superseded and removed** (recoverable only via the committed
+legacy `out/` results + git history). Shared `truth/` bundle unchanged
+(`activity_profile_fast.csv` per-isotope columns `O15,C11,N13,C10,O14,total`; `depth_dose.csv`) —
+still in the native frame, so the v2 chain shifts it by `source_z_offset_mm`. Config
+`[configuration]` is parked on the ring BGO v2 arm.

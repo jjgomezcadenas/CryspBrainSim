@@ -15,6 +15,15 @@ age, no re-simulation), with the age-resolved W(τ) variant, the label-free marg
 w(z₀,t_decay) = Σ_i P(i|z₀,t_decay) g_i we use downstream (posterior derived), the per-species
 posterior selector for σ_R^(i), and the spatial-non-uniformity route to the one genuine bias.
 
+**Realized in generation-2 (2026-07-13):** upstream now stamps the per-LOR isotope label and the
+per-window `washout_g`, so `drivers/sigma_r_v2.jl` applies the **exact** per-species Bernoulli keep
+`p_dose·g_i[isotope]` (the recommended path above) — the marginalised w is demoted to the label-free
+cross-check. The loss study was re-run this way across six v2 scanners (both crystals, three bores):
+same conclusions — **no bias** (ΔR₅₀ ±0.08 mm), **~1.5× σ_R cost** tracking counts not geometry —
+and the exact per-isotope selection **definitively refuted** the positron-range σ_R floor (¹⁵O more
+precise per count than ¹¹C; BGO gives the first clean ¹¹C point). Numbers: [`results.md`](results.md)
+"Generation-2 σ_R study"; note §8.
+
 ## The result (uniform Mizuno brain clearance)
 
 The two questions, answered:

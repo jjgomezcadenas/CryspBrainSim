@@ -15,8 +15,8 @@ one curve per scanner geometry. This is the analysis end of the chain
 - **`md/`** — the project state, kept out of this file so it stays lean:
   [`infrastructure.md`](md/infrastructure.md) (package, drivers, tools),
   [`results.md`](md/results.md) (the science done + numbers + data on disk),
-  [`sigma-r-investigation.md`](md/sigma-r-investigation.md) (the **current investigation** —
-  four-geometry σ_R + the positron-range variance test),
+  [`sigma-r-investigation.md`](md/sigma-r-investigation.md) (the four-geometry σ_R +
+  positron-range investigation, **closed** by the v2 exact per-isotope test),
   [`isotope-washout.md`](md/isotope-washout.md) (the washout loss study, done),
   [`pending.md`](md/pending.md) (smaller items). Keep these current; this file points to them.
 - **`dev/PLAN.md`** — the build plan: structure, dependencies, the consume-vs-write code inventory,
@@ -69,9 +69,9 @@ one curve per scanner geometry. This is the analysis end of the chain
 
 ## Status
 
-The build is complete; the physics studies are done through the acquisition-start axis and the
-isotope-washout loss study. Details live in `md/` (see "Read first") — this is the one-paragraph
-state.
+The build is complete; the physics studies are done through the acquisition-start axis, the
+isotope-washout loss study, and the generation-2 exact-washout + per-isotope study across six
+scanners. Details live in `md/` (see "Read first") — this is the one-paragraph state.
 
 **Where we are:** both representative scanners (BGO 195 K, cryogenic CsI, same 2X0 ring) measure
 the distal edge with **σ_R ≈ 0.11 mm per 1 Gy run** at the working protocol; precision scales as
@@ -98,4 +98,17 @@ bias route, needing a downstream perfusion-transport model (not pursued). Detail
 [`md/isotope-washout.md`](md/isotope-washout.md),
 [`md/washout-g4-formulation.md`](md/washout-g4-formulation.md), `latex/washout_brain.tex`.
 
-**Smaller pending:** cbs.tex fold-in, composite-erfc model — [`md/pending.md`](md/pending.md).
+**Generation-2 (v2) σ_R study — DONE (six scanners):** upstream regenerated the products as v2
+(tumour-centred, irradiation-end clock, per-LOR isotope column, stamped Mizuno `washout_g`, fixed
+`del{120,180,300}` scenario leaves). Consumed downstream by `drivers/sigma_r_v2.jl` (N=100, 1 Gy):
+washout as the **exact per-species g_i keep** (isotope label present) and per-isotope σ_R from
+**pure** selection. Across CsI (ring/R35-50/R35-35) and BGO (ring/r40-50/r40-35, +cryostat): **no
+bias** (ΔR₅₀ ±0.08 mm), washout **~1.5×** cost (tracks counts, not bore), **BGO more precise** at
+every size-class (2.1× counts), and the **positron-range hypothesis definitively refuted** — ¹⁵O is
+more precise per count than ¹¹C, with BGO giving the first clean ¹¹C point. In the note as §8. Prep:
+`generation` guard + `shard_isotope` (products.jl), tumour-centring `z_offset` into `characterize`,
+recentred grid + sensitivities, flagship configs `run_parameters_{csi_v2,ring_bgo_v2}.toml`. Full
+numbers: [`md/results.md`](md/results.md); toolchain: [`md/infrastructure.md`](md/infrastructure.md).
+
+**Smaller pending:** cbs.tex fold-in, composite-erfc model, ring-CsI del180 N=200 firm-up —
+[`md/pending.md`](md/pending.md).

@@ -1,8 +1,16 @@
-# σ_R across geometries + the positron-range variance question (IN PROGRESS, 2026-07-12)
+# σ_R across geometries + the positron-range variance question (CLOSED, 2026-07-13)
 
-Live investigation, opened after the washout loss study. Two linked threads: (a) a
-four-configuration σ_R comparison, and (b) whether **positron range** sets a per-isotope
-σ_R floor. This file is the compaction anchor; numbers + tools below.
+Investigation opened after the washout loss study. Two linked threads: (a) a four-configuration
+σ_R comparison, and (b) whether **positron range** sets a per-isotope σ_R floor. This file is the
+compaction anchor; numbers + tools below.
+
+**RESOLVED by the generation-2 exact test (see [`md/results.md`](results.md) "Generation-2 σ_R
+study").** The soft-posterior per-isotope selector here gave only a lower bound (isotope leakage);
+v2 carries the isotope label, so `drivers/sigma_r_v2.jl` does a **pure** single-species selection.
+Across all six v2 scanners ¹⁵O (longest β⁺ range) is **more precise per count** than ¹¹C
+(ring ¹⁵O k = σ√N ≈ 236 vs ¹¹C ≈ 319) — the opposite of a range penalty — with BGO giving the first
+clean ¹¹C point (above the fit floor). The positron-range σ_R floor is **definitively refuted**; the
+Thread-A "protection"/inversion wobbles are N-limited counting scatter, not an isotope effect.
 
 ## Thread A — four-geometry washout σ_R comparison
 
