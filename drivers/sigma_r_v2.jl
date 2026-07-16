@@ -19,8 +19,12 @@
 #
 # Run (active arm = ring 1 m CsI v2, config/run_parameters_csi_v2.toml):
 #   julia -t auto --project=. drivers/sigma_r_v2.jl [--realizations 100]
-#        [--dose 1.0] [--isotopes O15,C11] [--leaves del120s_ac300s_1Gy,...]
-# Writes <config>/washout_v2/{sigma_r_washout_v2.toml, sigma_r_per_isotope_v2.toml}
+#        [--dose 1.0] [--isotopes O15,C11] [--leaves del120s_ac300s_1Gy,...] [--tend 300]
+# `--tend T` models a SHORTER scan by sub-cutting a leaf window [t1,t2] to [t1,T]
+# (T ≤ t2): keep only t_decay ≤ T and recompute g_i for [t1,T] — reuses the shards,
+# no new products. Output filenames gain a `_t<t1>_<T>` tag so they don't clobber
+# the full-window results.
+# Writes <config>/washout_v2/{sigma_r_washout_v2, sigma_r_per_isotope_v2}[_t<t1>_<T>].toml
 
 using CryspBrainSim
 using RecoCryspTools
@@ -43,6 +47,10 @@ const REALIZATIONS = let i = findfirst(==("--realizations"), ARGS)
 end
 const THIN_DOSE = let i = findfirst(==("--dose"), ARGS)
     i === nothing ? 1.0 : parse(Float64, ARGS[i+1])
+end
+# --tend T: sub-cut each leaf's window to a shorter scan ending at T seconds.
+const TEND = let i = findfirst(==("--tend"), ARGS)
+    i === nothing ? nothing : parse(Float64, ARGS[i+1])
 end
 # Isotope ids follow the shard's `isotope_names` order (0=O15,1=C11,2=N13,3=C10,4=O14).
 const ISO_ID = Dict("O15" => 0, "C11" => 1, "N13" => 2, "C10" => 3, "O14" => 4)
@@ -69,30 +77,39 @@ function run_leaf(leaf)
                            scanner=RING, crystal=CFG.crystal, leaf=leaf,
                            sens_cache=cache, params=PARAMS)
     a = shard_attrs(ctx.files[1])
-    t_del, t_ac = Float64(a["t_del_s"]), Float64(a["t_ac_s"])
+    t_del = Float64(a["t_del_s"])
     t1, t2, tirr = Float64(a["t1_s"]), Float64(a["t2_s"]), Float64(a["t_irr_s"])
-    g = Float64.(a["washout_g"])                 # per-isotope, id order, for THIS window
+    g_stamped = Float64.(a["washout_g"])         # per-isotope, id order, for the stamped [t1,t2]
     Thalf = Float64.(a["isotope_half_lives"])
     M_k = Float64.(a["washout_fractions"]); T_k = Float64.(a["washout_Thalf_s"])
     μ = LN2 ./ T_k
-    # integrity: stamped washout_g == recompute from stamped Mizuno + window
-    for i in eachindex(g)
+    # integrity: stamped washout_g == recompute from stamped Mizuno + stamped window
+    for i in eachindex(g_stamped)
         gj = gfac(LN2 / Thalf[i], M_k, μ, tirr, t1, t2)
-        abs(gj - g[i]) < 1e-6 ||
-            error("$leaf: washout_g[$i] $(g[i]) ≠ recomputed $gj")
+        abs(gj - g_stamped[i]) < 1e-6 ||
+            error("$leaf: washout_g[$i] $(g_stamped[i]) ≠ recomputed $gj")
     end
+    # a shorter scan (--tend) sub-cuts the window to [t1, t2_eff]; recompute g_i there.
+    t2_eff = TEND === nothing ? t2 : TEND
+    t2_eff <= t2 || error("$leaf: --tend $t2_eff exceeds the leaf window end $t2")
+    g = TEND === nothing ? g_stamped :
+        [gfac(LN2 / Thalf[i], M_k, μ, tirr, t1, t2_eff) for i in eachindex(Thalf)]
+    t_ac = t2_eff - t1
 
-    println("── $leaf  window [$t1,$t2]s  g(O15,C11)=($(round(g[1],digits=3)),$(round(g[2],digits=3)))")
+    println("── $leaf  window [$t1,$t2_eff]s  g(O15,C11)=($(round(g[1],digits=3)),$(round(g[2],digits=3)))")
     pool = pool_shards(ctx.files)
     pool.n_dropped == 0 || error("$leaf: pool dropped $(pool.n_dropped) LORs")
     iso = vcat([shard_isotope(f) for f in ctx.files]...)
     length(iso) == length(pool.coinc) || error("$leaf: isotope/pool length mismatch")
+    td = Float64.(vcat([shard_t_decay(f) for f in ctx.files]...))
+    length(td) == length(pool.coinc) || error("$leaf: t_decay/pool length mismatch")
+    inwin = TEND === nothing ? trues(length(iso)) : (td .<= t2_eff)
     a_all = lor_attenuation(ctx, pool.coinc.xstart, pool.coinc.xend)
     n_shards = length(ctx.files); Mtot = length(pool.coinc)
     p_dose = THIN_DOSE / n_shards
     gvec = [g[Int(i) + 1] for i in iso]          # per-event survival = its isotope's g_i
-    @printf("   pooled %d coincs; %d shards; p_dose %.3f; N=%d\n",
-            Mtot, n_shards, p_dose, REALIZATIONS)
+    @printf("   pooled %d coincs (%d in [%.0f,%.0f]s); %d shards; p_dose %.3f; N=%d\n",
+            Mtot, count(inwin), t1, t2_eff, n_shards, p_dose, REALIZATIONS)
 
     recon(keep) = reconstruct_endpoint(ctx, endpoints(pool.coinc, keep)...,
                                        a_all[keep]; device=DEV).r50_fit
@@ -103,12 +120,12 @@ function run_leaf(leaf)
     nom, wsh = Float64[], Float64[]
     t = @elapsed for z in 1:REALIZATIONS
         rn = MersenneTwister(SEED_BASE + Int(t_del) * 1000 + z)
-        push!(nom, recon(rand(rn, Mtot) .< p_dose))
+        push!(nom, recon(inwin .& (rand(rn, Mtot) .< p_dose)))
         rw = MersenneTwister(SEED_BASE + 500_000 + Int(t_del) * 1000 + z)
-        push!(wsh, recon(rand(rw, Mtot) .< p_dose .* gvec))
+        push!(wsh, recon(inwin .& (rand(rw, Mtot) .< p_dose .* gvec)))
     end
     σn, σw = σ_of(nom), σ_of(wsh)
-    survival = sum(gvec) / Mtot
+    survival = sum(gvec[inwin]) / count(inwin)
     shift = mean(filter(isfinite, wsh)) - mean(filter(isfinite, nom))
     @printf("   washout: nom σ_R %.3f | washed σ_R %.3f | infl %.2f | ΔR50 %+.3f | surv %.3f | fails n/w %d/%d | %.0fs\n",
             σn, σw, σw / σn, shift, survival, nfail(nom), nfail(wsh), t)
@@ -116,7 +133,7 @@ function run_leaf(leaf)
     # (2) per-isotope: pure single-species sub-sample at natural abundance
     iso_pts = []
     for name in ISOTOPES
-        id = ISO_ID[name]; sel = iso .== id
+        id = ISO_ID[name]; sel = (iso .== id) .& inwin
         r50 = Float64[]; nevs = Int[]
         ti = @elapsed for z in 1:REALIZATIONS
             ri = MersenneTwister(SEED_BASE + 900_000 + id * 100_000 + Int(t_del) * 1000 + z)
@@ -129,7 +146,7 @@ function run_leaf(leaf)
                 name, mean(nevs), σ_of(r50), mean(filter(isfinite, r50)), nfail(r50), ti)
     end
 
-    return (leaf=leaf, t_del=t_del, t_ac=t_ac, g=g, survival=survival,
+    return (leaf=leaf, t_del=t_del, t_ac=t_ac, t2=t2_eff, g=g, survival=survival,
             crystal_label=ctx.crystal, σ_nom=σn, σ_wsh=σw, shift=shift,
             R_nom=mean(filter(isfinite, nom)), R_wsh=mean(filter(isfinite, wsh)),
             nfail_n=nfail(nom), nfail_w=nfail(wsh), iso=iso_pts)
@@ -141,8 +158,11 @@ function main()
     # the crystal LABEL dir (e.g. csi_2X0) — the tree convention shared with the tools
     cfgdir = config_out(SCENARIO, TOPOLOGY, RING, results[1].crystal_label)
     out = joinpath(cfgdir, "washout_v2"); mkpath(out)
+    # tag a shorter-scan run so it doesn't clobber the full-window results
+    tag = TEND === nothing ? "" :
+        "_t$(Int(round(results[1].t_del)))_$(Int(round(TEND)))"
 
-    open(joinpath(out, "sigma_r_washout_v2.toml"), "w") do io
+    open(joinpath(out, "sigma_r_washout_v2$(tag).toml"), "w") do io
         TOML.print(io, Dict(
             "generation" => "v2", "scanner" => RING, "crystal" => CFG.crystal,
             "dose_Gy" => THIN_DOSE, "realizations" => REALIZATIONS,
@@ -150,7 +170,7 @@ function main()
             "method" => "exact per-species g_i keep on the pooled leaf",
             "point" => [Dict(
                 "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
-                "washout_survival" => r.survival,
+                "t2_s" => r.t2, "washout_survival" => r.survival,
                 "nominal_sigma_R_mm" => r.σ_nom, "washed_sigma_R_mm" => r.σ_wsh,
                 "inflation" => r.σ_wsh / r.σ_nom,
                 "delta_R50_washout_mm" => r.shift,
@@ -158,19 +178,19 @@ function main()
                 "n_fail_nominal" => r.nfail_n, "n_fail_washed" => r.nfail_w)
                 for r in results]))
     end
-    open(joinpath(out, "sigma_r_per_isotope_v2.toml"), "w") do io
+    open(joinpath(out, "sigma_r_per_isotope_v2$(tag).toml"), "w") do io
         TOML.print(io, Dict(
             "generation" => "v2", "scanner" => RING, "crystal" => CFG.crystal,
             "dose_Gy" => THIN_DOSE, "realizations" => REALIZATIONS,
             "method" => "pure per-species selection by the isotope column",
             "point" => [Dict(
-                "leaf" => r.leaf, "t_del_s" => r.t_del, "isotope" => p.iso,
-                "sigma_R_mm" => p.σ, "mean_R50_mm" => p.meanR,
+                "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
+                "isotope" => p.iso, "sigma_R_mm" => p.σ, "mean_R50_mm" => p.meanR,
                 "mean_events" => p.nev, "n_fail" => p.nfail)
                 for r in results for p in r.iso]))
     end
-    println("wrote $(joinpath(out, "sigma_r_washout_v2.toml"))")
-    println("wrote $(joinpath(out, "sigma_r_per_isotope_v2.toml"))")
+    println("wrote $(joinpath(out, "sigma_r_washout_v2$(tag).toml"))")
+    println("wrote $(joinpath(out, "sigma_r_per_isotope_v2$(tag).toml"))")
 end
 
 main()
