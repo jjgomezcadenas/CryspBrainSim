@@ -1,0 +1,243 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+
+% simple isotope helper (avoids the isotope package dependency)
+\newcommand{\iso}[2]{\textsuperscript{#1}#2}
+
+\begin{document}
+
+\begin{center}
+  {\large\textbf{Offline PET/CT for proton range verification}}\\[2pt]
+  {\large\textbf{summary of Parodi et al.\ (2007) and Knopf et al.\ (2009)}}
+\end{center}
+\medskip
+
+\noindent
+This note summarises the two foundational Massachusetts General Hospital (MGH)
+studies of \emph{offline} PET/CT range verification of proton therapy: the
+controlled phantom feasibility study of Parodi et al.~\cite{parodi2007a}
+(Sec.~1), and the systematic patient-population study of the method's biological
+and physical limitations by Knopf et al.~\cite{knopf2009} (Secs.~2--7). In both,
+the measured $\beta^+$-activity distribution --- acquired on a commercial Biograph
+PET/CT tens of minutes after irradiation --- is compared with a Monte Carlo
+(FLUKA/Geant4) prediction built from the treatment plan, the CT and the
+irradiation/imaging time course, and the proton range is read from the distal
+fall-off of that activity. The phantom study establishes, under known geometry
+and composition, that the method reaches millimetre range accuracy; the patient
+study then shows that in vivo this accuracy is realised only in
+well-co-registered bony structures of head-and-neck patients and fails at the
+majority of positions and sites.
+
+\subsection*{1. Phantom feasibility (Parodi et al.\ 2007)}
+
+Parodi et al.~\cite{parodi2007a} irradiated plastic phantoms with SOBP proton
+fields (15--16~cm water-equivalent range, 10~cm modulation, $8\times8$~cm$^2$
+aperture) from the MGH 230~MeV cyclotron and imaged them 14--20~min later on an
+LSO-based Biograph Sensation~16 in list mode, comparing with FLUKA/Geant4
+predictions convolved with a 7~mm (transaxial) / 7.5~mm (axial) Gaussian. Four
+configurations were used: a homogeneous PMMA cylinder (8~Gy single field, and
+8~Gy two orthogonal fields), an inhomogeneous PMMA/bone/lung stack (2~Gy), and
+PMMA with two titanium rods mimicking spinal implants (8~Gy). Three results
+carry over to the present work.
+
+\emph{Range accuracy.} The 50\% distal fall-off of the measured activity agreed
+with the simulation \textbf{within 1~mm in every configuration} --- homogeneous
+PMMA, the inhomogeneous stack, and even through the titanium implants --- and
+held to within 1~mm when only the last 20~min was reconstructed (the
+$\sim$2~Gy-equivalent low-statistics case, activity reduced by $2.29\times$).
+Lateral field position was likewise verified to $<1$~mm. For the overlapping
+two-field case the analysis had to be restricted to the 30--10\% fall-off to
+exclude the second beam, and even there stayed within 1~mm.
+
+\emph{Isotope content and yield.} A maximum \iso{11}{C} production of
+$\sim$870~Bq\,ml$^{-1}$\,Gy$^{-1}$ was measured in PMMA after $\sim$6~min
+irradiation. At the start of imaging the offline signal is $94$--$97\%$
+\iso{11}{C}, $3$--$5\%$ \iso{13}{N}, with only trace \iso{15}{O} in the first
+minutes --- the long-lived-isotope regime that offline acquisition selects.
+Rescaled to tissue by carbon content, this corresponds to $\sim$0.3
+(muscle)--1.4 (bone/adipose)~kBq\,ml$^{-1}$ after a 2~Gy patient treatment.
+
+\emph{LSO intrinsic background.} The \iso{176}{Lu} content of LSO (2.6\% of
+natural Lu) produces a \textbf{stationary $\sim$930--1000~cps random background}
+independent of the signal. Because random coincidences scale as the square of the
+singles rate, this intrinsic noise dominates at the low count rates of therapy
+monitoring: the noise-to-signal ratio exceeded $0.2$ for true rates below
+$\sim$4.8--5.7~kcps (about 1~kBq\,ml$^{-1}$, $\sim$1~MBq total). This is a
+concrete penalty of an intrinsically radioactive scintillator in this
+low-signal application --- the axis on which BGO and CsI, which carry no such
+intrinsic activity, differ from LSO/LYSO. A separate finding, that PET range
+verification is insensitive to CT artifacts from the titanium rods yet more
+sensitive to the fluence ``shadowing'' behind them than a commercial pencil-beam
+plan, is not pursued here.
+
+\subsection*{2. Method and range metrics}
+
+Range verification compares depth profiles of the measured and simulated
+activity in the distal fall-off, at three definitions the authors label A, B, C:
+\emph{method A} at the 20\% level of the last local maximum, \emph{method B} at
+the 50\% level, and \emph{method C} (``shift method'') using the whole fall-off
+region rather than a single point. The shift method is the more robust of the
+three because it relies on the overall shape agreement rather than on a single
+landmark, and it dominates the soft-tissue conclusions below.
+
+\subsection*{3. Reproducibility (the enabling result)}
+
+Two patients were imaged twice, one week apart, for the same treatment fraction.
+The measured activity \emph{range} reproduced to $\sim$1~mm standard deviation
+(mean absolute range deviation 1.14~mm and 0.125~mm for the two patients, shift
+method), consistent with the 1~mm reproducibility seen earlier in phantoms.
+Absolute activity values differed by up to $\pm30\%$ between the two scans, but
+this is \emph{not} a timing effect: the MC, propagating the two different
+irradiation durations and delays, predicts at most 3\% difference. The $\pm30\%$
+therefore reflects statistical noise plus genuine day-to-day changes in tissue
+composition and perfusion. \textbf{The 1~mm range reproducibility is what makes
+the whole approach viable}; everything below is about the systematic offsets that
+sit on top of it.
+
+\subsection*{4. Biological washout}
+
+Six head-and-neck patients (chosen for good immobilisation and rigid geometry, so
+motion and co-registration are minimised) were analysed at positions sorted by
+where the beam stops. The mean measured-vs-simulated range agreement is given in
+Table~\ref{tab:washout}.
+
+\begin{table}[h]
+  \centering
+  \caption{Mean agreement between measured and MC-simulated activity range,
+    for the three stopping cases and the three range metrics
+    (Knopf et al.~\cite{knopf2009}, Table~1). Case (i): beam stops in bone;
+    case (ii): stops in soft tissue with the last activity maximum in bone;
+    case (iii): stops in soft tissue with the last maximum also in soft tissue.}
+  \label{tab:washout}
+  \begin{tabular}{lccc}
+    \toprule
+    & \multicolumn{2}{c}{Pointwise (mm)} & Shift (mm) \\
+    \cmidrule(lr){2-3}
+    Case & 50\% (B) & 20\% (A) & (C) \\
+    \midrule
+    (i)   Bone                 & 2.5 & 1.2 & 2.4 \\
+    (ii)  Bone / soft tissue   & 3.2 & 8.1 & 2.2 \\
+    (iii) Soft tissue          & 6.8 & 3.9 & 4.3 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent
+In bone (case i) all three metrics agree within $\sim$2.5~mm and verification
+works, though individual positions can still deviate by up to 6.6~mm (50\%) /
+3.6~mm (20\%). In soft tissue, pointwise verification breaks down because blood
+perfusion degrades the measured distribution: the robust shift method reaches
+4.3~mm in the worst case (iii) and 2.2~mm when the last maximum is anchored in
+bone (case ii), but $27\%$ (case ii) / $33\%$ (case iii) of soft-tissue positions
+are off by more than $\pm5$~mm. \textbf{Reliable mm-accurate verification in soft
+tissue is therefore not feasible with the offline method.} The paper's often-quoted
+``$\sim$4~mm washout discrepancy'' is precisely this case-(iii) soft-tissue number.
+Two points matter for our reading: (a) this is a \emph{measured-vs-model bias}
+driven by an imperfect washout model, not the intrinsic statistical $\sigma_R$;
+and (b) the authors' proposed cure --- shorter delay via in-room PET to minimise
+perfusion washout --- is the premise of the present scanner study.
+
+\subsection*{5. Patient motion}
+
+During the 30~min acquisition, breathing blurs the activity distribution. Lateral
+conformity between measured and simulated distributions was up to 5~mm in
+head-and-neck sites but degraded to as much as 30~mm in abdominopelvic sites,
+dominant in the anterior--posterior direction. This excludes most thoracic and
+abdominal tumours from mm-accurate verification with the 3D offline strategy,
+independent of washout.
+
+\subsection*{6. Uncertainty in the simulated activity (HU mapping)}
+
+The MC activity depends on assigning elemental composition and washout parameters
+to each voxel from its Hounsfield unit. Where tissues share an HU domain the
+mapping is not correlative: bone marrow and soft tissue both fall in
+$-20$ to $110$~HU, yet the Schneider conversion underestimates the marrow carbon
+fraction by nearly 50\%, and since activation is dominated by the $(p,pn)$ channel
+on \iso{12}{C} this underestimates marrow activity. Varying the HU conversion and
+the washout parameters within plausible ranges moves the \emph{absolute} activity
+by up to $\sim$35\% and the \emph{range} by $\sim$1.8--2.4~mm
+(Table~\ref{tab:hu}), while the simulated \emph{dose} profiles are essentially
+unaffected --- activity is far more sensitive to tissue parameters than dose is.
+
+\begin{table}[h]
+  \centering
+  \caption{Activity-range differences induced by parameter changes in the MC
+    (Knopf et al.~\cite{knopf2009}, Table~4): original vs adjusted HU conversion,
+    and original vs adjusted washout parameters.}
+  \label{tab:hu}
+  \begin{tabular}{lccc}
+    \toprule
+    & 20\% (A) & 50\% (B) & Shift (C) \\
+    \midrule
+    $R_{\text{orig}}-R_{\text{adj.\ HU}}$ (mm)      & 1.80 & 2.41 & 1.81 \\
+    $R_{\text{orig}}-R_{\text{adj.\ washout}}$ (mm) & 1.70 & 2.28 & 1.81 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent
+The washout model itself is the space- and time-dependent weighting
+$C_{\mathrm{bio}}(\mathbf{r},t) = M_s(\mathbf{r})\,
+\exp[-\lambda_{\mathrm{bio}}(\mathbf{r})\,t]$ of the physical activity, with an
+HU-based classification into low-, intermediate- and normally perfused tissue
+(muscle: $M_s=0.55$, $T_{1/2,\mathrm{bio}}=3500$~s; brain: $M_s=0.35$,
+$T_{1/2,\mathrm{bio}}=10\,000$~s), following Mizuno et al.~\cite{mizuno2003} and
+neglecting any distinction between isotopes. These are the source constants used
+in our own washout note.
+
+\subsection*{7. Site-specific limitations}
+
+Beyond the three general factors, offline verification is compromised for
+particular sites by: \emph{beam arrangement} (opposed or small-angle fields blur
+the distal edge of each field together --- feasible only for single or nearly
+orthogonal beams); \emph{co-registration} (rigid CT fusion needs a rigid,
+fully-imaged anatomy, which head/neck provides and eye/abdominopelvic do not);
+and \emph{organ motion} (e.g.\ prostate patients voiding the bladder between
+treatment and imaging changes the geometry irrecoverably).
+
+\subsection*{8. Conclusion and relevance here}
+
+In phantoms, where geometry and composition are known and motion and
+co-registration are absent, the offline method reaches 1~mm range accuracy even
+at 2~Gy-equivalent statistics (Sec.~1). In vivo, despite the same 1~mm range
+reproducibility, offline PET/CT verifies the proton range to 1--2~mm only in
+low-perfused, well-co-registered bony structures of head-and-neck patients.
+Washout limits \emph{where} within a field verification is possible ($\sim$4~mm
+in soft tissue); motion limits \emph{which whole sites} qualify (up to 3~cm in
+the abdomen); and the MC activity is itself limited to $\sim$35\% in absolute
+value and $\sim$2~mm in range by HU-to-tissue mapping. The authors argue all of
+these are ``conquerable'', principally by \textbf{in-room PET} --- reducing the
+treatment-to-scan gap to $\sim$1~min (their movable NeuroPET) suppresses washout
+and motion, and removes the repositioning that drives co-registration error.
+That prescription --- short delay, in-room acquisition --- is exactly the regime
+the present $\sigma_R$-vs-dose study operates in; the LSO intrinsic-background
+result (Sec.~1) is a quoted argument on the scintillator-choice axis that
+separates BGO and CsI from LSO/LYSO; and the washout parameterisation summarised
+in Sec.~6 is the one our downstream washout model adopts.
+
+\begin{thebibliography}{9}
+
+\bibitem{parodi2007a}
+K.~Parodi, H.~Paganetti, E.~Cascio, J.~B.~Flanz, A.~A.~Bonab, N.~M.~Alpert,
+K.~Lohmann and T.~Bortfeld,
+``PET/CT imaging for treatment verification after proton therapy: a study with
+plastic phantoms and metallic implants,''
+\textit{Med.\ Phys.} \textbf{34} (2007) 419--435.
+
+\bibitem{knopf2009}
+A.~Knopf, K.~Parodi, T.~Bortfeld, H.~A.~Shih and H.~Paganetti,
+``Systematic analysis of biological and physical limitations of proton beam
+range verification with offline PET/CT scans,''
+\textit{Phys.\ Med.\ Biol.} \textbf{54} (2009) 4477--4495.
+
+\bibitem{mizuno2003}
+H.~Mizuno, T.~Tomitani, M.~Kanazawa et al.,
+``Washout measurements of radioisotope implanted by radioactive beams in the
+rabbit,''
+\textit{Phys.\ Med.\ Biol.} \textbf{48} (2003) 2269--2281.
+
+\end{thebibliography}
+
+\end{document}
