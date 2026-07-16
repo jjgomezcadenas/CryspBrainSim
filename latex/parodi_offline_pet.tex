@@ -9,26 +9,42 @@
 \begin{document}
 
 \begin{center}
-  {\large\textbf{Offline PET/CT for proton range verification}}\\[2pt]
-  {\large\textbf{summary of Parodi et al.\ (2007) and Knopf et al.\ (2009)}}
+  {\large\textbf{PET-based proton range verification:}}\\[2pt]
+  {\large\textbf{method, limitations, and the case for an early, short window}}\\[4pt]
+  {\normalsize a reading of Parodi et al.\ (2007), Knopf et al.\ (2009),}\\[1pt]
+  {\normalsize Espa\~na et al.\ (2011) and Grogg et al.\ (2013)}
 \end{center}
 \medskip
 
 \noindent
-This note summarises the two foundational Massachusetts General Hospital (MGH)
-studies of \emph{offline} PET/CT range verification of proton therapy: the
-controlled phantom feasibility study of Parodi et al.~\cite{parodi2007a}
-(Sec.~1), and the systematic patient-population study of the method's biological
-and physical limitations by Knopf et al.~\cite{knopf2009} (Secs.~2--7). In both,
-the measured $\beta^+$-activity distribution --- acquired on a commercial Biograph
-PET/CT tens of minutes after irradiation --- is compared with a Monte Carlo
-(FLUKA/Geant4) prediction built from the treatment plan, the CT and the
-irradiation/imaging time course, and the proton range is read from the distal
-fall-off of that activity. The phantom study establishes, under known geometry
-and composition, that the method reaches millimetre range accuracy; the patient
-study then shows that in vivo this accuracy is realised only in
-well-co-registered bony structures of head-and-neck patients and fails at the
-majority of positions and sites.
+This note summarises four Massachusetts General Hospital (MGH) studies of
+PET-based range verification of proton therapy and draws out their common
+prescription. The method compares the $\beta^+$-activity distribution produced
+by the beam against a prediction, and reads the proton range from the distal
+fall-off of that activity. The four studies span its development and its two
+acquisition regimes --- \emph{offline} (a commercial PET/CT tens of minutes
+away, tens of minutes after treatment) and \emph{in-room} (a mobile scanner at
+the couch, acquiring within minutes):
+\begin{itemize}
+\item Parodi et al.~\cite{parodi2007a} (Sec.~1) --- the controlled offline
+  phantom feasibility study: millimetre range accuracy under known geometry and
+  composition.
+\item Knopf et al.~\cite{knopf2009} (Secs.~2--7) --- the systematic offline
+  patient-population study: in vivo, that accuracy is realised only in
+  well-co-registered bony structures of head-and-neck patients and fails at the
+  majority of positions and sites (washout, motion, HU mapping, geometry).
+\item Espa\~na et al.~\cite{espana2011} (Sec.~8) --- the cross-section
+  reliability study on an in-room CsI scanner: the achievable \emph{model}
+  accuracy depends strongly on which isotope carries the signal, and hence on
+  \emph{when} it is acquired.
+\item Grogg et al.~\cite{grogg2013} (Sec.~9) --- a fast, MC-free in-room method
+  comparing the distal \emph{endpoints} of dose and PET directly, which requires
+  \iso{15}{O} dominance for a clean, single-threshold endpoint.
+\end{itemize}
+Taken together (Sec.~10) they argue for an \textbf{early-start, short-window}
+acquisition on the \iso{15}{O} channel, for three independent reasons ---
+statistical, cross-section-systematic, and endpoint-definition --- which is the
+regime the present $\sigma_R$-vs-dose study operates in.
 
 \subsection*{1. Phantom feasibility (Parodi et al.\ 2007)}
 
@@ -197,7 +213,132 @@ fully-imaged anatomy, which head/neck provides and eye/abdominopelvic do not);
 and \emph{organ motion} (e.g.\ prostate patients voiding the bladder between
 treatment and imaging changes the geometry irrecoverably).
 
-\subsection*{8. Conclusion and relevance here}
+\subsection*{8. Cross-section reliability: the case for acquiring early and
+briefly (Espa\~na et al.\ 2011)}
+
+The Knopf limitations above are dominated by patient physiology. Espa\~na et
+al.~\cite{espana2011} isolate a different, purely nuclear source of
+model error and, in doing so, give the strongest argument in this set for a
+short, early acquisition window. They separate the cross-section input from the
+transport engine: proton transport uses a Geant4-based code, but the
+$\beta^+$-production \emph{cross sections} are supplied as external tabulated
+data --- experimental values from EXFOR and theoretical values from ICRU
+Report~63 --- convolved with the voxel proton fluence, so the cross-section
+choice becomes the controlled variable rather than a fixed physics-list output.
+Measurements used the CsI-based NeuroPET scanner (31~cm bore, 24~cm axial FOV)
+and a three-material phantom (HDPE, gel-water, tissue-equivalent gel) that
+isolates the three channels producing $\sim$95\% of the activity:
+\iso{16}{O}$(p,pn)$\iso{15}{O}, \iso{12}{C}$(p,pn)$\iso{11}{C}, and
+\iso{16}{O}$(p,3p3n)$\iso{11}{C}.
+
+The decisive result is that the achievable measured-vs-model range agreement
+depends strongly on the acquisition protocol, because the protocol selects which
+isotope --- and hence which cross section --- carries the signal. In the
+tissue-equivalent gel, with the best available cross sections combined, the
+50\% distal-fall-off agreement was:
+
+\begin{table}[h]
+  \centering
+  \caption{Measured-vs-Monte-Carlo range difference at the 50\% distal
+    fall-off in tissue-equivalent gel, for the two acquisition protocols and
+    both field types (Espa\~na et al.~\cite{espana2011}). The 5~min protocol
+    reconstructs the first 5~min; the 30~min protocol skips 15~min and
+    reconstructs the next 30~min.}
+  \label{tab:espana}
+  \begin{tabular}{lcc}
+    \toprule
+    Protocol & Monoenergetic (mm) & SOBP (mm) \\
+    \midrule
+    5~min (early)   & $0.2 \pm 0.5$ & $0.8 \pm 0.5$ \\
+    30~min (delayed) & $2.1 \pm 0.5$ & $4.4 \pm 0.5$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent
+The mechanism is isotope weighting in time. Early, the signal is dominated by
+\iso{15}{O} (half-life 122~s) from \iso{16}{O}$(p,pn)$\iso{15}{O}, whose cross
+sections are comparatively well measured --- so the model bias is sub-millimetre.
+By the delayed window \iso{15}{O} has decayed and the signal is carried by
+\iso{11}{C}, for which the \iso{16}{O}$(p,3p3n)$\iso{11}{C} channel is poorly
+known (experimental and ICRU values disagree by up to 50\% and produce a
+spurious double fall-off), leaving a residual $\sim$4~mm even with the best data.
+Secondary-neutron production channels contribute only 0.6\%. This is a
+\emph{systematic} model bias, distinct from the statistical $\sigma_R$ our study
+reports and from the physiological washout bias of Sec.~4: it argues for
+acquiring \textbf{early} (while \iso{15}{O} is present) and \textbf{stopping
+early} (before the \iso{11}{C}-dominated, cross-section-limited tail
+accumulates). It also complements our own generation-2 finding by an independent
+route: where our per-isotope study showed \iso{15}{O} is more \emph{statistically}
+precise per count than \iso{11}{C}, Espa\~na et al.\ show it is also more
+\emph{systematically} reliable --- both axes favour the short, early window.
+
+\subsection*{9. A fast, MC-free endpoint method (Grogg et al.\ 2013)}
+
+Grogg et al.~\cite{grogg2013} target the cost of the method rather than its
+accuracy: a full Geant4 MC-PET takes $\sim$12~h on 10 dual-core CPUs per patient,
+so they propose a fast screen ($<$30~min on one CPU) that compares the distal
+\emph{endpoints} of the planned dose and the PET activity directly, with no
+MC-PET and no filter functions. The rationale is the one our reconstruction
+relies on: cross sections, elemental composition and washout all affect the
+\emph{shape} of the activity profile, but its distal \emph{endpoint} is fixed by
+the nuclear-reaction energy thresholds alone, so it maps to the end of range
+independently of those uncertainties. The PET endpoint is defined as the
+\textbf{x-intercept of the best linear fit to the distal fall-off} (fit window
+from the last distal maximum extending 2.5~cm, sub-range chosen by best
+residual-sum-of-squares over $\ge 8$ voxels); the dose endpoint is the midpoint
+of its 20--50\%-of-maximum fall-off. They deliberately reject the single-point
+``$X\%$ of the distal maximum'' definition as unreliable and ambiguous when the
+profile carries a small spurious distal peak. A fixed intrinsic offset of
+$1.4 \pm 0.1$~mm (PET endpoint shallower than dose, modulation-independent to
+$<0.08$~mm) is measured in a gel phantom and subtracted.
+
+Method and data are in-room: proton transport is the Geant4-based MGH system
+with EXFOR/ICRU cross sections optimised as in Espa\~na et al.; the scanner is
+the CsI-based mobile NeuroPET (patient results use simulated PET at 7~mm FWHM;
+only a rabbit-thigh irradiation is real NeuroPET data), with an integrated
+NeuroPET/CT (2.5~mm resolution) named as the platform for patient measurement.
+Across six head-and-neck patients the mean dose$-$simPET endpoint difference was
+$-1.6$ to $+0.5$~mm between patients, with a per-patient spread of $1.1$--$4.0$~mm
+(Table~\ref{tab:grogg}); the rabbit gave $0.2 \pm 2.5$~mm. Realistic accuracy is
+$\sim$3~mm with simPET-quality data and $\sim$4--5~mm with current real PET ---
+short of millimetre, but enough to flag beams outside the MGH safety margin
+($3.5\% + 1$~mm), with heterogeneous nasal-cavity paths driving the large-spread
+cases.
+
+\begin{table}[h]
+  \centering
+  \caption{Mean and standard deviation of the dose$-$simPET distal-endpoint
+    difference for the six head-and-neck patients (Grogg et
+    al.~\cite{grogg2013}, Table~II).}
+  \label{tab:grogg}
+  \begin{tabular}{lcccccc}
+    \toprule
+    Patient & A & B & C & D & E & F \\
+    \midrule
+    Mean (mm)    & $-1.6$ & $0.5$ & $-0.4$ & $0.4$ & $-0.9$ & $-1.7$ \\
+    Std.\ dev.\ (mm) & $1.9$ & $1.6$ & $1.1$ & $2.7$ & $4.0$ & $2.5$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent
+The result that matters here is the requirement, not the accuracy. The endpoint
+map is clean only when a \emph{single} nuclear threshold sets the fall-off, which
+holds for \iso{15}{O} --- produced through the one channel
+\iso{16}{O}$(p,pn)$\iso{15}{O} (threshold 16.79~MeV) --- but not for \iso{11}{C},
+which comes from three channels of differing threshold that smear the endpoint.
+Grogg et al.\ therefore run a 5~min in-room scan started 2~min after treatment,
+when \iso{15}{O} is $\sim$80\% of the signal. This is a \emph{third}, independent
+reason to prefer the early, \iso{15}{O}-dominated window, on top of the
+statistical (per-count precision) and cross-section-systematic (Sec.~8) reasons.
+Two further contacts with our work: they apply a reverse washout correction using
+the same Mizuno carbon-beam model our washout note adopts, and flag it as
+``questionable'' for protons --- the caveat our note also carries; and they are
+developing a direct \iso{15}{O} kinetic model to remove the washout correction
+entirely, which is the spatial-perfusion direction our washout note leaves open.
+
+\subsection*{10. Conclusion and relevance here}
 
 In phantoms, where geometry and composition are known and motion and
 co-registration are absent, the offline method reaches 1~mm range accuracy even
@@ -211,11 +352,24 @@ value and $\sim$2~mm in range by HU-to-tissue mapping. The authors argue all of
 these are ``conquerable'', principally by \textbf{in-room PET} --- reducing the
 treatment-to-scan gap to $\sim$1~min (their movable NeuroPET) suppresses washout
 and motion, and removes the repositioning that drives co-registration error.
-That prescription --- short delay, in-room acquisition --- is exactly the regime
-the present $\sigma_R$-vs-dose study operates in; the LSO intrinsic-background
-result (Sec.~1) is a quoted argument on the scintillator-choice axis that
-separates BGO and CsI from LSO/LYSO; and the washout parameterisation summarised
-in Sec.~6 is the one our downstream washout model adopts.
+Espa\~na et al.\ (Sec.~8) and Grogg et al.\ (Sec.~9) sharpen the timing
+prescription from the opposite end: not only \emph{start} early to beat washout,
+but keep the window \emph{short} so the signal stays on the \iso{15}{O} channel
+rather than drifting onto the \iso{11}{C} channels. Three independent arguments
+converge on that \iso{15}{O}, \textbf{early-start, short-window} acquisition:
+(i) \emph{statistical} --- our own generation-2 study finds \iso{15}{O} more
+precise per count; (ii) \emph{cross-section-systematic} --- \iso{15}{O}'s single
+production channel is well measured, whereas the \iso{11}{C} channels are not
+($\sim$4~mm residual model bias, Sec.~8); and (iii) \emph{endpoint-definition}
+--- \iso{15}{O}'s single nuclear threshold gives one clean distal endpoint, while
+\iso{11}{C}'s three thresholds smear it (Sec.~9). That prescription --- short
+delay, short window, in-room acquisition on \iso{15}{O} --- is exactly the regime
+the present $\sigma_R$-vs-dose study operates in. Two further threads connect
+directly to our toolchain: the LSO intrinsic-background result (Sec.~1) is a
+quoted argument on the scintillator-choice axis that separates BGO and CsI from
+LSO/LYSO; and the Mizuno washout parameterisation used across these papers
+(Secs.~6 and~9) is the one our downstream washout model adopts, complete with the
+same caveat about its proton applicability.
 
 \begin{thebibliography}{9}
 
@@ -231,6 +385,19 @@ A.~Knopf, K.~Parodi, T.~Bortfeld, H.~A.~Shih and H.~Paganetti,
 ``Systematic analysis of biological and physical limitations of proton beam
 range verification with offline PET/CT scans,''
 \textit{Phys.\ Med.\ Biol.} \textbf{54} (2009) 4477--4495.
+
+\bibitem{espana2011}
+S.~Espa\~na, X.~Zhu, J.~Daartz, G.~El~Fakhri, T.~Bortfeld and H.~Paganetti,
+``Reliability of proton-nuclear interaction cross-section data to predict
+proton-induced PET images in proton therapy,''
+\textit{Phys.\ Med.\ Biol.} \textbf{56} (2011) 2687--2698.
+
+\bibitem{grogg2013}
+K.~Grogg, X.~Zhu, C.~H.~Min, B.~Winey, T.~Bortfeld, H.~Paganetti, H.~A.~Shih and
+G.~El~Fakhri,
+``Feasibility of using distal endpoints for in-room PET range verification of
+proton therapy,''
+\textit{IEEE Trans.\ Nucl.\ Sci.} \textbf{60} (2013) 3290--3297.
 
 \bibitem{mizuno2003}
 H.~Mizuno, T.~Tomitani, M.~Kanazawa et al.,
