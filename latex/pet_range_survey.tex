@@ -1,0 +1,462 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage[hidelinks]{hyperref}
+
+% simple isotope helper (avoids the isotope package dependency)
+\newcommand{\iso}[2]{\textsuperscript{#1}#2}
+
+\begin{document}
+
+\begin{center}
+  {\large\textbf{PET for proton and light-ion range verification, 2013--2026}}\\[2pt]
+  {\large\textbf{what has happened since the MGH foundational papers, and where it points}}
+\end{center}
+\medskip
+
+\noindent
+This note surveys the literature on PET-based distal-edge / range determination
+in proton and light-ion therapy from roughly 2013 to 2026 --- i.e.\ after the
+foundational MGH series (Parodi et al.\ 2007, Knopf et al.\ 2009, Espa\~na et
+al.\ 2011, Grogg et al.\ 2013) summarised in the companion note. It was compiled
+as a multi-source, adversarially fact-checked survey; each claim below is
+anchored to a primary source with a fetchable link in the bibliography (PubMed /
+PMC / DOI / arXiv). Where a number comes from simulation or a phantom rather than
+a patient, it is marked as such --- that distinction is the single most important
+one in this field today.
+
+\subsection*{1. The trajectory in one paragraph}
+
+Since Grogg (2013) the centre of gravity has moved from offline/in-room imaging
+toward true \emph{in-beam} PET, and geographically from MGH to Europe (CNAO,
+Groningen, Madrid) and the J-PET collaboration. Three fronts advance in parallel:
+(i) \textbf{down the isotope half-life axis} --- \iso{11}{C} (20~min)
+$\rightarrow$ \iso{15}{O} (2~min) $\rightarrow$ ultra-short-lived \iso{12}{N}
+(11~ms) --- chasing faster feedback; (ii) \textbf{from reconstructing activity to
+reconstructing dose} in real time, increasingly with machine learning; and (iii)
+\textbf{from crystal scanners toward cost-effective geometries} (plastic-scintillator
+J-PET). The persistent gap: every sub-millimetre figure lives in simulation or
+phantoms, while verified patient-level precision remains $2$--$4$~mm.
+
+\subsection*{2. Clinical translation: INSIDE at CNAO}
+
+In-beam PET has reached genuine, registered clinical use. The INSIDE scanner ---
+two planar heads of LFS (lutetium fine silicate) pixelated crystals,
+$3\times3\times20$~mm$^3$ at 3~mm pitch, one-to-one SiPM readout, 50~cm working
+distance, with data-vs-Monte-Carlo distal edges agreeing within 1~mm in phantoms
+\cite{bisogni2016} --- was commissioned at CNAO from 2016 and used in the field's
+first registered clinical trial (NCT03662373), monitoring nine head-and-neck
+carbon-ion patients \cite{ferrero2024}. The measured patient precision floor is
+$\sigma \approx 3.7$~mm ($1\sigma$, carbon cohort, the detector sensitivity for
+stable patients) \cite{ferrero2024}, while the proton-patient cohort reached
+$2.5$~mm (Most-Likely-Shift method, applied to in-beam PET for the first time)
+and $2.3$~mm (Beam's-Eye-View method) inter-fractional standard deviation ---
+below the scanner's own 3~mm spatial resolution \cite{moglioni2022}. These
+$2.3$--$3.7$~mm figures are, as of this survey, the best \emph{patient-level}
+numbers anyone has published, and they set the realistic bar: roughly $20\times$
+coarser than a simulated $\sigma_R \approx 0.11$~mm.
+
+\subsection*{3. The isotope half-life axis: \iso{15}{O} and beyond to \iso{12}{N}}
+
+The community argument for a short, early window has crystallised around
+\iso{15}{O}. Purushothaman et al.~\cite{purushothaman2023} (co-authors Parodi,
+Durante, Dendooven) argue \iso{15}{O} is the \emph{most technically feasible}
+emitter for quasi-real-time in-beam monitoring: a production cross section similar
+to \iso{11}{C} but a $\sim$10$\times$ shorter half-life (122.24~s vs $\sim$1221~s),
+so a conclusive activity-peak position is reached faster and at lower dose. This
+is the community landing where the companion note's three-reasons synthesis lands.
+(A companion sub-millimetre claim from the same paper, for high-energy \iso{14}{O},
+was \emph{refuted} in this survey's verification and should be treated with
+scepticism.)
+
+The frontier now extends past \iso{15}{O} to ultra-short-lived \iso{12}{N}
+($T_{1/2}=11$~ms), enabling ``quasi-prompt'' feedback. The Groningen group
+\cite{ozoemelam2020} imaged \iso{12}{N} to get $2.5$--$2.6$~mm ($1\sigma$)
+activity-range precision at a clinically relevant $10^{8}$~protons/pulse
+($\sim$1~Gy over 1~L) on PMMA/graphite, improving to $0.8$--$0.9$~mm at
+$10^{9}$~protons/pulse. Zapien-Campos et al.~\cite{zapiencampos2025} then
+demonstrated \emph{spot-by-spot} IMPT distal-edge verification with a 60~ms
+inter-spot delay: $1.5$--$3.6$~mm per-spot precision (1.5$\sigma$ clinical level),
+$\sim$0.4~mm average agreement with Monte Carlo, and correct detection of
+deliberate 2~mm and 5~mm range shifts. Verification \emph{during} delivery, per
+spot, is a genuinely new axis relative to the endpoint methods of 2013.
+
+\subsection*{4. From activity to dose: real-time reconstruction and deep learning}
+
+Two 2024--2025 results reframe the problem from ``recover the activity endpoint''
+to ``recover the dose.'' Valladolid-Onecha / Bertolet et al.~\cite{valladolid2025}
+(UCM/CSIC/MGH) pair GPU 3D reconstruction with a dictionary-based (non-neural)
+method that estimates deposited dose directly from in-beam 3D PET, with display
+latency as short as 1~s; at 8.4~Gy at the Bragg peak, 1~mm range shifts are
+detectable, and 20~s of statistics gives 1~Gy doses online with total uncertainty
+below 2~mm (PMMA phantom, in-house six-module scanner). PROTOTWIN-PET
+\cite{prototwin2024} (UCM Madrid) trains patient-specific deep-learning models on
+simulated PET--dose pairs to infer 3D delivered dose in milliseconds (mean
+relative error 0.6\%, near-perfect $3\,\mathrm{mm}/3\%$ gamma on a two-field
+oropharyngeal plan) and recovers setup deviations on average within $\sim$0.1~mm
+and $0.1^{\circ}$. The latter is in silico only, on a single plan with simulated
+PET --- promising, unvalidated on real data.
+
+\subsection*{5. A cost-effective hardware track: plastic-scintillator J-PET}
+
+A parallel line pursues cheap geometry rather than crystal performance. A
+GATE\,+\,CASToR feasibility study of six J-PET geometries \cite{baran2023} --- the
+modular, portable, plastic-scintillator-strip, SiPM-read total-body PET concept of
+Moskal et al.\ --- reconstructed with list-mode TOF-MLEM at 500~ps FWHM and found
+proton range-shift precision (the $\sigma$ of the activity-vs-dose range
+difference $\Delta R$) \textbf{below 1~mm} for both single-pencil-beam and SOBP
+plans (per-geometry $\sigma = 0.04$--$0.83$~mm), using sigmoid fits to the distal
+activity fall-off ($R_A$ at 50\% of maximum) against the dose range $R_D$ at 80\%
+of the integrated-depth-dose fall-off. This is simulation only, on uniform PMMA
+--- a feasibility bound, not a clinical number --- but it is the same
+``cost-effective geometry, low-count regime'' framing as the present work, and its
+fall-off-fit endpoint definition is close to ours.
+
+\subsection*{6. The competing modality: prompt-gamma imaging}
+
+PET has not decisively won against prompt-gamma imaging (PGI), and machine learning
+is now used on both sides to rescue image quality at clinical count rates. An ML
+full-energy event classifier for the i-TED Compton camera \cite{iTED2022} correctly
+recognises $65$--$73\%$ of full-energy events (peak-to-background up to $2\times$)
+and sharpens the reconstructed distal fall-off ($F_{80\%}$) from 3.2~mm to 1.3~mm
+for the single 4.4~MeV prompt-gamma line (Geant4 simulation). The takeaway: PGI
+sits on a similar $1$--$3$~mm simulated footing --- the modality question is not
+settled by accuracy alone.
+
+\subsection*{7. In-beam vs.\ very-near-in-room: the under-argued geometry
+trade-off}
+
+The move toward in-beam PET buys immediacy (the short-lived isotopes, no motion,
+no repositioning) at the price of \textbf{angular coverage}: a closed ring cannot
+surround the patient in the beam, so in-beam systems use dual planar heads. The
+opposite choice --- a full-ring \emph{in-room} scanner --- buys angular coverage
+at the price of \textbf{patient displacement} (transfer delay, hence
+\iso{15}{O} decay and washout, plus re-setup / co-registration error). The
+central observation of this section is that \emph{the literature quantifies each
+price separately but never puts them on a common $\sigma_R$ axis}, and that a
+specific design point --- a dedicated full ring immediately adjacent to the beam,
+imaging the patient on the same couch after a short tracked move (``very-near-in-room'')
+--- has been demonstrated only in a modest form and never rigorously argued.
+
+\medskip
+\noindent\textbf{Who has done what (systems inventory).}
+\begin{itemize}
+\item \textbf{Full-ring, same-couch, in-room --- MGH mobile NeuroPET (the key
+  precedent).} NeuroPET (PhotoDiagnostic Systems) is a \emph{full-ring} mobile
+  brain scanner --- LYSO, two DOI layers, ring diameter 35.7~cm, axial FOV
+  22~cm, $\sim$3~mm resolution --- parked beside the beam nozzle. After
+  irradiation \emph{the treatment couch is rotated and translated to bring the
+  patient into the ring, ``no patient re-positioning''}; co-registration is by
+  the couch transform, not by re-registration. Zhu et al.~\cite{zhu2011} (\emph{PMB}
+  2011) established feasibility (phantom, $\sim$2~min delay); Grogg et
+  al.~\cite{grogg2013} imaged a rabbit thigh 2~min after irradiation and
+  simulated patients at $90$--$150$~s delay; Min et al.~\cite{min2013} (\emph{IJROBP}
+  2013) reported the clinical application on patients with a realised average
+  \textbf{treatment-to-scan gap of 2.5~min} --- so the widely-quoted ``$\sim$1~min''
+  is aspirational, not achieved. This is the \emph{only} same-couch, couch-moved,
+  full-ring in-room precedent, and it is brain-bore only.
+\item \textbf{Dual-head in-beam --- BASTEI (GSI).} The original in-beam system
+  monitored $\sim$430 carbon-ion patients (1997--2008); its two named limitations
+  were ``the low statistics \dots\ and the limited angular field-of-view of the
+  dual-head geometry'' (reviewed in Parodi, Yamaya \& Moskal~\cite{parodiyamaya2023}).
+\item \textbf{Dual-head in-beam --- INSIDE (CNAO).} Two planar heads,
+  $10\times25$~cm$^2$, 60~cm apart; the collaboration states plainly that ``due to
+  the partial angular coverage \dots\ the images suffer from artefacts in the
+  direction perpendicular to the planes, as well as from limited statistics''
+  \cite{moglioni2022}, reaching patient $\sigma = 2.3$--$2.5$~mm.
+\item \textbf{Gantry-mounted planar, patient stationary --- Nishio BOLPs-RGp.}
+  A dual-head PET on the rotating gantry port, FOV on isocenter, acquiring 200~s
+  immediately after irradiation on 48 patients \cite{nishio2010} --- on-line, not
+  a transfer design.
+\item \textbf{Open-ring, recover coverage \emph{without} moving --- OpenPET
+  (QST/NIRS).} Yamaya et al.~\cite{yamaya2011} build near-full open-ring
+  geometries with an axial gap for the beam, keeping acquisition in the treatment
+  position; the 2025 rotating open-ring \cite{rotatingopenring2025} fills the
+  missing angles by rotation. These are the \emph{mirror image} of the
+  very-near-in-room bet, and remain prototype / early-clinical.
+\item \textbf{Offline full-ring PET/CT --- HIT, MD Anderson, the MGH original.}
+  Patient transported to a remote scanner, $15$--$30$~min delay, image
+  re-registered to the CT --- the case the whole in-room programme was meant to
+  escape.
+\end{itemize}
+
+\medskip
+\noindent\textbf{The angular-coverage penalty decomposes into two very different
+terms.} First, \emph{sensitivity}: a dual-head collects roughly \textbf{one third}
+the coincidences of a closed ring at equal activity (Chen et al.~\cite{chen2013},
+GATE), equivalently a normalised sensitivity $\sim$2--2.4$\times$ lower than a
+cylindrical arm of equal module count for SOBP (Baran et al.~\cite{baran2023}).
+Since $\sigma_R \propto 1/\sqrt{\mathrm{counts}}$, this alone makes a full ring
+worth $\sim$1.4--1.7$\times$ better $\sigma_R$ at fixed dose --- the dominant,
+first-order coverage penalty. Second, \emph{limited-angle artifact}: an
+anisotropic, position-dependent PSF elongated perpendicular to the detector
+planes, worst at the FOV periphery \cite{moglioni2022,chen2013}. Crucially, the
+\emph{range} observable is comparatively robust to this second term --- Chen et
+al.\ found ``no significant difference'' in the distal-falloff \emph{position}
+between dual-plate, four-head and full-ring at fixed dose, and all J-PET
+geometries reached sub-mm range precision, the penalty concentrated in the
+single-layer dual-head. The canonical limited-angle analysis of Crespo, Shakirin
+\& Enghardt~\cite{crespo2006} sets the boundary: dual-head is adequate for
+\emph{small, central head-and-neck fields}, but a closed ring is ``highly
+desirable'' for larger / peripheral fields --- and a closed-ring in-beam
+arrangement is, they note, geometrically feasible. So in-beam's real
+angular-coverage cost for range work is \emph{counting statistics}, not distortion
+of the edge itself.
+
+\medskip
+\noindent\textbf{The displacement penalty, quantified against it.} A transfer
+delay costs \iso{15}{O} ($T_{1/2}=2$~min): at NeuroPET's realised 2.5~min only
+$\sim$42\% survives, so classic in-room fell back to the \iso{11}{C} regime; a
+genuinely short same-couch move of $30$--$60$~s keeps $\sim$70--85\%. The
+co-registration term --- generically 2--5~mm (Zhu \& El~Fakhri~\cite{zhuelfakhri2013})
+--- is driven toward zero by a tracked couch transform, exactly as NeuroPET's ``no
+re-positioning'' already indicates.
+
+\medskip
+\noindent\textbf{The gap, and where the present work fits.} No paper puts these on
+a common axis. The workflow comparison of Shakirin et al.~\cite{shakirin2011}
+weighs data quality against integration effort and \emph{recommends in-room} for
+new facilities --- on logistics, not on measured precision; Fiedler \&
+Shakirin~\cite{fiedler2010} quantify only the in-beam limited-angle detectability;
+the reviews (Kraan~\cite{kraan2015}, Zhu \& El~Fakhri~\cite{zhuelfakhri2013},
+Parodi, Yamaya \& Moskal~\cite{parodiyamaya2023}) name the trade-off but resolve
+it qualitatively and state they cannot separate the geometry term from the
+washout/model terms. The missing quantity is
+%
+\[
+  \big(\text{full-ring }\sqrt{\sim3}\text{ sensitivity gain in }\sigma_R\big)
+  \;-\;\big(\text{\iso{15}{O} washout loss over a }30\text{--}60~\text{s move}\big)
+  \quad\text{vs.}\quad
+  \big(\text{in-beam dual-head }\sigma_R\big),
+\]
+%
+with the in-room co-registration term set to $\sim$0 by a tracked couch. This is
+precisely a controlled, geometry-vs-delay comparison at fixed dose, isotope mix
+and reconstruction --- which the $\sigma_R$-vs-geometry and acquisition-start
+machinery of the present project can produce by adding a dual-head comparator. Two
+honest counter-arguments the design must own: a same-couch move still occupies the
+treatment room (Shakirin's throughput objection), and it concedes the
+ultra-short-lived isotopes --- in-beam \iso{12}{N} spot-by-spot feedback is
+unreachable once the patient moves at all, so the niche is explicitly best
+$\sigma_R$ per Gy on \iso{15}{O} with full angular coverage, not real-time-during-delivery.
+
+\subsection*{8. Caveats: the simulation-to-clinic gap}
+
+Every sub-millimetre figure in this note --- J-PET $\sigma = 0.04$--$0.83$~mm,
+\iso{12}{N} $0.8$--$0.9$~mm at $10^{9}$~p/pulse, PROTOTWIN-PET 0.1~mm setup
+recovery, 1~mm shift detection at 8.4~Gy --- comes from simulation or phantom
+experiments. The only verified \emph{patient} numbers are INSIDE's
+$2.3$--$3.7$~mm, so ``achievable clinical precision'' today is $2$--$4$~mm.
+Several key findings rest on a single group (the \iso{15}{O} case on one 2023
+paper; real-time dose reconstruction and PROTOTWIN-PET on UCM Madrid).
+``Clinical translation'' here means a \emph{completed feasibility trial}, not
+routine adoption --- no centre runs PET range verification as standard care, and
+the CNAO trial itself cautions its data were insufficient for a definitive
+time-trend interpretation.
+
+\subsection*{9. Where it points, and two under-covered fronts}
+
+The field is heading toward \textbf{real-time, in-beam, short-isotope,
+ML-assisted verification of dose rather than activity}, with plastic-scintillator
+total-body geometries as a parallel cost-effective hardware track. The literature
+\emph{confirms} the \iso{15}{O} short-early thesis and the cheap-geometry framing
+of the present work, while pointing at two directions not currently pursued here:
+\iso{12}{N} spot-by-spot in-beam verification, and dose-not-activity ML
+reconstruction. It also plants a flag on the main risk --- the simulation-to-clinic
+gap between a simulated $\sigma_R$ and the $2.3$~mm best-patient number.
+
+Two fronts central to the present project were \emph{under-covered} by this survey
+and did not yield verified claims: (a) detector / scintillator trends (BGO revival,
+LSO/LYSO intrinsic \iso{176}{Lu} background, cryogenic CsI, time-of-flight
+resolution, and whether total-body TOF scanners such as Biograph Vision/Quadra or
+uEXPLORER are being repurposed for range verification); and (b) biological washout
+modelling beyond the Mizuno carbon-beam parametrisation toward proton-specific or
+perfusion/kinetic models. One unverified lead surfaced on the latter --- an
+uncertainty-aware deep-learning framework for post-therapy PET washout claiming
+$60\%$/$28\%$ error reductions in washout-parameter estimation \cite{washoutDL2025}
+--- but it did not pass this survey's verification bar and should be read directly.
+Both fronts warrant a focused follow-up pass.
+
+\begin{thebibliography}{99}
+
+\bibitem{ferrero2024}
+G.~Ferrero et al.\ [INSIDE Collaboration],
+``In-beam PET treatment monitoring of carbon therapy patients: results of a
+clinical trial at CNAO,''
+\textit{Physica Medica} (2024). PMID~39137617.\\
+\url{https://pubmed.ncbi.nlm.nih.gov/39137617/}
+
+\bibitem{bisogni2016}
+M.~G.~Bisogni et al.,
+``INSIDE in-beam positron emission tomography system for particle range
+monitoring in hadrontherapy,''
+\textit{J.\ Med.\ Imaging} \textbf{4} (2017) 011005. PMC5133454.\\
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC5133454/}
+
+\bibitem{moglioni2022}
+M.~Moglioni et al.\ [INSIDE Collaboration, CNAO],
+``In-vivo range verification analysis with in-beam PET data for patients treated
+with proton therapy at CNAO,''
+\textit{Frontiers in Oncology} \textbf{12} (2022). PMC9549776.\\
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9549776/}
+
+\bibitem{purushothaman2023}
+S.~Purushothaman, K.~Parodi, M.~Durante, P.~Dendooven et al.,
+``[\iso{15}{O} as the feasible emitter for quasi-real-time in-beam PET range
+monitoring],''
+\textit{Scientific Reports} \textbf{13} (2023) 45122.
+DOI~10.1038/s41598-023-45122-2.\\
+\url{https://www.nature.com/articles/s41598-023-45122-2}
+
+\bibitem{ozoemelam2020}
+I.~Ozoemelam et al.,
+``Real-time PET imaging of the ultra-short-lived positron emitter \iso{12}{N}
+($T_{1/2}=11$~ms) for proton range verification,''
+\textit{Phys.\ Med.\ Biol.} \textbf{65} (2020). DOI~10.1088/1361-6560/aba504.\\
+\url{https://iopscience.iop.org/article/10.1088/1361-6560/aba504}
+
+\bibitem{zapiencampos2025}
+H.~Zapien-Campos et al.,
+``Spot-by-spot proton range verification with in-beam PET of \iso{12}{N},''
+\textit{Medical Physics} (2025). PMC12257898.\\
+\url{https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12257898/}
+
+\bibitem{valladolid2025}
+J.~Valladolid-Onecha, A.~Bertolet et al.,
+``Real-time dose reconstruction in proton therapy from in-beam PET measurements,''
+\textit{Phys.\ Med.\ Biol.} \textbf{70} (2025). DOI~10.1088/1361-6560/adbfd9.\\
+\url{https://iopscience.iop.org/article/10.1088/1361-6560/adbfd9}
+
+\bibitem{prototwin2024}
+J.~M.~Ordu\~na et al.,
+``PROTOTWIN-PET: patient-specific deep learning models for 3D dose verification
+in proton therapy with PET,''
+IEEE (2024/2025).\\
+\url{https://www.researchgate.net/publication/385274401}
+
+\bibitem{baran2023}
+J.~Baran, P.~Moskal et al.,
+``Feasibility of the J-PET plastic-scintillator total-body PET for proton range
+verification (GATE\,+\,CASToR study),''
+arXiv:2302.14359 (2023).\\
+\url{https://arxiv.org/pdf/2302.14359}
+
+\bibitem{iTED2022}
+[i-TED Collaboration],
+``Machine-learning event selection for the i-TED Compton camera improves
+prompt-gamma distal fall-off reconstruction,''
+\textit{Scientific Reports} \textbf{12} (2022) 06126.
+DOI~10.1038/s41598-022-06126-6.\\
+\url{https://www.nature.com/articles/s41598-022-06126-6}
+
+\bibitem{washoutDL2025}
+[Unverified lead]
+``Mapping intratumoral heterogeneity through PET-derived washout and deep
+learning after proton therapy,''
+Elsevier (2025/2026).\\
+\url{https://www.sciencedirect.com/science/article/pii/S001048252600209X}
+
+% --- Geometry / acquisition-mode trade-off (Sec.~7) ---
+
+\bibitem{zhu2011}
+X.~Zhu, S.~Espa\~na, J.~Daartz, N.~Liebsch, J.~Ouyang, H.~Paganetti,
+T.~R.~Bortfeld and G.~El~Fakhri,
+``Monitoring proton radiation therapy with in-room PET imaging,''
+\textit{Phys.\ Med.\ Biol.} \textbf{56} (2011) 4041--4057.
+DOI~10.1088/0031-9155/56/13/019.\\
+\url{https://pubmed.ncbi.nlm.nih.gov/21677366/}
+
+\bibitem{grogg2013}
+K.~Grogg, X.~Zhu, C.~H.~Min, B.~Winey, T.~Bortfeld, H.~Paganetti, H.~A.~Shih and
+G.~El~Fakhri,
+``Feasibility of using distal endpoints for in-room PET range verification of
+proton therapy,''
+\textit{IEEE Trans.\ Nucl.\ Sci.} \textbf{60} (2013) 3290--3297. PMC3900284.\\
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC3900284/}
+
+\bibitem{min2013}
+C.~H.~Min, X.~Zhu, B.~A.~Winey, K.~Grogg, M.~Testa, G.~El~Fakhri, T.~R.~Bortfeld,
+H.~Paganetti and H.~A.~Shih,
+``Clinical application of in-room positron emission tomography for in vivo
+treatment monitoring in proton radiation therapy,''
+\textit{Int.\ J.\ Radiat.\ Oncol.\ Biol.\ Phys.} \textbf{86} (2013) 183--189.
+DOI~10.1016/j.ijrobp.2012.12.010.\\
+\url{https://doi.org/10.1016/j.ijrobp.2012.12.010}
+
+\bibitem{crespo2006}
+P.~Crespo, G.~Shakirin and W.~Enghardt,
+``On the detector arrangement for in-beam PET for hadron therapy monitoring,''
+\textit{Phys.\ Med.\ Biol.} \textbf{51} (2006) 2143--2163.
+DOI~10.1088/0031-9155/51/9/002.\\
+\url{https://pubmed.ncbi.nlm.nih.gov/16625032/}
+
+\bibitem{chen2013}
+Y.~Chen et al.,
+``A simulation study of a dual-plate in-room PET system for dose verification in
+carbon ion therapy,''
+\textit{Chinese Phys.\ C} \textbf{37} (2013) 010201. arXiv:1310.2469.\\
+\url{https://arxiv.org/abs/1310.2469}
+
+\bibitem{shakirin2011}
+G.~Shakirin, H.~Braess, F.~Fiedler, D.~Kunath, K.~Laube, K.~Parodi, M.~Priegnitz
+and W.~Enghardt,
+``Implementation and workflow for PET monitoring of therapeutic ion irradiation:
+a comparison of in-beam, in-room, and off-line techniques,''
+\textit{Phys.\ Med.\ Biol.} \textbf{56} (2011) 1281--1298.
+DOI~10.1088/0031-9155/56/5/004.\\
+\url{https://pubmed.ncbi.nlm.nih.gov/21285487/}
+
+\bibitem{fiedler2010}
+F.~Fiedler, G.~Shakirin, J.~Skowron, H.~Braess, P.~Crespo, D.~Kunath, J.~Pawelke
+and W.~Enghardt,
+``On the effectiveness of ion range determination from in-beam PET data,''
+\textit{Phys.\ Med.\ Biol.} \textbf{55} (2010) 1989--1998.
+DOI~10.1088/0031-9155/55/7/013.\\
+\url{https://iopscience.iop.org/article/10.1088/0031-9155/55/7/013}
+
+\bibitem{kraan2015}
+A.~C.~Kraan,
+``Range verification methods in particle therapy: underlying physics and Monte
+Carlo modeling,''
+\textit{Frontiers in Oncology} \textbf{5} (2015) 150.
+DOI~10.3389/fonc.2015.00150. PMC4493660.\\
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC4493660/}
+
+\bibitem{zhuelfakhri2013}
+X.~Zhu and G.~El~Fakhri,
+``Proton therapy verification with PET imaging,''
+\textit{Theranostics} \textbf{3} (2013) 731--740. DOI~10.7150/thno.5162.\\
+\url{https://www.thno.org/v03p0731.htm}
+
+\bibitem{parodiyamaya2023}
+K.~Parodi, T.~Yamaya and P.~Moskal,
+``Experience and new prospects of PET imaging for ion beam therapy monitoring,''
+\textit{Z.\ Med.\ Phys.} \textbf{33} (2023) 22--34.
+DOI~10.1016/j.zemedi.2022.11.001. PMC10068545.\\
+\url{https://pmc.ncbi.nlm.nih.gov/articles/PMC10068545/}
+
+\bibitem{nishio2010}
+T.~Nishio, A.~Miyatake, T.~Ogino, K.~Nakagawa, N.~Saijo and H.~Esumi,
+``The development and clinical use of a beam on-line PET system mounted on a
+rotating gantry port in proton therapy,''
+\textit{Int.\ J.\ Radiat.\ Oncol.\ Biol.\ Phys.} \textbf{76} (2010) 277--286.\\
+\url{https://pubmed.ncbi.nlm.nih.gov/20005459/}
+
+\bibitem{yamaya2011}
+T.~Yamaya, T.~Inaniwa, S.~Minohara et al.,
+``A proposal of an open PET geometry,''
+\textit{Phys.\ Med.\ Biol.} \textbf{56} (2011) 1123--1137.
+DOI~10.1088/0031-9155/56/4/015.\\
+\url{https://iopscience.iop.org/article/10.1088/0031-9155/56/4/015}
+
+\bibitem{rotatingopenring2025}
+[QST group],
+``Iterative reconstruction with a rotating open-ring PET scanner for proton
+therapy range verification,''
+\textit{Phys.\ Med.\ Biol.} (2025). DOI~10.1088/1361-6560/adfe51.\\
+\url{https://iopscience.iop.org/article/10.1088/1361-6560/adfe51}
+
+\end{thebibliography}
+
+\end{document}
