@@ -127,8 +127,11 @@ endpoints in mm, `mult` the per-LOR attenuation) and read its range endpoint.
 Scales the sensitivity to this list's count, runs MLEM, sums the image over
 the whole transverse plane into a depth profile, and fits the distal edge. Pass `device =
 MtlArray` (with Metal loaded) to run on the GPU. Returns
-`(nev, r50_fit, z0_err, w, r50_cross)`: the count, R in both conventions, the
-fitted edge width, and the fit's own error estimate.
+`(nev, r50_fit, z0_err, w, r50_cross, rx_grogg, rx_grogg_err, rx_grogg_unw)`:
+the count, R in the erfc-fit and crossing conventions, the fitted edge width,
+the fit's own error estimate, and the Grogg linear x-intercept on the same
+profile ([`fit_endpoint_grogg`](@ref)) — Poisson-weighted primary plus the
+paper-literal unweighted variant.
 """
 function reconstruct_endpoint(ctx, xs, xe, mult; device=identity)
     p = ctx.params
@@ -141,6 +144,15 @@ function reconstruct_endpoint(ctx, xs, xe, mult; device=identity)
     z, prof = depth_profile(Array(x); voxel_size_mm=p.grid.voxsize, beam_axis=3,
                             roi_radius_mm=p.roi.radius_mm, z_origin_mm=p.grid.img_origin[3])
     fit = fit_endpoint(z, prof; window=ctx.ref.window, weighted=true)
+    fg = fit_endpoint_grogg(z, prof; window=ctx.ref.window, weighted=true)
+    fgu = fit_endpoint_grogg(z, prof; window=ctx.ref.window, weighted=false)
+    # Grogg's full pipeline: 7 mm FWHM PET-resolution smoothing before the fit.
+    fgs = fit_endpoint_grogg(z, prof; window=ctx.ref.window, weighted=true,
+                             smooth_fwhm_mm=7.0)
     return (nev=nev, r50_fit=fit.z0, z0_err=fit.z0_err, w=fit.w,
-            r50_cross=windowed_crossing(z, prof, ctx.ref.window))
+            r50_cross=windowed_crossing(z, prof, ctx.ref.window),
+            rx_grogg=fg.x0, rx_grogg_err=fg.x0_err, rx_grogg_unw=fgu.x0,
+            grogg_z_first=fg.z_first, grogg_z_last=fg.z_last, grogg_slope=fg.slope,
+            rx_grogg_sm=fgs.x0, grogg_sm_z_first=fgs.z_first,
+            grogg_sm_z_last=fgs.z_last, grogg_sm_slope=fgs.slope)
 end

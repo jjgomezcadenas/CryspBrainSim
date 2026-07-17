@@ -7,16 +7,16 @@ sigma_band = 0.07106690545187015
 scanner = "crysp_r35_35cm_csi_2x0"
 
 [[point]]
-nominal_R50_mean_mm = 11.5377694966276
-inflation = 1.273407939445779
-nominal_sigma_R_mm = 0.21572803801780502
+nominal_R50_mean_mm = 11.53776949509094
+inflation = 1.2734078063560614
+nominal_sigma_R_mm = 0.215728054607288
 n_fail_nominal = 0
 washout_survival = 0.48311958699668467
 leaf = "del120s_ac300s_1Gy"
 n_fail_washed = 0
 t_del_s = 120.0
 t2_s = 300.0
-delta_R50_washout_mm = 0.03153994193629828
+delta_R50_washout_mm = 0.0315399434667647
 t_ac_s = 180.0
-washed_sigma_R_mm = 0.27470979637293375
-washed_R50_mean_mm = 11.569309438563899
+washed_sigma_R_mm = 0.27470978878692726
+washed_R50_mean_mm = 11.569309438557704

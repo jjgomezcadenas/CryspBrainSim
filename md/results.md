@@ -269,6 +269,52 @@ In the note as **§8** (CsI + BGO v2 subsections + the BGO-vs-CsI comparison; Fi
 figures via `tools/plot_sigma_r_v2.py`, `plot_washed_v2_scanners.py`, `plot_washed_bgo_vs_csi.py`.
 The two flagship reference configs are `config/run_parameters_{csi_v2,ring_bgo_v2}.toml`.
 
+## Grogg-estimator comparison: linear x-intercept vs R50 — DONE (2026-07-17)
+
+Simulated the linear distal-endpoint method of **Grogg et al.** (IEEE TNS 60 (2013) 3290 —
+`papers/feasibility-distal-points.txt`) against our erfc R50, on identical events, at a **short
+in-room scan** (leaf `del120s_ac300s_1Gy` sub-cut with `--tend 300` → window **[120,300] s**, a 180 s
+acquisition 2 min after beam-off) on the **two 35 cm-AFOV arms — CsI R35/35 and BGO r40/35**. On the
+uniform-brain phantom their "standardization" is a no-op except the 7 mm PET-resolution smoothing
+(density scaling / water-equivalent depth trivial in a homogeneous medium; reverse washout is a
+global per-species constant that can't move a line's x-intercept), so what transfers is the
+**estimator**: the linear x-intercept computed on the same whole-plane profile as R50, paired seed
+by seed. `drivers/sigma_r_v2.jl` extended (deliverable 3 + `--isotopes none`); the fit is
+`fit_endpoint_grogg` (start = last local max ≥ 50% of window max, fixed start + variable end by best
+RSS/dof, ≥8 pts) + `gaussian_smooth` in `src/endpoint.jl`, both wired through `reconstruct_endpoint`.
+N=100, 1 Gy. Measured **¹⁵O fraction in the window = 0.823 (CsI) / 0.824 (BGO)** — confirms Grogg's
+"~80% ¹⁵O" premise exactly.
+
+**σ_R at 1 Gy [mm], nominal / washed:**
+
+| estimator | CsI R35/35 | BGO r40/35 |
+|---|---|---|
+| **erfc R50 (ours)** | **0.216 / 0.275** | **0.153 / 0.227** |
+| linear intercept, raw | 7.40 / 3.39 | 9.11 / 7.42 |
+| linear intercept, 7 mm smoothed | 1.57 / 2.61 | 1.12 / 1.71 |
+
+- **Raw linear = 30–60× worse than R50**, dominated by a **start-selection lottery**: the "last
+  distal maximum" that anchors the fit is placed by noise — `z_first` std **5.3 mm (CsI) / 5.4 mm
+  (BGO)** across 13–14 bins over ~20 mm, intercept walking 24→49 mm with it. Orthogonal to the edge:
+  **paired corr(linear, R50) = 0.02**. Conditioned on a fixed start bin the residual spread is
+  **0.33 mm** vs R50's 0.22 mm — the estimator's own floor once the lottery is held.
+- **7 mm smoothing collapses the jitter to a single bin** (z_first std → 0.0) → σ_R falls ~5–8× to
+  **1.1–1.6 mm** (consistent with Grogg's reported 4–5 mm; the fair rendering of their method), and
+  the **physical washed > nominal ordering reappears** (was scrambled by the lottery). Mean intercept
+  deepens to 47–49 mm (rounding pulls the start proximal, flattens the slope).
+- **Even smoothed, R50 is 5–7× more precise** — structural, smoothing-proof: the line uses only local
+  slope and extrapolates ~40 mm to a zero crossing (lever-arm amplified, scatter-tail coupled); R50
+  reads the half-height in place and its free baseline decouples the background. **Verdict: the
+  linear endpoint is a fast heterogeneity screen, not a precision estimator; the distal edge carries
+  far more range info than a linear extrapolation extracts.** Grogg's 4–5 mm is a spatial spread on
+  smoothed high-stat simPET, not a single-acquisition σ_R — no contradiction.
+
+In the note as **§9** ("The linear-endpoint estimator of Grogg et al.", Table 11 + Fig. 14; Conclusions
+sentence; `grogg2013` bib entry). Outputs `out/…/{crysp_r35_35cm_csi_2x0,crysp_r40_35cm_bgo_2x0}/…/
+washout_v2/sigma_r_grogg_v2_t120_300.toml` (per-realization endpoints + chosen fit ranges for all
+three estimators). Figure `tools/plot_grogg_v2.py` → `comparison/figures/grogg_v2.png` (wired into
+`collect_note_figures.sh`).
+
 ## Data on disk
 
 Products at `PtCryspProds/uniform_headep_sobp_1e8/` are now **generation v2** (self-describing:

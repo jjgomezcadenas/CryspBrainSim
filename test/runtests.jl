@@ -192,6 +192,93 @@ end
         @test f.popt === nothing && f.pcov === nothing
     end
 
+    @testset "fit_endpoint_grogg — exact intercept on plateau + linear ramp" begin
+        # Plateau 1000 to z = 100, ramp -20/mm to zero at 150, zero tail: the
+        # last local max at ≥ 50% of the window max is the plateau end (100),
+        # every candidate range lies on the exact line, x-intercept = 150.
+        z = collect(0.0:1.0:200.0)
+        prof = [zi <= 100.0 ? 1000.0 : max(0.0, 1000.0 - 20.0 * (zi - 100.0))
+                for zi in z]
+        for wtd in (true, false)
+            f = fit_endpoint_grogg(z, prof; window=(90.0, 170.0), weighted=wtd)
+            @test f.x0 ≈ 150.0 atol = 1e-9
+            @test f.slope ≈ -20.0 atol = 1e-9
+            @test f.z_first == 100.0
+            @test f.n_points >= 8
+            @test f.x0_err >= 0.0
+        end
+    end
+
+    @testset "fit_endpoint_grogg — start guard and range trimming" begin
+        z = collect(0.0:1.0:200.0)
+        # A tail noise bump (local max below 50% of the window max) must not
+        # capture the fit start.
+        prof = [zi <= 100.0 ? 1000.0 : max(0.0, 1000.0 - 20.0 * (zi - 100.0))
+                for zi in z]
+        prof[z .== 160.0] .= 30.0
+        f = fit_endpoint_grogg(z, prof; window=(90.0, 170.0))
+        @test f.z_first == 100.0
+        @test f.x0 ≈ 150.0 atol = 1e-9
+
+        # A flattening tail past the ramp: the RSS/dof selection trims the fit
+        # to the linear stretch, leaving the intercept at the ramp's crossing.
+        prof2 = [zi <= 100.0 ? 1000.0 :
+                 zi <= 140.0 ? 1000.0 - 20.0 * (zi - 100.0) :
+                 200.0 * exp(-(zi - 140.0) / 5.0) for zi in z]
+        f2 = fit_endpoint_grogg(z, prof2; window=(90.0, 170.0))
+        @test f2.z_first == 100.0
+        @test f2.z_last <= 140.0
+        @test f2.x0 ≈ 150.0 atol = 1e-9
+    end
+
+    @testset "gaussian_smooth — kernel identity, normalisation, no-op" begin
+        z = collect(0.0:1.5:150.0)
+        # Constant profile: edge-normalised smoothing preserves the constant.
+        c = fill(7.0, length(z))
+        @test gaussian_smooth(c, 1.5, 7.0) ≈ c atol = 1e-12
+        # fwhm ≤ 0 is a no-op.
+        v = Float64.(1:length(z))
+        @test gaussian_smooth(v, 1.5, 0.0) == v
+        # Symmetric input → symmetric output; smoothing lowers a lone spike.
+        spike = zeros(length(z)); spike[div(end, 2) + 1] = 100.0
+        s = gaussian_smooth(spike, 1.5, 7.0)
+        @test s ≈ reverse(s) atol = 1e-9
+        @test maximum(s) < 100.0
+        @test sum(s) ≈ sum(spike) rtol = 0.02
+    end
+
+    @testset "fit_endpoint_grogg — smoothing is finite and fwhm→0 is a no-op" begin
+        # A profile with a genuine distal maximum (peak at z = 140) then a
+        # linear falloff to zero at z = 160 — an activity-like shape where the
+        # "last distal maximum" start rule is well posed. Intercept = 160.
+        z = collect(100.0:1.0:200.0)
+        prof = [zi <= 140.0 ? 25.0 * (zi - 100.0) :
+                zi <= 160.0 ? max(0.0, 1000.0 - 50.0 * (zi - 140.0)) : 0.0
+                for zi in z]
+        f = fit_endpoint_grogg(z, prof; window=(120.0, 175.0))
+        @test f.z_first == 140.0
+        @test f.x0 ≈ 160.0 atol = 1e-9
+        # fwhm ≤ 0 recovers the unsmoothed intercept exactly.
+        @test fit_endpoint_grogg(z, prof; window=(120.0, 175.0),
+                                 smooth_fwhm_mm=0.0).x0 ≈ f.x0 atol = 1e-12
+        # 7 mm smoothing rounds the peak and corner: finite, near but not equal.
+        fs = fit_endpoint_grogg(z, prof; window=(120.0, 175.0), smooth_fwhm_mm=7.0)
+        @test isfinite(fs.x0) && abs(fs.x0 - 160.0) < 12.0
+    end
+
+    @testset "fit_endpoint_grogg — failure paths" begin
+        z = collect(0.0:1.0:200.0)
+        ramp = [zi <= 100.0 ? 1000.0 : max(0.0, 1000.0 - 20.0 * (zi - 100.0))
+                for zi in z]
+        # Too few window points, an empty profile, a rising profile: NaN.
+        for (zz, pp, win) in ((z, ramp, (100.0, 105.0)),
+                              (z, zeros(length(z)), (90.0, 170.0)),
+                              (z, reverse(ramp), (30.0, 110.0)))
+            f = fit_endpoint_grogg(zz, pp; window=win)
+            @test isnan(f.x0) && isnan(f.x0_err) && isnan(f.slope)
+        end
+    end
+
     @testset "sigma_R" begin
         s = sigma_R(REF["sig_endpoints"];
                     dose_bragg_peak=REF["sig_dose_bragg_peak"][1])

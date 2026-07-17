@@ -98,6 +98,125 @@ function fit_endpoint(z::AbstractVector{<:Real}, profile::AbstractVector{<:Real}
 end
 
 """
+    gaussian_smooth(profile, dz_mm, fwhm_mm) -> Vector{Float64}
+
+1-D Gaussian smoothing of a uniformly-sampled profile (`dz_mm` spacing) with a
+kernel of `fwhm_mm` full width at half maximum, edge-normalised (each output
+divided by the in-range kernel weight, so the plateau and tail are not pulled
+down at the ends). `fwhm_mm <= 0` returns the profile unchanged. This is the
+Grogg et al. PET-resolution smoothing (7 mm FWHM) applied before the linear
+distal fit.
+"""
+function gaussian_smooth(profile::AbstractVector{<:Real}, dz_mm::Real, fwhm_mm::Real)
+    p = Float64.(profile)
+    fwhm_mm <= 0 && return p
+    σ = fwhm_mm / (2.0 * sqrt(2.0 * log(2.0)))
+    r = max(1, ceil(Int, 3σ / dz_mm))
+    k = [exp(-0.5 * (j * dz_mm / σ)^2) for j in -r:r]
+    n = length(p)
+    out = similar(p)
+    for i in 1:n
+        acc = 0.0; wsum = 0.0
+        for (m, j) in enumerate(-r:r)
+            ii = i + j
+            1 <= ii <= n || continue
+            acc += k[m] * p[ii]; wsum += k[m]
+        end
+        out[i] = acc / wsum
+    end
+    return out
+end
+
+"""
+    fit_endpoint_grogg(z, profile; window, weighted=true,
+                       extent_mm=25.0, min_points=8, smooth_fwhm_mm=0.0) -> NamedTuple
+
+Distal endpoint by the Grogg et al. estimator (IEEE TNS 60 (2013) 3290): the
+x-intercept of a linear fit to the distal falloff. The comparison estimator to
+the erfc R50 of [`fit_endpoint`](@ref), run on the same profile and window.
+
+The fit region starts at the last distal maximum inside the window and extends
+`extent_mm` beyond it; the fit range keeps that start and ends where the
+(weighted) residual sum of squares per degree of freedom is smallest, over
+candidates of at least `min_points` points — the paper's range selection with
+the RSS normalised per dof, so ranges of different lengths compare. Two
+adaptations to a reconstructed whole-plane profile, both stated here because
+the paper leaves them open: the last distal maximum is the deepest local
+maximum at ≥ 50% of the window maximum (a plain "last local max" can be a
+noise bump in the empty tail), and `weighted=true` applies the same Poisson
+precision weights `1/max(P,1)` as the erfc fit, so the two estimators differ
+only in model, not in weighting convention (`weighted=false` is the paper's
+literal unweighted least squares, with the MSE-scaled covariance).
+
+`smooth_fwhm_mm > 0` Gaussian-smooths the profile first
+([`gaussian_smooth`](@ref)) — the paper's PET-resolution smoothing (7 mm),
+which stabilises the distal-maximum start selection at the cost of resolution.
+
+# Returns
+NamedTuple `(x0, x0_err, slope, n_points, z_first, z_last, rss_dof)`: the
+x-intercept `-a/b` (mm), its propagated error, the fitted slope, the chosen
+range (point count and z limits), and the selection score. `x0` is NaN when
+the window holds fewer than `min_points` points past the start, the profile
+has no positive maximum, or the best-range slope is not negative.
+"""
+function fit_endpoint_grogg(z::AbstractVector{<:Real}, profile::AbstractVector{<:Real};
+                            window, weighted::Bool=true,
+                            extent_mm::Real=25.0, min_points::Int=8,
+                            smooth_fwhm_mm::Real=0.0)
+    zlo, zhi = window
+    prof = smooth_fwhm_mm > 0 ?
+        gaussian_smooth(profile, length(z) > 1 ? Float64(z[2] - z[1]) : 1.0,
+                        smooth_fwhm_mm) : profile
+    sel = (z .>= zlo) .& (z .<= zhi)
+    zf = Float64.(z[sel])
+    pf = Float64.(prof[sel])
+    n = length(zf)
+    nanres = (x0=NaN, x0_err=NaN, slope=NaN, n_points=0,
+              z_first=NaN, z_last=NaN, rss_dof=NaN)
+    pmax = n == 0 ? 0.0 : maximum(pf)
+    (n < min_points || pmax <= 0.0) && return nanres
+
+    # Fit-region start: the last local maximum at ≥ 50% of the window maximum.
+    islocmax(i) = (i == 1 || pf[i] >= pf[i-1]) && (i == n || pf[i] >= pf[i+1])
+    starts = [i for i in 1:n if pf[i] >= 0.5 * pmax && islocmax(i)]
+    isempty(starts) && return nanres
+    i0 = last(starts)
+    jmax = searchsortedlast(zf, zf[i0] + extent_mm)
+    jmax - i0 + 1 < min_points && return nanres
+
+    # Fixed start, variable end: weighted linear regression on each candidate,
+    # keep the smallest RSS/dof.
+    best = nothing
+    for j in (i0 + min_points - 1):jmax
+        zs = view(zf, i0:j); ps = view(pf, i0:j)
+        w = weighted ? 1.0 ./ max.(ps, 1.0) : ones(length(ps))
+        Sw = sum(w); Sx = sum(w .* zs); Sy = sum(w .* ps)
+        Sxx = sum(w .* zs .^ 2); Sxy = sum(w .* zs .* ps)
+        Δ = Sw * Sxx - Sx^2
+        Δ <= 0 && continue
+        b = (Sw * Sxy - Sx * Sy) / Δ
+        a = (Sxx * Sy - Sx * Sxy) / Δ
+        dof = length(ps) - 2
+        rss_dof = sum(w .* (ps .- a .- b .* zs) .^ 2) / dof
+        if best === nothing || rss_dof < best.rss_dof
+            # Covariance: precision-weighted (absolute sigma) as-is; unweighted
+            # MSE-scaled — the same two conventions as fit_endpoint.
+            s2 = weighted ? 1.0 : rss_dof
+            best = (a=a, b=b, rss_dof=rss_dof, j=j,
+                    var_a=s2 * Sxx / Δ, var_b=s2 * Sw / Δ, cov_ab=-s2 * Sx / Δ)
+        end
+    end
+    (best === nothing || best.b >= 0.0) && return nanres
+
+    a, b = best.a, best.b
+    x0 = -a / b
+    var_x0 = best.var_a / b^2 + a^2 * best.var_b / b^4 - 2a * best.cov_ab / b^3
+    return (x0=x0, x0_err=sqrt(max(var_x0, 0.0)), slope=b,
+            n_points=best.j - i0 + 1, z_first=zf[i0], z_last=zf[best.j],
+            rss_dof=best.rss_dof)
+end
+
+"""
     sigma_R(endpoints; dose_bragg_peak=nothing) -> NamedTuple
 
 Collapse the per-realisation endpoints at ONE dose level into the two numbers

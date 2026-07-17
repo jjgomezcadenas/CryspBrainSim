@@ -21,7 +21,8 @@ using TOML
 using NPZ: npzread, npzwrite
 using Random: MersenneTwister
 
-export depth_profile, distal_window, fit_endpoint, sigma_R
+export depth_profile, distal_window, fit_endpoint, fit_endpoint_grogg,
+    gaussian_smooth, sigma_R
 export read_csv_table, leaf_dir, shard_files, shard_attrs, read_shard,
        shard_t_decay, shard_isotope, shard_generation, pool_shards,
        scanner_geometry, phantom_region,

@@ -1,0 +1,25 @@
+method = "pure per-species selection by the isotope column"
+generation = "v2"
+crystal = "bgo_195k"
+realizations = 100
+dose_Gy = 1.0
+scanner = "crysp_r40_35cm_bgo_2x0"
+
+[[point]]
+mean_R50_mm = 12.428767529661304
+t_ac_s = 180.0
+n_fail = 0
+mean_events = 2.00135098e6
+t_del_s = 120.0
+isotope = "O15"
+sigma_R_mm = 0.15510011585610764
+leaf = "del120s_ac300s_1Gy"
+[[point]]
+mean_R50_mm = 4.231786593440602
+t_ac_s = 180.0
+n_fail = 0
+mean_events = 292015.32
+t_del_s = 120.0
+isotope = "C11"
+sigma_R_mm = 0.4476152041338045
+leaf = "del120s_ac300s_1Gy"

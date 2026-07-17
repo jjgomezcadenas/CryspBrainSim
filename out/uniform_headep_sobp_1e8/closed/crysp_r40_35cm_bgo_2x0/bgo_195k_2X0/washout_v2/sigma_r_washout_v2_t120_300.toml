@@ -1,0 +1,22 @@
+method = "exact per-species g_i keep on the pooled leaf"
+generation = "v2"
+crystal = "bgo_195k"
+realizations = 100
+dose_Gy = 1.0
+sigma_band = 0.07106690545187015
+scanner = "crysp_r40_35cm_bgo_2x0"
+
+[[point]]
+nominal_R50_mean_mm = 11.56370478732777
+inflation = 1.484460214454843
+nominal_sigma_R_mm = 0.153172249485848
+n_fail_nominal = 0
+washout_survival = 0.483124478159624
+leaf = "del120s_ac300s_1Gy"
+n_fail_washed = 0
+t_del_s = 120.0
+t2_s = 300.0
+delta_R50_washout_mm = 0.037849498424293415
+t_ac_s = 180.0
+washed_sigma_R_mm = 0.22737811032029268
+washed_R50_mean_mm = 11.601554285752064

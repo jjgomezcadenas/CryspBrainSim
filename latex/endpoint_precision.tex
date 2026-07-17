@@ -811,6 +811,115 @@ scatter correction of Sec.~\ref{sec:outlook} is what would close the gap.
   \label{fig:bgovscsi}
 \end{figure}
 
+\section{The linear-endpoint estimator of Grogg et al.}
+\label{sec:grogg}
+
+The range observable of this note is the erfc half-height $\Rfifty$
+(Sec.~\ref{sec:estimator}). An earlier and widely cited in-room method takes a
+different endpoint: Grogg et al.~\cite{grogg2013} fit a \emph{straight line} to
+the distal fall-off and report its $x$-intercept, comparing it directly to the
+planned dose end-of-range without a Monte-Carlo intermediary. Their fit region
+begins at the last distal maximum of the activity profile and extends
+\SI{25}{mm} beyond it, the sub-range chosen for the best residual sum of
+squares; the profile is first ``standardised'' (reverse washout, target-density
+scaling, water-equivalent depth) and smoothed to the scanner resolution
+(\SI{7}{mm} FWHM). They quote a range accuracy of \SIrange{4}{5}{mm} on patient
+data. This section puts that estimator on our profiles, on equal footing with
+$\Rfifty$, to ask what its intrinsic precision is.
+
+On the uniform-brain phantom the standardisation is nearly a no-op --- density
+scaling and water-equivalent depth are trivial in a homogeneous medium, and the
+reverse-washout factor is a global per-species constant that cannot move a
+straight line's intercept --- so what transfers is the estimator itself: the
+linear intercept, computed on the \emph{same} whole-plane depth profile,
+\emph{same} events, \emph{same} reconstruction as $\Rfifty$, realisation by
+realisation. We run it on the two \SI{350}{mm}-AFOV arms (CsI R35/35 and its
+BGO counterpart r40/35) at a short in-room scan --- the \texttt{del120} window
+sub-cut to $[120,300]\,$s, a \SI{180}{s} acquisition begun \SI{2}{min} after
+beam-off, the regime of the original method. In this window $^{15}$O supplies a
+fraction $0.823$ of the events, confirming the $^{15}$O-dominance the endpoint
+method relies on. Three variants are measured: the linear intercept as
+published (their smoothing on), the intercept without smoothing, and $\Rfifty$;
+all use the thinned firm-up at \SI{1}{Gy}, $N = 100$ ($\pm7\%$).
+
+\begin{table}[htb]
+  \centering
+  \caption{Range precision of the linear-endpoint estimator vs.\ $\Rfifty$ at a
+    short in-room scan ($[120,300]\,$s, \SI{1}{Gy}, $N = 100$), on the two
+    \SI{350}{mm}-AFOV arms. Nominal / washed $\sigma_R$ in mm, on identical
+    events. The linear intercept without smoothing is dominated by
+    start-selection jitter; the \SI{7}{mm} smoothing of the published method
+    removes it but does not reach $\Rfifty$.}
+  \label{tab:grogg}
+  \vspace{1mm}
+  \begin{tabular}{l S[table-format=1.3] S[table-format=1.3]
+                     S[table-format=1.3] S[table-format=1.3]}
+    \toprule
+    & \multicolumn{2}{c}{CsI R35/35} & \multicolumn{2}{c}{BGO r40/35} \\
+    \cmidrule(lr){2-3}\cmidrule(lr){4-5}
+    Estimator & {nominal} & {washed} & {nominal} & {washed} \\
+    \midrule
+    $\Rfifty$ (erfc, this note)   & 0.216 & 0.275 & 0.153 & 0.227 \\
+    Linear intercept, raw         & 7.404 & 3.394 & 9.112 & 7.415 \\
+    Linear intercept, \SI{7}{mm} smoothed & 1.572 & 2.606 & 1.120 & 1.710 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\emph{The raw intercept is dominated by a start-selection lottery.} Without
+smoothing the linear estimator scatters by \SIrange{7}{9}{mm}
+(Table~\ref{tab:grogg}, Fig.~\ref{fig:grogg}) --- $30$--$60\times$ worse than
+$\Rfifty$. The
+per-realisation record locates the cause: the ``last distal maximum'' that
+anchors the fit region is placed by noise, its position jittering with a
+standard deviation of \SI{5.3}{mm} (CsI) and \SI{5.4}{mm} (BGO) across
+$13$--$14$ distinct bins over $\sim\!\SI{20}{mm}$, and the intercept walks from
+$\sim\!\SI{24}{mm}$ to $\sim\!\SI{49}{mm}$ as it moves. This start noise is
+orthogonal to the edge: the paired correlation between the linear intercept and
+$\Rfifty$ over the $N=100$ realisations is $0.02$. Conditioned on a fixed start
+bin, the intercept's residual spread is \SI{0.33}{mm} against $\Rfifty$'s
+\SI{0.22}{mm} on the same realisations --- the estimator's own precision, once
+the lottery is held fixed.
+
+\emph{Smoothing removes the lottery but not the deficit.} The published
+\SI{7}{mm} smoothing collapses the start jitter to a single bin (position
+standard deviation $\SI{5.3}{}\to\SI{0}{mm}$), and $\sigma_R$ falls
+$\sim\!5$--$8\times$, to \SIrange{1.1}{1.6}{mm} --- consistent with the
+\SIrange{4}{5}{mm} of the original patient study, and the fair rendering of the
+method. Two signatures confirm the mechanism: the mean intercept deepens to
+\SIrange{47}{49}{mm} (rounding the shoulder pulls the start proximal, flattening
+the fitted slope), and the \emph{physical} ordering $\sigma_R^{\text{washed}} >
+\sigma_R^{\text{nominal}}$ reappears (Table~\ref{tab:grogg}, smoothed row) once
+the noise-selection that had scrambled it is gone. Yet even smoothed, the linear
+intercept is $5$--$7\times$ less precise than $\Rfifty$ on the identical events.
+The reason is structural and smoothing cannot touch it: the straight line uses
+only the local slope of the fall-off and extrapolates $\sim\!\SI{40}{mm}$ to a
+zero crossing, so slope noise is amplified by the lever arm, and the crossing is
+pulled by any positive tail (scatter); $\Rfifty$ instead reads the half-height
+in place and noise-averages the whole edge, which its free baseline decouples
+from the background. The linear-endpoint method is a fast heterogeneity screen,
+not a precision estimator: at the same short in-room scan where it verifies the
+range at millimetres, the whole-edge fit measures it at
+\SIrange{0.15}{0.22}{mm}.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=\textwidth]{figs/grogg_v2.png}
+  \caption{The linear-endpoint estimator vs.\ $\Rfifty$ at a short in-room scan
+    ($[120,300]\,$s, \SI{1}{Gy}, $N = 100$; points, $\pm1/\sqrt{2(N-1)}$).
+    \emph{Left}: nominal $\sigma_R$ by estimator (log axis), both
+    \SI{350}{mm}-AFOV arms. The raw linear intercept is \SIrange{7}{9}{mm}; the
+    published \SI{7}{mm} smoothing recovers it to \SIrange{1.1}{1.6}{mm} but
+    stays $5$--$7\times$ above $\Rfifty$. \emph{Right}: the mechanism (CsI arm)
+    --- the linear fit-region start (the ``last distal maximum'') scatters
+    \SI{5.3}{mm} across many bins realisation-to-realisation, the lottery that
+    dominates the raw $\sigma_R$; the smoothing collapses it to a single bin
+    (and, landing proximal on the plateau, deepens the intercept). From
+    \texttt{drivers/sigma\_r\_v2.jl} \texttt{--tend 300} +
+    \texttt{tools/plot\_grogg\_v2.py}.}
+  \label{fig:grogg}
+\end{figure}
+
 \section{Outlook}
 \label{sec:outlook}
 
@@ -858,7 +967,14 @@ the zero-delay precision. Isotope washout, folded in as spatially uniform
 brain clearance, adds no range bias --- its edge shift calibrates away like
 any offset (parameter uncertainty $\pm\SI{0.02}{mm}$) --- but costs
 $\approx 1.5\times$ in $\sigma_R$ ($\SI{0.11}{}\to\SI{0.16}{mm}$ at
-\SI{1}{Gy}), the ordinary penalty for its $\sim\!57\%$ count loss.
+\SI{1}{Gy}), the ordinary penalty for its $\sim\!57\%$ count loss. Finally,
+against the linear distal-endpoint method of Grogg et al.~\cite{grogg2013} on
+identical events at a short in-room scan, the whole-edge erfc fit is
+$5$--$7\times$ more precise ($\sigma_R = \SIrange{0.15}{0.22}{mm}$ vs.\
+\SIrange{1.1}{1.6}{mm} for the smoothed linear intercept): the intercept
+extrapolates from a local slope where $\Rfifty$ reads a noise-averaged
+half-height, so the distal edge carries far more range information than a linear
+extrapolation can extract.
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}

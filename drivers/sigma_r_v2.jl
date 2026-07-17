@@ -13,6 +13,14 @@
 #   2. Per-isotope σ_R: select a PURE single-species sub-sample by the isotope
 #      column (exact, no posterior leakage) at its natural abundance (× p_dose),
 #      reconstruct, take σ_R — the positron-range test, now exact. O15 and C11.
+#      `--isotopes none` skips this pass.
+#
+#   3. Grogg-estimator σ_R (Grogg et al., IEEE TNS 60 (2013) 3290): every
+#      realization also carries the linear-x-intercept endpoint on the same
+#      profile — Poisson-weighted primary + paper-literal unweighted — so the
+#      estimator comparison to the erfc R50 is paired, realization by
+#      realization. Reported nominal and washed, with the in-window O15
+#      fraction (the paper's "~80% ¹⁵O" premise, measured).
 #
 # Each leaf's stamped washout_g is cross-checked against a recompute from the
 # stamped Mizuno params + window (note Eq. 8), so a self-contradicting shard fails.
@@ -24,7 +32,8 @@
 # (T ≤ t2): keep only t_decay ≤ T and recompute g_i for [t1,T] — reuses the shards,
 # no new products. Output filenames gain a `_t<t1>_<T>` tag so they don't clobber
 # the full-window results.
-# Writes <config>/washout_v2/{sigma_r_washout_v2, sigma_r_per_isotope_v2}[_t<t1>_<T>].toml
+# Writes <config>/washout_v2/{sigma_r_washout_v2, sigma_r_per_isotope_v2,
+# sigma_r_grogg_v2}[_t<t1>_<T>].toml
 
 using CryspBrainSim
 using RecoCryspTools
@@ -55,7 +64,8 @@ end
 # Isotope ids follow the shard's `isotope_names` order (0=O15,1=C11,2=N13,3=C10,4=O14).
 const ISO_ID = Dict("O15" => 0, "C11" => 1, "N13" => 2, "C10" => 3, "O14" => 4)
 const ISOTOPES = let i = findfirst(==("--isotopes"), ARGS)
-    i !== nothing ? String.(split(ARGS[i+1], ",")) : ["O15", "C11"]
+    i === nothing ? ["O15", "C11"] :
+        ARGS[i+1] == "none" ? String[] : String.(split(ARGS[i+1], ","))
 end
 const LEAVES = let i = findfirst(==("--leaves"), ARGS)
     i !== nothing ? String.(split(ARGS[i+1], ",")) :
@@ -112,23 +122,52 @@ function run_leaf(leaf)
             Mtot, count(inwin), t1, t2_eff, n_shards, p_dose, REALIZATIONS)
 
     recon(keep) = reconstruct_endpoint(ctx, endpoints(pool.coinc, keep)...,
-                                       a_all[keep]; device=DEV).r50_fit
-    reconv(keep) = (r = reconstruct_endpoint(ctx, endpoints(pool.coinc, keep)...,
-                                             a_all[keep]; device=DEV); (r.r50_fit, r.nev))
+                                       a_all[keep]; device=DEV)
+    reconv(keep) = (r = recon(keep); (r.r50_fit, r.nev))
 
-    # (1) washout: nominal vs exact washed
-    nom, wsh = Float64[], Float64[]
+    # (1+3) washout nominal vs exact washed — every realization carries the
+    # erfc R50 and the Grogg x-intercept (weighted + unweighted), paired.
+    est = Dict(k => Float64[] for k in
+               (:nom, :wsh, :nomg, :wshg, :nomgu, :wshgu, :nomgs, :wshgs,
+                :nomg_zf, :nomg_zl, :nomg_sl, :wshg_zf, :wshg_zl, :wshg_sl,
+                :nomgs_zf, :nomgs_zl, :nomgs_sl, :wshgs_zf, :wshgs_zl, :wshgs_sl))
     t = @elapsed for z in 1:REALIZATIONS
         rn = MersenneTwister(SEED_BASE + Int(t_del) * 1000 + z)
-        push!(nom, recon(inwin .& (rand(rn, Mtot) .< p_dose)))
+        r = recon(inwin .& (rand(rn, Mtot) .< p_dose))
+        push!(est[:nom], r.r50_fit); push!(est[:nomg], r.rx_grogg)
+        push!(est[:nomgu], r.rx_grogg_unw); push!(est[:nomgs], r.rx_grogg_sm)
+        push!(est[:nomg_zf], r.grogg_z_first); push!(est[:nomg_zl], r.grogg_z_last)
+        push!(est[:nomg_sl], r.grogg_slope)
+        push!(est[:nomgs_zf], r.grogg_sm_z_first); push!(est[:nomgs_zl], r.grogg_sm_z_last)
+        push!(est[:nomgs_sl], r.grogg_sm_slope)
         rw = MersenneTwister(SEED_BASE + 500_000 + Int(t_del) * 1000 + z)
-        push!(wsh, recon(inwin .& (rand(rw, Mtot) .< p_dose .* gvec)))
+        r = recon(inwin .& (rand(rw, Mtot) .< p_dose .* gvec))
+        push!(est[:wsh], r.r50_fit); push!(est[:wshg], r.rx_grogg)
+        push!(est[:wshgu], r.rx_grogg_unw); push!(est[:wshgs], r.rx_grogg_sm)
+        push!(est[:wshg_zf], r.grogg_z_first); push!(est[:wshg_zl], r.grogg_z_last)
+        push!(est[:wshg_sl], r.grogg_slope)
+        push!(est[:wshgs_zf], r.grogg_sm_z_first); push!(est[:wshgs_zl], r.grogg_sm_z_last)
+        push!(est[:wshgs_sl], r.grogg_sm_slope)
     end
+    nom, wsh = est[:nom], est[:wsh]
     σn, σw = σ_of(nom), σ_of(wsh)
     survival = sum(gvec[inwin]) / count(inwin)
     shift = mean(filter(isfinite, wsh)) - mean(filter(isfinite, nom))
+    # the measured isotope mix behind Grogg's ¹⁵O-dominance premise
+    o15win = (iso .== ISO_ID["O15"]) .& inwin
+    fO15 = count(o15win) / count(inwin)
+    fO15w = sum(gvec[o15win]) / sum(gvec[inwin])
     @printf("   washout: nom σ_R %.3f | washed σ_R %.3f | infl %.2f | ΔR50 %+.3f | surv %.3f | fails n/w %d/%d | %.0fs\n",
             σn, σw, σw / σn, shift, survival, nfail(nom), nfail(wsh), t)
+    @printf("   grogg-w: nom σ_R %.3f | washed σ_R %.3f | mean nom %8.3f | fails n/w %d/%d | O15 frac %.3f (washed %.3f)\n",
+            σ_of(est[:nomg]), σ_of(est[:wshg]), mean(filter(isfinite, est[:nomg])),
+            nfail(est[:nomg]), nfail(est[:wshg]), fO15, fO15w)
+    @printf("   grogg-u: nom σ_R %.3f | washed σ_R %.3f | mean nom %8.3f | fails n/w %d/%d\n",
+            σ_of(est[:nomgu]), σ_of(est[:wshgu]), mean(filter(isfinite, est[:nomgu])),
+            nfail(est[:nomgu]), nfail(est[:wshgu]))
+    @printf("   grogg-7mm: nom σ_R %.3f | washed σ_R %.3f | mean nom %8.3f | fails n/w %d/%d\n",
+            σ_of(est[:nomgs]), σ_of(est[:wshgs]), mean(filter(isfinite, est[:nomgs])),
+            nfail(est[:nomgs]), nfail(est[:wshgs]))
 
     # (2) per-isotope: pure single-species sub-sample at natural abundance
     iso_pts = []
@@ -146,10 +185,18 @@ function run_leaf(leaf)
                 name, mean(nevs), σ_of(r50), mean(filter(isfinite, r50)), nfail(r50), ti)
     end
 
+    # Grogg summary per variant: σ, mean, fails, nominal and washed.
+    gsum(kn, kw) = (σn=σ_of(est[kn]), σw=σ_of(est[kw]),
+                    Rn=mean(filter(isfinite, est[kn])),
+                    Rw=mean(filter(isfinite, est[kw])),
+                    fn=nfail(est[kn]), fw=nfail(est[kw]))
     return (leaf=leaf, t_del=t_del, t_ac=t_ac, t2=t2_eff, g=g, survival=survival,
             crystal_label=ctx.crystal, σ_nom=σn, σ_wsh=σw, shift=shift,
             R_nom=mean(filter(isfinite, nom)), R_wsh=mean(filter(isfinite, wsh)),
-            nfail_n=nfail(nom), nfail_w=nfail(wsh), iso=iso_pts)
+            nfail_n=nfail(nom), nfail_w=nfail(wsh), iso=iso_pts,
+            grogg_w=gsum(:nomg, :wshg), grogg_u=gsum(:nomgu, :wshgu),
+            grogg_s=gsum(:nomgs, :wshgs),
+            fO15=fO15, fO15_washed=fO15w, est=est)
 end
 
 function main()
@@ -178,19 +225,80 @@ function main()
                 "n_fail_nominal" => r.nfail_n, "n_fail_washed" => r.nfail_w)
                 for r in results]))
     end
-    open(joinpath(out, "sigma_r_per_isotope_v2$(tag).toml"), "w") do io
+    if !isempty(ISOTOPES)
+        open(joinpath(out, "sigma_r_per_isotope_v2$(tag).toml"), "w") do io
+            TOML.print(io, Dict(
+                "generation" => "v2", "scanner" => RING, "crystal" => CFG.crystal,
+                "dose_Gy" => THIN_DOSE, "realizations" => REALIZATIONS,
+                "method" => "pure per-species selection by the isotope column",
+                "point" => [Dict(
+                    "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
+                    "isotope" => p.iso, "sigma_R_mm" => p.σ, "mean_R50_mm" => p.meanR,
+                    "mean_events" => p.nev, "n_fail" => p.nfail)
+                    for r in results for p in r.iso]))
+        end
+        println("wrote $(joinpath(out, "sigma_r_per_isotope_v2$(tag).toml"))")
+    end
+    # The Grogg-estimator comparison: erfc R50 vs linear x-intercept, same
+    # realizations (paired seeds), weighted primary + unweighted variant.
+    open(joinpath(out, "sigma_r_grogg_v2$(tag).toml"), "w") do io
         TOML.print(io, Dict(
             "generation" => "v2", "scanner" => RING, "crystal" => CFG.crystal,
             "dose_Gy" => THIN_DOSE, "realizations" => REALIZATIONS,
-            "method" => "pure per-species selection by the isotope column",
+            "sigma_band" => 1 / sqrt(2 * (REALIZATIONS - 1)),
+            "method" => "Grogg linear x-intercept vs erfc R50, paired realizations",
             "point" => [Dict(
                 "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
-                "isotope" => p.iso, "sigma_R_mm" => p.σ, "mean_R50_mm" => p.meanR,
-                "mean_events" => p.nev, "n_fail" => p.nfail)
-                for r in results for p in r.iso]))
+                "t2_s" => r.t2, "o15_fraction" => r.fO15,
+                "o15_fraction_washed" => r.fO15_washed,
+                "erfc_nominal_sigma_R_mm" => r.σ_nom,
+                "erfc_washed_sigma_R_mm" => r.σ_wsh,
+                "erfc_nominal_R50_mean_mm" => r.R_nom,
+                "grogg_nominal_sigma_R_mm" => r.grogg_w.σn,
+                "grogg_washed_sigma_R_mm" => r.grogg_w.σw,
+                "grogg_nominal_Rx_mean_mm" => r.grogg_w.Rn,
+                "grogg_washed_Rx_mean_mm" => r.grogg_w.Rw,
+                "grogg_n_fail_nominal" => r.grogg_w.fn,
+                "grogg_n_fail_washed" => r.grogg_w.fw,
+                "grogg_unw_nominal_sigma_R_mm" => r.grogg_u.σn,
+                "grogg_unw_washed_sigma_R_mm" => r.grogg_u.σw,
+                "grogg_unw_nominal_Rx_mean_mm" => r.grogg_u.Rn,
+                "grogg_unw_washed_Rx_mean_mm" => r.grogg_u.Rw,
+                "grogg_unw_n_fail_nominal" => r.grogg_u.fn,
+                "grogg_unw_n_fail_washed" => r.grogg_u.fw,
+                # Grogg's full pipeline: 7 mm FWHM smoothing before the fit
+                "grogg_sm7_nominal_sigma_R_mm" => r.grogg_s.σn,
+                "grogg_sm7_washed_sigma_R_mm" => r.grogg_s.σw,
+                "grogg_sm7_nominal_Rx_mean_mm" => r.grogg_s.Rn,
+                "grogg_sm7_washed_Rx_mean_mm" => r.grogg_s.Rw,
+                "grogg_sm7_n_fail_nominal" => r.grogg_s.fn,
+                "grogg_sm7_n_fail_washed" => r.grogg_s.fw,
+                # per-realization endpoints + chosen Grogg range, paired by
+                # index — the raw material for paired/mechanism analysis
+                "realizations_erfc_nominal_mm" => r.est[:nom],
+                "realizations_erfc_washed_mm" => r.est[:wsh],
+                "realizations_grogg_nominal_mm" => r.est[:nomg],
+                "realizations_grogg_washed_mm" => r.est[:wshg],
+                "realizations_grogg_unw_nominal_mm" => r.est[:nomgu],
+                "realizations_grogg_unw_washed_mm" => r.est[:wshgu],
+                "realizations_grogg_nominal_z_first_mm" => r.est[:nomg_zf],
+                "realizations_grogg_nominal_z_last_mm" => r.est[:nomg_zl],
+                "realizations_grogg_nominal_slope" => r.est[:nomg_sl],
+                "realizations_grogg_washed_z_first_mm" => r.est[:wshg_zf],
+                "realizations_grogg_washed_z_last_mm" => r.est[:wshg_zl],
+                "realizations_grogg_washed_slope" => r.est[:wshg_sl],
+                "realizations_grogg_sm7_nominal_mm" => r.est[:nomgs],
+                "realizations_grogg_sm7_washed_mm" => r.est[:wshgs],
+                "realizations_grogg_sm7_nominal_z_first_mm" => r.est[:nomgs_zf],
+                "realizations_grogg_sm7_nominal_z_last_mm" => r.est[:nomgs_zl],
+                "realizations_grogg_sm7_nominal_slope" => r.est[:nomgs_sl],
+                "realizations_grogg_sm7_washed_z_first_mm" => r.est[:wshgs_zf],
+                "realizations_grogg_sm7_washed_z_last_mm" => r.est[:wshgs_zl],
+                "realizations_grogg_sm7_washed_slope" => r.est[:wshgs_sl])
+                for r in results]))
     end
     println("wrote $(joinpath(out, "sigma_r_washout_v2$(tag).toml"))")
-    println("wrote $(joinpath(out, "sigma_r_per_isotope_v2$(tag).toml"))")
+    println("wrote $(joinpath(out, "sigma_r_grogg_v2$(tag).toml"))")
 end
 
 main()
