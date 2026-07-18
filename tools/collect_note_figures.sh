@@ -38,4 +38,5 @@ cp "$CMP/washed_sigma_r_scanners_v2_csi.png"    "$FIGS/washed_sigma_r_scanners_v
 cp "$CMP/washed_sigma_r_scanners_v2_bgo.png"    "$FIGS/washed_sigma_r_scanners_v2_bgo.png"
 cp "$CMP/washed_bgo_vs_csi_v2.png"              "$FIGS/washed_bgo_vs_csi_v2.png"
 cp "$CMP/grogg_v2.png"                          "$FIGS/grogg_v2.png"
-echo "collected 17 figures into $FIGS/"
+cp "$CMP/grogg_leaves_v2.png"                   "$FIGS/grogg_leaves_v2.png"
+echo "collected 18 figures into $FIGS/"

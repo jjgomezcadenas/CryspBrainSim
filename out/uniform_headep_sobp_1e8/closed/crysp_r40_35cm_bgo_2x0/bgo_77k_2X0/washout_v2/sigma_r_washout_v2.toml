@@ -1,0 +1,50 @@
+method = "exact per-species g_i keep on the pooled leaf"
+generation = "v2"
+crystal = "bgo_77k"
+realizations = 100
+dose_Gy = 1.0
+sigma_band = 0.07106690545187015
+scanner = "crysp_r40_35cm_bgo_2x0"
+
+[[point]]
+nominal_R50_mean_mm = 11.318739505182398
+inflation = 1.5486764548215155
+nominal_sigma_R_mm = 0.13201153287351075
+n_fail_nominal = 0
+washout_survival = 0.4636742848089856
+leaf = "del120s_ac300s_1Gy"
+n_fail_washed = 0
+t_del_s = 120.0
+t2_s = 420.0
+delta_R50_washout_mm = 0.05769072120863683
+t_ac_s = 300.0
+washed_sigma_R_mm = 0.20444315272610258
+washed_R50_mean_mm = 11.376430226391035
+[[point]]
+nominal_R50_mean_mm = 11.034414096965222
+inflation = 1.5007688096798295
+nominal_sigma_R_mm = 0.14791969803613525
+n_fail_nominal = 0
+washout_survival = 0.4309934998994966
+leaf = "del180s_ac300s_1Gy"
+n_fail_washed = 0
+t_del_s = 180.0
+t2_s = 480.0
+delta_R50_washout_mm = 0.09365414793195903
+t_ac_s = 300.0
+washed_sigma_R_mm = 0.2219932691498905
+washed_R50_mean_mm = 11.12806824489718
+[[point]]
+nominal_R50_mean_mm = 10.085001270668306
+inflation = 1.4645602156323736
+nominal_sigma_R_mm = 0.20408862301033612
+n_fail_nominal = 0
+washout_survival = 0.3879902835671605
+leaf = "del300s_ac300s_1Gy"
+n_fail_washed = 0
+t_del_s = 300.0
+t2_s = 600.0
+delta_R50_washout_mm = 0.054094503812429195
+t_ac_s = 300.0
+washed_sigma_R_mm = 0.2989000777241321
+washed_R50_mean_mm = 10.139095774480735

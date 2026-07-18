@@ -315,6 +315,32 @@ washout_v2/sigma_r_grogg_v2_t120_300.toml` (per-realization endpoints + chosen f
 three estimators). Figure `tools/plot_grogg_v2.py` → `comparison/figures/grogg_v2.png` (wired into
 `collect_note_figures.sh`).
 
+**Delay-axis extension — two more operating points, full windows (2026-07-18).** Repeated on the two
+remaining detector variants upstream published under the same scanners — **CsI(Tl) ambient**
+(`crysp_r35_35cm_csi_2x0/csi_tl`, eres 7%, emin 0) and **BGO 77 K**
+(`crysp_r40_35cm_bgo_2x0/bgo_77k`, eres 10%) — over **all three full 300 s leaves**
+(del120/180/300, no `--tend`), N=100, 1 Gy. New configs `run_parameters_{r35_35_csi_tl,r40_35_bgo_77k}_v2.toml`
+(copies of the r35_35/r40_35 v2 configs, only `crystal` changed; sensitivity cache shared per scanner
+geometry). Zero fit failures. **The estimator ordering holds at every delay and on both crystals** —
+three separated bands: R50 **0.13–0.31 mm** < smoothed-Grogg **0.9–2.2 mm** < raw-Grogg **2.3–8.7 mm**
+(R50 5–9× better than smoothed, 20–65× better than raw). Per leaf (nominal σ_R mm, R50 / grogg_raw /
+grogg_sm7):
+
+| leaf | CsI(Tl) | BGO 77 K |
+|---|---|---|
+| del120 | 0.202 / 7.19 / 1.91 | 0.132 / 8.68 / 0.89 |
+| del180 | 0.241 / 4.35 / 1.75 | 0.148 / 7.01 / 1.14 |
+| del300 | 0.307 / 2.33 / 2.19 | 0.204 / 5.78 / 0.96 |
+
+Raw-Grogg's deficit tracks residual plateau structure in the window (falls with delay on CsI(Tl) as
+the window drifts off-plateau; stays high on higher-count BGO). Washout ~1.5× (infl 1.46–1.62,
+ΔR₅₀ ≤ +0.12 mm), crystal-independent; ¹⁵O window fraction 0.79/0.75/0.63 (detector-blind, del120/180/300).
+BGO 77 K is the most precise arm measured (R50 0.132 mm at del120 — better eres + 2.1× counts). In the
+note as **§9 subsection** "Across the acquisition-delay axis" (Fig. 15). Outputs
+`out/…/{csi_tl_2X0,bgo_77k_2X0}/washout_v2/{sigma_r_washout_v2,sigma_r_per_isotope_v2,sigma_r_grogg_v2}.toml`
+(full windows, no tag); figure `tools/plot_grogg_leaves_v2.py` → `comparison/figures/grogg_leaves_v2.png`.
+The washout + per-isotope results for these two operating points are on disk too (same TOMLs).
+
 ## Data on disk
 
 Products at `PtCryspProds/uniform_headep_sobp_1e8/` are now **generation v2** (self-describing:

@@ -920,6 +920,42 @@ range at millimetres, the whole-edge fit measures it at
   \label{fig:grogg}
 \end{figure}
 
+\subsection*{Across the acquisition-delay axis}
+
+The single short scan above is one point on the delay axis. Repeating the
+comparison on the two remaining detector operating points --- CsI(Tl) at ambient
+temperature (R35/35, energy resolution $7\%$) and BGO at \SI{77}{K} (r40/35,
+$10\%$) --- over all three full \SI{300}{s} windows (\texttt{del120},
+\texttt{del180}, \texttt{del300}) confirms the ordering holds everywhere
+(Fig.~\ref{fig:grogg_leaves}). At every delay and on both crystals the three
+estimators stay in three separated bands: $\Rfifty$ at
+\SIrange{0.13}{0.31}{mm}, the smoothed linear intercept at
+\SIrange{0.9}{2.2}{mm}, the raw intercept at \SIrange{2.3}{8.7}{mm}. The gap
+between $\Rfifty$ and the smoothed intercept is $5$--$9\times$ across the axis;
+the raw intercept's $20$--$65\times$ deficit is again start-selection noise, its
+magnitude tracking how much plateau structure each window retains (it falls with
+delay on CsI(Tl), where the window drifts off the plateau, and stays high on the
+higher-count BGO). The washout cost is the ordinary $\approx\!1.5\times$ on both
+crystals (inflation $1.46$--$1.62$, edge shift $\le\SI{+0.12}{mm}$), and the
+in-window $^{15}$O fraction --- detector-blind --- falls $0.79\to0.75\to0.63$
+across the three delays, so Grogg's $^{15}$O-dominance premise holds at the short
+delay and erodes as $^{15}$O decays. $\Rfifty$ is the more precise estimator at
+every operating point, delay, and crystal measured.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=\textwidth]{figs/grogg_leaves_v2.png}
+  \caption{Nominal $\sigma_R$ by estimator vs.\ acquisition delay (full
+    \SI{300}{s} windows, \SI{1}{Gy}, $N = 100$; points,
+    $\pm1/\sqrt{2(N-1)}$), on the two ambient/cold operating points: CsI(Tl)
+    R35/35 (left) and BGO \SI{77}{K} r40/35 (right). The three estimators stay
+    in three separated bands at every delay --- $\Rfifty$ (erfc) lowest, the raw
+    linear intercept highest, the \SI{7}{mm}-smoothed intercept between --- with
+    $\Rfifty$ the more precise throughout. From \texttt{drivers/sigma\_r\_v2.jl}
+    + \texttt{tools/plot\_grogg\_leaves\_v2.py}.}
+  \label{fig:grogg_leaves}
+\end{figure}
+
 \section{Outlook}
 \label{sec:outlook}
 
