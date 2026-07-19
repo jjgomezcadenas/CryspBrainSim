@@ -13,6 +13,7 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{placeins}
 \usepackage{eurosym}
 \usepackage{siunitx}
 \usepackage{amsmath}
@@ -616,7 +617,39 @@ $\pm10\%$ at $N=50$, $\pm5\%$ at $N=200$.
 \section{Results}
 \label{sec:results}
 
-\begin{table}[ht]
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.7\textwidth]{figs/washed_shortscan_afov.png}
+  \caption{Washed range precision $\sigma_R$ at the short in-room scan (the
+  \SI{180}{s} window $[120,300]$~s, $1$~Gy, $N=100$; points with the
+  $\pm1/\sqrt{2(N-1)}$ band) as a function of scanner AFOV, for the two
+  crystals.}
+  \label{fig:shortscan_afov}
+\end{figure}
+
+We quantify the range precision $\sigma_R$ of each scanner as the standard
+deviation of the reconstructed distal endpoint \Rc\ over $N=100$
+statistically independent realisations of a single \SI{1}{\gray} acquisition
+(Sec.~\ref{sec:thining}), combining all isotopes at their natural abundance.
+Tables~\ref{tab:sigmaR_combined}, \ref{tab:sigmaR_50cm}
+and~\ref{tab:sigmaR_35cm} report $\sigma_R$ for the reference TBP scanner and
+the two smaller configurations (LAFOV, CAFOV), at the three acquisition-delay
+windows, without and with biological washout. Three features are common to all
+three geometries. First, the precision degrades smoothly with the acquisition
+delay, as the fixed \SI{300}{s} window records progressively fewer counts while
+$^{15}$O decays. Second, biological washout inflates $\sigma_R$ by the ordinary
+counting factor $1/\sqrt{\text{survival}}\approx 1.5$. Third, BGO
+is the more precise crystal at every delay and geometry, owing to its higher
+sensitivity ($\sim\!2\times$ the counts of CsI). Figure~\ref{fig:shortscan_afov} shows the
+washed range precision $\sigma_R$ at the short in-room scan (the
+\SI{180}{s} window $[120,300]$~s) as a function of scanner AFOV, for the two
+crystals. Several relevant observations can be extracted from the plot. First,
+BGO gives a more precise $\sigma_R$ than CsI; second, as expected, the precision degrades
+as the AFOV shortens; third, if we consider realistic delay times (120 or 180 seconds), 
+$\sigma_R$ is below \SI{300}{\micro\metre}, well below the \SI{1}{\milli\metre} precision sought for distal-edge determination.
+
+
+\begin{table}[htbp!]
   \centering
   \begin{tabular}{llccc}
     \toprule
@@ -630,19 +663,18 @@ $\pm10\%$ at $N=50$, $\pm5\%$ at $N=200$.
     \midrule
     \multirow{3}{*}{CsI (cryogenic)} & no washout           & $0.113$ & $0.174$ & $0.228$ \\
                                      & washout              & $0.232$ & $0.199$ & $0.309$ \\
-                                     & washout, short scan  & $0.271$ & --      & --      \\
+                                     & washout, short scan  & $0.243$ & --      & --      \\
     \bottomrule
   \end{tabular}
   \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
-  biological washout, for the two reference scanners on the 1~m ring
-  ($r_{\text{inner}}=387$~mm, axial FOV $1024$~mm), at the three
-  acquisition-delay windows ($1$~Gy, $N=100$ realisations). The full-window cases
-  use the \SI{300}{s} acquisition $[t_{\text{del}},t_{\text{del}}+300]$~s; the
-  short-scan case is the \SI{180}{s} window $[120,300]$~s.}
+  biological washout, for the reference TBP scanner, in both crystals, at the
+  three acquisition-delay windows ($1$~Gy, $N=100$ realisations). The full-window
+  cases use the \SI{300}{s} acquisition $[t_{\text{del}},t_{\text{del}}+300]$~s;
+  the short-scan case is the \SI{180}{s} window $[120,300]$~s.}
   \label{tab:sigmaR_combined}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[htbp!]
   \centering
   \begin{tabular}{llccc}
     \toprule
@@ -660,14 +692,13 @@ $\pm10\%$ at $N=50$, $\pm5\%$ at $N=200$.
     \bottomrule
   \end{tabular}
   \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
-  biological washout, for the two \SI{50}{cm}-AFOV scanners (axial FOV
-  $512$~mm; CsI $r_{\text{inner}}=350$~mm, BGO $r_{\text{inner}}=400$~mm with
-  cryostat), at the three acquisition-delay windows ($1$~Gy, $N=100$
+  biological washout, for the LAFOV configuration (\SI{50}{cm} AFOV), in both
+  crystals, at the three acquisition-delay windows ($1$~Gy, $N=100$
   realisations). Windows as in Table~\ref{tab:sigmaR_combined}.}
   \label{tab:sigmaR_50cm}
 \end{table}
 
-\begin{table}[ht]
+\begin{table}[htbp!]
   \centering
   \begin{tabular}{llccc}
     \toprule
@@ -685,15 +716,19 @@ $\pm10\%$ at $N=50$, $\pm5\%$ at $N=200$.
     \bottomrule
   \end{tabular}
   \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
-  biological washout, for the two \SI{35}{cm}-AFOV scanners (axial FOV
-  $358$~mm; CsI $r_{\text{inner}}=350$~mm, BGO $r_{\text{inner}}=400$~mm with
-  cryostat), at the three acquisition-delay windows ($1$~Gy, $N=100$
+  biological washout, for the CAFOV configuration (\SI{35}{cm} AFOV), in both
+  crystals, at the three acquisition-delay windows ($1$~Gy, $N=100$
   realisations). Windows as in Table~\ref{tab:sigmaR_combined}.}
   \label{tab:sigmaR_35cm}
 \end{table}
 
+
+
+\FloatBarrier
 \section{Conclusions}
 \label{sec:conclu}
+
+CRYSP scanners offer an excellent alternative to in-beam scanners, thanks to their full ring geometry, high sensitivity, excellent energy and spatial resolution and low cost. Their use affords short scans that minimise the impact of systematic uncertainties related to nuclear cross-sections~\cite{Espana2011}, biological washout~\cite{Mizuno2003} or patient movement~\cite{Knopf2009}. The intrinsic uncertainty introduced by the scanner design (combined with radioactive decay and including a model for washout) is much smaller than the sought precision for distal-edge prediction. Several configurations are possible, depending on the application and the budget. The optimal solution for a fully flexible scanner with very high precision may be the BGO LAFOV, but CsI CAFOV also offers an excellent case, in particular for head and well-localised tumours, at a very competitive cost. The systematic use of these scanners may be a crucial step to reach a high precision prediction on the distal edge of the treatment. 
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}
