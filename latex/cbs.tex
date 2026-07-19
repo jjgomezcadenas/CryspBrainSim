@@ -12,6 +12,7 @@
 \usepackage[a4paper,margin=2.5cm]{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{eurosym}
 \usepackage{siunitx}
 \usepackage{amsmath}
@@ -192,11 +193,6 @@ Table~\ref{tab:cryo_scint}.
 
 \begin{table}[ht]
   \centering
-  \caption{Light yield and scintillation decay constant of pure CsI and BGO at
-  room temperature and at cryogenic temperatures. CsI values from
-  Ref.~\cite{soleti_crysp}; BGO values from Ref.~\cite{ding_bgo}
-  (room-temperature decay constant is the nominal BGO value).}
-  \label{tab:cryo_scint}
   \begin{tabular}{llcc}
     \hline
     Material & Temperature & Light yield & Decay constant \\
@@ -210,6 +206,11 @@ Table~\ref{tab:cryo_scint}.
     BGO & $77$~K (liquid nitrogen)   & $\sim\!2.9\times10^{4}$ & $2.99$~$\mu$s / $9.01$~$\mu$s \\
     \hline
   \end{tabular}
+  \caption{Light yield and scintillation decay constant of pure CsI and BGO at
+  room temperature and at cryogenic temperatures. CsI values from
+  Ref.~\cite{soleti_crysp}; BGO values from Ref.~\cite{ding_bgo}
+  (room-temperature decay constant is the nominal BGO value).}
+  \label{tab:cryo_scint}
 \end{table}
 
 \begin{figure}[htbp]
@@ -308,14 +309,13 @@ inner radius $R_{\mathrm{inner}} = \SI{387}{\milli\metre}$ and an axial length o
 per wheel, for a total of 960 crystals. The crystals and the SiPMs operate inside a cryostat. Signals are extracted through flat kapton cables through suitable feedthroughs and read with custom electronics. The operation temperature is  \SI{77}{\kelvin}
  (liquid nitrogen), with two important qualifications. It is possible to operate a scanner of CsI(Tl) at room temperature, and BGO can be operated at \SI{195}{\kelvin} instead of \SI{77}{\kelvin}, trading a factor two in light yield by a much shorter scintillation time. 
  
- In addition to the reference scanner, we consider three more configurations per crystal. A ``large AFOV'' (LAFOV) configuration with an axial length of \SI{500}{\milli\metre} (same diameter as the reference scanner); a ``compact AFOV'' (CAFOV) configuration with axial length of \SI{350}{\milli\metre}, and a ``compact head-and-shoulder scanner'' (CHS), with
- axial length of \SI{300}{\milli\metre} and a diameter of \SI{600}{\milli\metre}. The energy resolution of the scanners at \SI{511}{\kilo\electronvolt} is 6\% for CsI~\cite{soleti_crysp,soleti_csi} and
+ In addition to the reference scanner, we consider two more configurations per crystal: a ``large AFOV'' (LAFOV) configuration with an axial length of \SI{500}{\milli\metre} (same diameter as the reference scanner), and a ``compact AFOV'' (CAFOV) configuration with an axial length of \SI{350}{\milli\metre}. The energy resolution of the scanners at \SI{511}{\kilo\electronvolt} is 6\% for CsI~\cite{soleti_crysp,soleti_csi} and
 10\% for BGO---a conservative value given the high light yields, but still two times better than the results often quoted in the literature---. The spatial resolution in the three
 coordinates is \SI{3.5}{\milli\metre} FWHM~\cite{soleti_crysp}.
 
 
 If the only aim were to verify proton treatments of tumours of the brain and
-skull base, the CHS model would be sufficient: the
+skull base, a compact configuration would be sufficient: the
 target always sits in the same place, and a short axial field of view (AFOV)
 covers it comfortably. The case for a larger scanner, on the other hand,  is its flexibility, e.g., the ability to deploy a single
 instrument across the range of anatomical sites that proton therapy treats.
@@ -492,10 +492,6 @@ Table~\ref{tab:washout_brain}.
 
 \begin{table}[ht]
   \centering
-  \caption{Three-component biological washout parameters for brain tissue,
-  from Mizuno et al.~\cite{Mizuno2003}. Uncertainties on the last digits are
-  in parentheses.}
-  \label{tab:washout_brain}
   \begin{tabular}{lccc}
     \hline
     Component & Fraction $M_k$ & $T_k^{\mathrm{bio}}$ (s) &
@@ -506,6 +502,10 @@ Table~\ref{tab:washout_brain}.
     Slow   & $0.35\,(1)$ & $10191\,(2200)$ & $6.8\times10^{-5}$ \\
     \hline
   \end{tabular}
+  \caption{Three-component biological washout parameters for brain tissue,
+  from Mizuno et al.~\cite{Mizuno2003}. Uncertainties on the last digits are
+  in parentheses.}
+  \label{tab:washout_brain}
 \end{table}
 
 The productions available to us model physical decay only, storing per species
@@ -615,6 +615,82 @@ $\pm10\%$ at $N=50$, $\pm5\%$ at $N=200$.
 
 \section{Results}
 \label{sec:results}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{llccc}
+    \toprule
+    & & \multicolumn{3}{c}{$\sigma_R$ [mm]} \\
+    \cmidrule(lr){3-5}
+    Scanner & Case & $t_{\text{del}}=120$~s & $180$~s & $300$~s \\
+    \midrule
+    \multirow{3}{*}{BGO 195~K}       & no washout           & $0.100$ & $0.113$ & $0.141$ \\
+                                     & washout              & $0.133$ & $0.168$ & $0.232$ \\
+                                     & washout, short scan  & $0.159$ & --      & --      \\
+    \midrule
+    \multirow{3}{*}{CsI (cryogenic)} & no washout           & $0.113$ & $0.174$ & $0.228$ \\
+                                     & washout              & $0.232$ & $0.199$ & $0.309$ \\
+                                     & washout, short scan  & $0.271$ & --      & --      \\
+    \bottomrule
+  \end{tabular}
+  \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
+  biological washout, for the two reference scanners on the 1~m ring
+  ($r_{\text{inner}}=387$~mm, axial FOV $1024$~mm), at the three
+  acquisition-delay windows ($1$~Gy, $N=100$ realisations). The full-window cases
+  use the \SI{300}{s} acquisition $[t_{\text{del}},t_{\text{del}}+300]$~s; the
+  short-scan case is the \SI{180}{s} window $[120,300]$~s.}
+  \label{tab:sigmaR_combined}
+\end{table}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{llccc}
+    \toprule
+    & & \multicolumn{3}{c}{$\sigma_R$ [mm]} \\
+    \cmidrule(lr){3-5}
+    Scanner & Case & $t_{\text{del}}=120$~s & $180$~s & $300$~s \\
+    \midrule
+    \multirow{3}{*}{BGO 195~K}       & no washout           & $0.111$ & $0.136$ & $0.154$ \\
+                                     & washout              & $0.182$ & $0.217$ & $0.285$ \\
+                                     & washout, short scan  & $0.196$ & --      & --      \\
+    \midrule
+    \multirow{3}{*}{CsI (cryogenic)} & no washout           & $0.148$ & $0.209$ & $0.240$ \\
+                                     & washout              & $0.235$ & $0.266$ & $0.395$ \\
+                                     & washout, short scan  & $0.262$ & --      & --      \\
+    \bottomrule
+  \end{tabular}
+  \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
+  biological washout, for the two \SI{50}{cm}-AFOV scanners (axial FOV
+  $512$~mm; CsI $r_{\text{inner}}=350$~mm, BGO $r_{\text{inner}}=400$~mm with
+  cryostat), at the three acquisition-delay windows ($1$~Gy, $N=100$
+  realisations). Windows as in Table~\ref{tab:sigmaR_combined}.}
+  \label{tab:sigmaR_50cm}
+\end{table}
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{llccc}
+    \toprule
+    & & \multicolumn{3}{c}{$\sigma_R$ [mm]} \\
+    \cmidrule(lr){3-5}
+    Scanner & Case & $t_{\text{del}}=120$~s & $180$~s & $300$~s \\
+    \midrule
+    \multirow{3}{*}{BGO 195~K}       & no washout           & $0.150$ & $0.173$ & $0.203$ \\
+                                     & washout              & $0.218$ & $0.236$ & $0.278$ \\
+                                     & washout, short scan  & $0.227$ & --      & --      \\
+    \midrule
+    \multirow{3}{*}{CsI (cryogenic)} & no washout           & $0.194$ & $0.214$ & $0.268$ \\
+                                     & washout              & $0.241$ & $0.290$ & $0.405$ \\
+                                     & washout, short scan  & $0.275$ & --      & --      \\
+    \bottomrule
+  \end{tabular}
+  \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
+  biological washout, for the two \SI{35}{cm}-AFOV scanners (axial FOV
+  $358$~mm; CsI $r_{\text{inner}}=350$~mm, BGO $r_{\text{inner}}=400$~mm with
+  cryostat), at the three acquisition-delay windows ($1$~Gy, $N=100$
+  realisations). Windows as in Table~\ref{tab:sigmaR_combined}.}
+  \label{tab:sigmaR_35cm}
+\end{table}
 
 \section{Conclusions}
 \label{sec:conclu}
