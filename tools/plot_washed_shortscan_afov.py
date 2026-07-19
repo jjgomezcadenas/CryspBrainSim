@@ -66,16 +66,17 @@ def main():
             s.append(v)
             bands.append(b)
         s = np.array(s)
-        dx = -0.03 if col is RED else 0.03
-        ax.errorbar(np.array(xs) + dx, s, yerr=s * np.array(bands), fmt=mk + "-",
-                    ms=8, lw=1.2, color=col, capsize=3, label=lab)
+        ax.errorbar(np.array(xs), s, yerr=s * np.array(bands), fmt=mk,
+                    ls="none", ms=8, color=col, capsize=3, label=lab)
     ax.set_xticks(xs)
     ax.set_xticklabels([lab for _, lab in SIZES], color=INK, fontsize=11)
     ax.set_xlim(-0.4, 2.4)
+    ax.set_yscale("log")
+    ax.set_ylim(0.1, 1.0)
     ax.set_ylabel("washed $\\sigma_R$ at 1 Gy [mm]", color=INK, fontsize=13)
     ax.set_title("Short in-room scan ([120,300] s): $\\sigma_R$ vs scanner AFOV",
                  color=INK, fontsize=12, loc="left")
-    ax.legend(frameon=False, fontsize=12, labelcolor=INK, loc="center left")
+    ax.legend(frameon=False, fontsize=12, labelcolor=INK, loc="upper right")
     fig.tight_layout()
 
     d = os.path.join(scenario_out(SCENARIO), TOPOLOGY, "comparison", "figures")

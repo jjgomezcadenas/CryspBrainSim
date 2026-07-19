@@ -1,22 +1,22 @@
 method = "exact per-species g_i keep on the pooled leaf"
 generation = "v2"
 crystal = "csi"
-realizations = 100
+realizations = 200
 dose_Gy = 1.0
-sigma_band = 0.07106690545187015
+sigma_band = 0.05012547071170855
 scanner = "crysp_ring_1m_csi_2x0"
 
 [[point]]
-nominal_R50_mean_mm = 11.223906243830632
-inflation = 2.04856616315071
-nominal_sigma_R_mm = 0.13238939523381824
+nominal_R50_mean_mm = 11.216018554027707
+inflation = 1.770593923520289
+nominal_sigma_R_mm = 0.13744487535029157
 n_fail_nominal = 0
 washout_survival = 0.48311160463445335
 leaf = "del120s_ac300s_1Gy"
 n_fail_washed = 0
 t_del_s = 120.0
 t2_s = 300.0
-delta_R50_washout_mm = -0.00037756532053734304
+delta_R50_washout_mm = 0.002181141609840509
 t_ac_s = 180.0
-washed_sigma_R_mm = 0.2712084354359859
-washed_R50_mean_mm = 11.223528678510094
+washed_sigma_R_mm = 0.2433590611142298
+washed_R50_mean_mm = 11.218199695637548
