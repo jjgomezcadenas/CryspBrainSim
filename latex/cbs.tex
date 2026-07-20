@@ -121,7 +121,7 @@ apparent shift of the range~\cite{Knopf2009,zhu2013}.
 In \emph{in-beam} imaging the signal is collected
 during and immediately after irradiation with the detectors at the treatment
 position, which retains the short-lived isotopes and keeps the patient
-stationary. In order to leave the beam path clear, in-beam PET has typically used two planar detector heads ~\cite{Crespo2006,Ferrero2018}. While in-beam minimises the effect of radioactive decay and washout, and eliminates the need of co-registration, the price to pay is reduced angular coverage, which lowers dramatically the sensitivity and introduces limited-angle image
+stationary. In order to leave the beam path clear, in-beam PET has typically used two planar detector heads~\cite{Crespo2006,Ferrero2018}. While in-beam minimises the effect of radioactive decay and washout, and eliminates the need of co-registration, the price to pay is reduced angular coverage, which lowers dramatically the sensitivity and introduces limited-angle image
 artefacts that grow away from the field centre~\cite{Crespo2006,Moglioni2022}. It also clutters the beam-delivery zone. 
 
  In \emph{in-room} imaging a dedicated
@@ -159,15 +159,15 @@ imaging is disfavoured, since it amplifies {\em avoidable} effects such as
 reduced ion activity and increased washout, and in-beam PET has so far been
 confined to research systems rather than clinical use.
 
-A large-sensitivity in-room PET offers a number of advantages that can help closing the existing gaps. Achieving a precise and fast movement of the bed from the beam to the scan is purely a mechanical engineering problem which can be addressed, in particular if planned ahead the installation; high sensitivity, combined with high spatial and energy resolution, provides a very precise activity image, and the known and stable parameters of the scanner permit a precise simulation. High sensitivity also allows for a short scan, minimising effects of washout and patient movement. All those features combined, offer an ideal scenario to devise a technique of distal edge verification with real clinical application. 
+A large-sensitivity in-room PET offers a number of advantages that can help closing the existing gaps. Achieving a precise and fast movement of the bed from the beam to the scan is purely a mechanical engineering problem which can be addressed, in particular if planned ahead of the installation; high sensitivity, combined with high spatial and energy resolution, provides a very precise activity image, and the known and stable parameters of the scanner permit a precise simulation. High sensitivity also allows for a short scan, minimising effects of washout and patient movement. All those features combined offer an ideal scenario to devise a technique of distal edge verification with real clinical application.
 
 Here, we propose an in-room PET scanner based on the CRYSP concept \cite{soleti_crysp}. The acronym, {\em CRYogenic Sensitive PET}, refers to the key innovation of these devices: suitable scintillators such as CsI and BGO dramatically increase their light yield at cryogenic temperatures, in exchange for a slower decay constant. 
 
 To quantify the application of CRYSP scanners to PBT, we define a scenario that idealises one of the more significant applications of PBT, e.g.\ the treatment of a head tumour, specifically an ependymoma (Fig.~\ref{fig:tumour}). We define a phantom which models a patient's head, a uniform brain-tissue ellipsoid, and apply a typical treatment dose, with a SOBP beam designed to deliver conformal coverage of the tumour. The resulting $\beta^+$ activity is then recorded by our CRYSP scanners. An erfc fit is performed on the image projection, from which the \Rc\ edge is obtained.
 
-Our objective here is to quantify the RMS variation of \Rc\ ($\sigma_R$) due to known factors. These include: a) the impact of the PET itself (sensitivity, AFOV, resolution), which we quantify as an {\em intrinsic} $\sigma_R$ due exclusively to the apparatus (all other effects being absent); b) the impact of radioactive decay, for different start-of-scan and total-scan times; c) the impact of washout. 
+Our objective here is to quantify the RMS variation of \Rc\ ($\sigma_R$) due to known factors. These include: a) the impact of the PET itself (sensitivity, AFOV, resolution); b) the impact of radioactive decay, for different start-of-scan and total-scan times; and c) the impact of washout. Effects (a) and (b) together set the ``no-washout'' $\sigma_R$ reported below, while (c) adds the washout cost.
 
-Notice that we do not attempt to quantify the impact of uncertainties such as density variations, the fidelity of Monte Carlo modelling (cross sections in particular), and washout. These have been amply covered in the literature~\cite{Espana2011,Knopf2009,Mizuno2003}, and the overall impact they quantify is of the order of a few millimetres in the best cases~\cite{Knopf2009,Paganetti2012}. Instead, our goal is to show that $\sigma_R$ measured with CRYSP scanners is small compared with these uncertainties, and thus the scanners offer an excellent tool to further quantify and reduce them in a controlled environment, and, eventually, a tool for clinical diagnosis.
+Notice that we do not attempt to quantify the systematic uncertainties such as density variations, the fidelity of Monte Carlo modelling (cross sections in particular), and the imperfect knowledge of the washout model. These have been amply covered in the literature~\cite{Espana2011,Knopf2009,Mizuno2003}, and the overall impact they quantify is of the order of a few millimetres in the best cases~\cite{Knopf2009,Paganetti2012}. Instead, our goal is to show that $\sigma_R$ measured with CRYSP scanners is small compared with these uncertainties, and thus the scanners offer an excellent tool to further quantify and reduce them in a controlled environment, and, eventually, a tool for clinical diagnosis.
 
 This paper is organised as follows. Section \ref{sec:crysp} explains the CRYSP concept in some detail. Section \ref{sec:setup} describes the study setup: the scanner configurations, the phantom, and the beam. Section \ref{sec:estimator} defines the estimator used for distal edge quantification and its uncertainty. The modelling of the biological washout is presented in section 
 \ref{sec:washout}, while section \ref{sec:thining} discusses the
@@ -225,9 +225,9 @@ Table~\ref{tab:cryo_scint}.
 \end{figure}
 
 
- In both cases, the intense light emission compensates the relatively slow decay constant, allowing a coincidence time resolution (CTR) of the order of a few nanoseconds. The long integration time needed to measure the signal, however, has a real impact on conventional PET imaging. As discussed in ~\cite{soleti_crysp}, the impact of pile-up in a CsI scanner is modest and can be further reduced with dedicated electronics. This may also be the case for a BGO scanner operating at 195 K but pile-up in the case of BGO at 77 K is too high for typical high-activity medical imaging. However, the activity in PBT scans, even at large doses, is two to three orders of magnitude smaller than that of imaging applications (Figure \ref{fig:activity_iso}). This, combined with the delay time ($\sim 2$ minutes) until the start of the acquisition, results in no significant pile-up for CsI or BGO at 195~K and only a very small effect ($\sim 1\%$) for BGO at 77~K. Thus, the relatively slow scintillation response of these devices---the main limitation for clinical PET imaging---becomes a non-issue for PBT.
+ In both cases, the intense light emission compensates the relatively slow decay constant, allowing a coincidence time resolution (CTR) of the order of a few nanoseconds. The long integration time needed to measure the signal, however, has a real impact on conventional PET imaging. As discussed in~\cite{soleti_crysp}, the impact of pile-up in a CsI scanner is modest and can be further reduced with dedicated electronics. This may also be the case for a BGO scanner operating at 195 K but pile-up in the case of BGO at 77 K is too high for typical high-activity medical imaging. However, the activity in PBT scans, even at large doses, is two to three orders of magnitude smaller than that of imaging applications (Figure \ref{fig:activity_iso}). This, combined with the delay time ($\sim 2$ minutes) until the start of the acquisition, results in no significant pile-up for CsI or BGO at 195~K and only a very small effect ($\sim 1\%$) for BGO at 77~K. Thus, the relatively slow scintillation response of these devices---the main limitation for clinical PET imaging---becomes a non-issue for PBT.
  
- In exchange, the large light yield has several benefits. First, it brings the energy resolution of the scanners essentially to the Fano limit. In CsI, a resolution of 6\% has been measured~\cite{soleti_csi}, and BGO can likely reach a similar value with enough light yield. Excellent energy resolution has the desirable effect of reducing significantly the impact of multiple scattering in image reconstruction, thus minimising one important source of smearing in the image. Second, the use of monolithic crystals read out by SiPMs and reconstructing the three coordinates of the impinging gamma becomes feasible. There is enough light to guarantee excellent sharing between large SiPMs (typically of $6 \times 6$ mm$^2$, as proposed in~\cite{soleti_crysp}), and the use of convolutional neural networks allows an excellent spatial resolution in the three coordinates, thus eliminating parallax effects. Spatial resolution and no-parallax, in turn, contribute to a clean, artefact-free reconstruction of the image. 
+ In exchange, the large light yield has several benefits. First, it brings the energy resolution of the scanners essentially to the Fano limit. In CsI, a resolution of 6\% has been measured~\cite{soleti_csi}, and BGO can likely reach a similar value with enough light yield, though we adopt a conservative $10\%$ for it in this study. Excellent energy resolution has the desirable effect of reducing significantly the impact of multiple scattering in image reconstruction, thus minimising one important source of smearing in the image. Second, the use of monolithic crystals read out by SiPMs and reconstructing the three coordinates of the impinging gamma becomes feasible. There is enough light to guarantee excellent sharing between large SiPMs (typically of $6 \times 6$ mm$^2$, as proposed in~\cite{soleti_crysp}), and the use of convolutional neural networks allows an excellent spatial resolution in the three coordinates, thus eliminating parallax effects. Spatial resolution and no-parallax, in turn, contribute to a clean, artefact-free reconstruction of the image. 
  
  \begin{table}[htbp]
 \centering
@@ -261,15 +261,15 @@ and PETsys (TOF electronics). The cost of CRYSP electronics comes from our own c
     readout chain, while the CRYSP crystals use a simpler
     chain without TOF. \emph{(Bottom)} full-scanner
     cost for the monolithic BGO (left panel) and CsI (right panel) options,
-    at the reference geometry ($D = 770$~mm, AFOV~$= 1000$~mm) and for the
+    at the reference geometry ($D = 774$~mm, AFOV~$= 1024$~mm) and for the
     more compact in-room configurations considered in this work.}
   \label{fig:cost}
 \end{figure}
 
  
- The scanners also offer a very competitive cost. CsI is the cheapest option, and readily available. BGO, on the other hand, although a common material for PET, with a very competitive cost when compared with LYSO, has the drawback of restricted supply---an important fraction of the production comes from China---and more volatility in cost. In both cases, monolithic crystals reduce costs relative to their pixelated analogues. Furthermore, the readout is considerably cheaper. In large quantities the cost of the SiPMs is proportional to the deployed surface and independent of pixel size. The number of electronics channels, by contrast, does depend on it. CRYSP crystals are read out by matrices of $8 \times 8$ SiPMs of $6 \times 6$ mm$^2$, while conventional scanners use a typical size for pixels of  $3 \times 3$ mm$^2$. Thus the number of channels in a conventional scanner is of the order of a factor 4 larger than those of a CRYSP scanner. Finally, there is the cost of the electronics channels themselves. LYSO scanners use fast electronics and synchronisation between system clocks in the range of hundreds of picoseconds (to take advantage of TOF capabilities) while CRYSP scanners need to handle large signals with synchronisation at the nanosecond level. Typical costs of TOF electronics for LYSO scanners range around 20 \euro/channel, while the estimated cost for CRYSP electronics is of the order of 12 \euro/channel. Figure \ref{fig:cost} summarises the picture. 
+ The scanners also offer a very competitive cost. CsI is the cheapest option, and readily available. BGO, on the other hand, although a common material for PET, with a very competitive cost when compared with LYSO, has the drawback of restricted supply---an important fraction of the production comes from China---and more volatility in cost. In both cases, monolithic crystals reduce costs relative to their pixelated analogues. Furthermore, the readout is considerably cheaper. In large quantities the cost of the SiPMs is proportional to the deployed surface and independent of pixel size. The number of electronics channels, by contrast, does depend on it. CRYSP crystals are read out by matrices of $8 \times 8$ SiPMs of $6 \times 6$ mm$^2$, while conventional scanners use a typical size for pixels of  $3 \times 3$ mm$^2$. Thus the number of channels in a conventional scanner is of the order of a factor 4 larger than those of a CRYSP scanner. Finally, there is the cost of the electronics channels themselves. LYSO scanners use fast electronics and synchronisation between system clocks in the range of hundreds of picoseconds (to take advantage of TOF capabilities) while CRYSP scanners need to handle large signals with synchronisation at the nanosecond level. Typical costs of TOF electronics for LYSO scanners range around 20 \euro/channel, while the estimated cost for CRYSP electronics is of the order of 12 \euro/channel. The unit costs of the individual detector elements are collected in Table~\ref{tab:element-costs}, and Figure~\ref{fig:cost} summarises the resulting scanner cost.
  
-An important factor not fully captured by the price tag is that of material availability. Both LYSO and BGO are rare Earths, heavily controlled by a few actors, China in particular. This introduces uncertainties on the supply (and variability of cost) absent in the case of CsI, a common and readily available material. 
+An important factor not fully captured by the price tag is that of material availability. LYSO relies on lutetium, a rare earth, and BGO on germanium and bismuth; all are strategically controlled materials whose supply is concentrated in a few actors, China in particular. This introduces uncertainties on the supply (and variability of cost) absent in the case of CsI, a common and readily available material. 
 
 Importantly for this application, monolithic crystals of CsI(Tl) are also readily available and offer a performance similar to that of cryogenic pure CsI in both light yield (50,000 photons/MeV, a factor two less than pure CsI at 77 K but still plenty for good energy and spatial resolution), and lifetime (also of the order of 1 $\mu$s). Like cryogenic BGO, the use of CsI(Tl) is problematic in high-activity applications due to its afterglow, but this effect is irrelevant in the low-activity environment of PBT. 
  
@@ -287,14 +287,13 @@ Importantly for this application, monolithic crystals of CsI(Tl) are also readil
   enhancing mass invading the roof of the fourth ventricle and growing downward
   toward the foramen magnum, with the brainstem displaced anteriorly. The
   tumour--brainstem interface visible here is precisely the region where the
-  distal edge of a proton beam must be placed. Image credit: https://case.edu/med/neurology/NR/cerebelepend2.htm.}
+  distal edge of a proton beam must be placed. Image credit: \url{https://case.edu/med/neurology/NR/cerebelepend2.htm}.}
   \label{fig:tumour}
 \end{figure}
 
 Our setup is chosen to model one of the most relevant applications of PBT. Ependymomas are rare tumours of the central nervous system which arise from the ependymal cells lining the cerebral ventricles and
 the central canal of the spinal cord~\citep{donahue2022,macdonald2013}. In children they are the third most common neuroepithelial tumour,
-comprising roughly \SIrange{5}{10}{\percent} of childhood brain tumours, or about \num{3.4} cases per million children in Europe with ages comprised in the range
-\numrange{0}{14} years~\citep{peris2006},  with a median age at diagnosis
+comprising roughly \SIrange{5}{10}{\percent} of childhood brain tumours, or about \num{3.4} cases per million children in Europe, aged \numrange{0}{14} years~\citep{peris2006},  with a median age at diagnosis
 of only \SIrange{4}{6}{\years}. In children, ependymomas grow in the lower-back part of the skull, specifically in the cavity that holds the brainstem and cerebellum, and tend to be very aggressive (Figure \ref{fig:tumour}). Thus the need to adjust the beam to fully cover the tumour, while sparing healthy cerebellum tissue. This general requirement is all the more poignant in children and translates into the need to predict the distal edge with great accuracy. A target value often quoted in the literature is $\sim 1$ mm. 
 
 At the same time, ependymomas in adults appear predominantly as a spinal-cord tumour, with about \SI{64}{\percent} arising in the spine~\citep{mcguire2009}. 
@@ -305,13 +304,13 @@ The wide range of tumours that can be treated with a proton beam drives the CRYS
 
 We take as a reference a ``total body PET'' (TBP) with an
 inner radius $R_{\mathrm{inner}} = \SI{387}{\milli\metre}$ and an axial length of
-\SI{1024}{\milli\metre}, following the model presented in \cite{soleti_crysp}. The scanner deploys monolithic CsI (BGO) crystals of $48 \times 48$~mm$^2$ surface and a depth of 2 radiation lengths
+\SI{1024}{\milli\metre}, following the model presented in \cite{soleti_crysp}. The scanner deploys monolithic CsI or BGO crystals of $48 \times 48$~mm$^2$ surface and a depth of 2 radiation lengths
 (2~X$_0$). It has 20 wheels and 48 crystals
 per wheel, for a total of 960 crystals. The crystals and the SiPMs operate inside a cryostat. Signals are extracted through flat kapton cables through suitable feedthroughs and read with custom electronics. The operation temperature is  \SI{77}{\kelvin}
  (liquid nitrogen), with two important qualifications. It is possible to operate a scanner of CsI(Tl) at room temperature, and BGO can be operated at \SI{195}{\kelvin} instead of \SI{77}{\kelvin}, trading a factor two in light yield by a much shorter scintillation time. 
  
  In addition to the reference scanner, we consider two more configurations per crystal: a ``large AFOV'' (LAFOV) configuration with an axial length of \SI{500}{\milli\metre} (same diameter as the reference scanner), and a ``compact AFOV'' (CAFOV) configuration with an axial length of \SI{350}{\milli\metre}. The energy resolution of the scanners at \SI{511}{\kilo\electronvolt} is 6\% for CsI~\cite{soleti_crysp,soleti_csi} and
-10\% for BGO---a conservative value given the high light yields, but still two times better than the results often quoted in the literature---. The spatial resolution in the three
+10\% for BGO---a conservative value given the high light yields, but still two times better than the results often quoted in the literature. The spatial resolution in the three
 coordinates is \SI{3.5}{\milli\metre} FWHM~\cite{soleti_crysp}.
 
 
@@ -373,11 +372,12 @@ the list of lines of response (LORs) produced by a PET scanner.
 MLEM~\cite{shepp_vardi} is used to reconstruct the activity image
 $A(x,y,z)$. \Rc\ is estimated through a depth-profile extraction, followed by an erfc fit.  
 
-To find $\sigma_R$, ten independent ``shards'' (each of \SI{1}{\gray}) are run, collecting a sample with ten times the statistics of a single dose.
+To find $\sigma_R$, ten independent ``shards'' (each of \SI{1}{\gray}) are run and pooled into a single event sample; the thinning method (Sec.~\ref{sec:thining}) is then executed over this pool to estimate $\sigma_R$.
 
-The fit to a single run yields a predicted distal value of
-\SI{-16.10}{\milli\metre}, to be compared with the distal value of the true beam
-profile, \SI{-16.45}{\milli\metre}.
+The calibration offset $\DR = \Roc - \Rc$ between the activity midpoint \Rc\ and
+the dose edge \Roc\ is fixed for a given setup and is determined beforehand (for
+example, via a precise simulation of the setup); on real data one then fits \Rc\
+and adds \DR\ to recover the distal edge \Roc\ (Sec.~\ref{sec:estimator}).
 
 \section{The estimator}
 \label{sec:estimator}
@@ -393,7 +393,8 @@ profile, \SI{-16.45}{\milli\metre}.
 \end{figure}
 
 
-The depth profile is the activity integrated over the full transverse
+Figure~\ref{fig:projections} shows orthogonal projections of one reconstructed
+run. The depth profile is the activity integrated over the full transverse
 plane at each depth,
 %
 \begin{equation}
@@ -655,21 +656,21 @@ $\sigma_R$ is below \SI{300}{\micro\metre}, well below the \SI{1}{\milli\metre} 
     \toprule
     & & \multicolumn{3}{c}{$\sigma_R$ [mm]} \\
     \cmidrule(lr){3-5}
-    Scanner & Case & $t_{\text{del}}=120$~s & $180$~s & $300$~s \\
+    Scanner & Case & $t_d=120$~s & $180$~s & $300$~s \\
     \midrule
     \multirow{3}{*}{BGO 195~K}       & no washout           & $0.100$ & $0.113$ & $0.141$ \\
                                      & washout              & $0.133$ & $0.168$ & $0.232$ \\
                                      & washout, short scan  & $0.159$ & --      & --      \\
     \midrule
-    \multirow{3}{*}{CsI (cryogenic)} & no washout           & $0.113$ & $0.174$ & $0.228$ \\
-                                     & washout              & $0.232$ & $0.199$ & $0.309$ \\
+    \multirow{3}{*}{CsI (cryogenic)} & no washout           & $0.118$ & $0.164$ & $0.228$ \\
+                                     & washout              & $0.226$ & $0.221$ & $0.309$ \\
                                      & washout, short scan  & $0.243$ & --      & --      \\
     \bottomrule
   \end{tabular}
   \caption{Combined range precision $\sigma_R$ (all isotopes), without and with
   biological washout, for the reference TBP scanner, in both crystals, at the
   three acquisition-delay windows ($1$~Gy, $N=100$ realisations). The full-window
-  cases use the \SI{300}{s} acquisition $[t_{\text{del}},t_{\text{del}}+300]$~s;
+  cases use the \SI{300}{s} acquisition $[t_d,t_d+300]$~s;
   the short-scan case is the \SI{180}{s} window $[120,300]$~s.}
   \label{tab:sigmaR_combined}
 \end{table}
@@ -680,7 +681,7 @@ $\sigma_R$ is below \SI{300}{\micro\metre}, well below the \SI{1}{\milli\metre} 
     \toprule
     & & \multicolumn{3}{c}{$\sigma_R$ [mm]} \\
     \cmidrule(lr){3-5}
-    Scanner & Case & $t_{\text{del}}=120$~s & $180$~s & $300$~s \\
+    Scanner & Case & $t_d=120$~s & $180$~s & $300$~s \\
     \midrule
     \multirow{3}{*}{BGO 195~K}       & no washout           & $0.111$ & $0.136$ & $0.154$ \\
                                      & washout              & $0.182$ & $0.217$ & $0.285$ \\
@@ -704,7 +705,7 @@ $\sigma_R$ is below \SI{300}{\micro\metre}, well below the \SI{1}{\milli\metre} 
     \toprule
     & & \multicolumn{3}{c}{$\sigma_R$ [mm]} \\
     \cmidrule(lr){3-5}
-    Scanner & Case & $t_{\text{del}}=120$~s & $180$~s & $300$~s \\
+    Scanner & Case & $t_d=120$~s & $180$~s & $300$~s \\
     \midrule
     \multirow{3}{*}{BGO 195~K}       & no washout           & $0.150$ & $0.173$ & $0.203$ \\
                                      & washout              & $0.218$ & $0.236$ & $0.278$ \\
