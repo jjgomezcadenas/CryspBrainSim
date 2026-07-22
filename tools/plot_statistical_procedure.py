@@ -56,54 +56,70 @@ def plot_shard(path):
 
 
 def main():
-    source = os.path.join(
+    root = os.path.join(
         config_out(SCENARIO, TOPOLOGY, SCANNER, CRYSTAL),
-        "statistical_procedure",
-        "reference_bgo_t120.toml",
+        "statistical_procedure", "del120s_ac300s_1Gy_D1p0Gy",
     )
-    with open(source, "rb") as stream:
-        result = tomllib.load(stream)
-    shards = result["independent_shards"]
-    thinning = result["thinning"]
-    r_shards = np.asarray(shards["R50_mm"], dtype=float)
-    r_nominal = np.asarray(thinning["nominal_R50_mm"], dtype=float)
-    r_washed = np.asarray(thinning["washed_R50_mm"], dtype=float)
+    shard_files = sorted(
+        os.path.join(root, "shards", name)
+        for name in os.listdir(os.path.join(root, "shards"))
+        if name.endswith(".toml")
+    )
+    shard_rows = [tomllib.load(open(path, "rb")) for path in shard_files]
+    nominal = tomllib.load(open(os.path.join(root, "combined", "nominal_N100.toml"), "rb"))
+    washed = tomllib.load(open(os.path.join(root, "combined", "washed_N100.toml"), "rb"))
+    r_shards = np.asarray([row["R50_mm"] for row in shard_rows], dtype=float)
+    r_nominal = np.asarray(nominal["R50_mm"], dtype=float)
+    r_washed = np.asarray(washed["R50_mm"], dtype=float)
+    shard_mean, shard_sigma = r_shards.mean(), r_shards.std(ddof=1)
+    shard_chi2 = np.asarray([row["erfc_chi2_dof"] for row in shard_rows], dtype=float)
+    representative = shard_rows[np.argsort(shard_chi2)[len(shard_rows) // 2]]
 
-    fig, axes = plt.subplots(1, 2, figsize=(10.4, 4.2), facecolor=SURFACE)
+    fig, axes = plt.subplots(1, 3, figsize=(15.2, 4.2), facecolor=SURFACE)
     for axis in axes:
         style(axis)
 
-    # With ten values, show every observation; the Gaussian is descriptive.
+    # (a) A representative individual edge fit.
     axis = axes[0]
+    z = np.asarray(representative["profile_z_mm"], dtype=float)
+    profile = np.asarray(representative["profile"], dtype=float)
+    base, amplitude, r50, width = np.asarray(representative["erfc_popt"], dtype=float)
+    edge = base + 0.5 * amplitude * np.vectorize(math.erfc)(
+        (z - r50) / (math.sqrt(2.0) * width)
+    )
+    axis.plot(z, profile, "o", ms=3, color=INK, label="reconstructed profile")
+    axis.plot(z, edge, color=BLUE, lw=2, label="bounded erfc fit")
+    axis.axvspan(*representative["fit_window_mm"], color=BLUE, alpha=0.08)
+    axis.axvline(r50, color=RED, lw=1.5, ls="--")
+    axis.set_title("(a) Representative independent shard", loc="left", color=INK)
+    axis.set_xlabel("depth [mm]", color=INK)
+    axis.set_ylabel("reconstructed activity [a.u.]", color=INK)
+    axis.legend(frameon=False, fontsize=8, labelcolor=INK)
+
+    # (b) With ten values, show every observation; the Gaussian is descriptive.
+    axis = axes[1]
     bins = np.linspace(r_shards.min() - 0.04, r_shards.max() + 0.04, 6)
     axis.hist(r_shards, bins=bins, density=True, color=BLUE, alpha=0.30,
               edgecolor=BLUE, linewidth=1.0)
     x = np.linspace(bins[0], bins[-1], 300)
-    axis.plot(x, gaussian(x, shards["mean_R50_mm"], shards["sigma_R_mm"]),
-              color=BLUE, lw=2, label="Gaussian from sample mean and spread")
+    axis.plot(x, gaussian(x, shard_mean, shard_sigma), color=BLUE, lw=2,
+              label="Gaussian from sample mean and spread")
     rug_height = 0.035 * axis.get_ylim()[1]
     axis.vlines(r_shards, 0, rug_height, color=INK, lw=1.4)
-    axis.set_title("(a) Ten independent 1-Gy shards", loc="left", color=INK)
+    axis.set_title("(b) Ten independent 1-Gy shards", loc="left", color=INK)
     axis.set_xlabel("$R_{50}$ [mm]", color=INK)
     axis.set_ylabel("density", color=INK)
     axis.legend(frameon=False, fontsize=8, labelcolor=INK)
 
-    axis = axes[1]
-    combined = np.concatenate((r_nominal, r_washed))
-    bins = np.linspace(combined.min(), combined.max(), 22)
-    axis.hist(r_nominal, bins=bins, density=True, histtype="stepfilled",
-              color=BLUE, alpha=0.24, label="nominal")
-    axis.hist(r_washed, bins=bins, density=True, histtype="step",
-              color=RED, linewidth=1.8, label="with washout")
+    # (c) The washed production ensemble.
+    axis = axes[2]
+    bins = np.linspace(r_washed.min(), r_washed.max(), 22)
+    axis.hist(r_washed, bins=bins, density=True, histtype="stepfilled",
+              color=RED, alpha=0.28, label="washed thinning")
     x = np.linspace(bins[0], bins[-1], 400)
-    axis.plot(x, gaussian(x, thinning["nominal_mean_R50_mm"],
-                          thinning["nominal_sigma_R_raw_mm"]),
-              color=BLUE, lw=1.8)
-    axis.plot(x, gaussian(x, thinning["washed_mean_R50_mm"],
-                          thinning["washed_sigma_R_raw_mm"]),
-              color=RED, lw=1.8)
-    axis.set_title(f"(b) Fixed-pool thinning, N={result['realizations']}",
-                   loc="left", color=INK)
+    axis.plot(x, gaussian(x, washed["mean_R50_mm"], washed["raw_sigma_R_mm"]),
+              color=RED, lw=1.8, label="Gaussian from raw spread")
+    axis.set_title("(c) Washed fixed-pool thinning, $N=100$", loc="left", color=INK)
     axis.set_xlabel("$R_{50}$ [mm]", color=INK)
     axis.set_ylabel("density", color=INK)
     axis.legend(frameon=False, fontsize=9, labelcolor=INK)
@@ -114,29 +130,25 @@ def main():
     plt.close(fig)
 
     macros = os.path.join(REPO, "latex", "statistical_procedure_results.tex")
-    shard_error = np.asarray(shards["R50_fit_error_mm"], dtype=float)
-    shard_chi2 = np.asarray(shards["erfc_chi2_dof"], dtype=float)
-    nominal_chi2 = np.asarray(thinning["nominal_erfc_chi2_dof"], dtype=float)
-    washed_chi2 = np.asarray(thinning["washed_erfc_chi2_dof"], dtype=float)
     lines = [
         "% Generated by tools/plot_statistical_procedure.py; do not edit.",
-        rf"\newcommand{{\StatShardMean}}{{{shards['mean_R50_mm']:.3f}}}",
-        rf"\newcommand{{\StatShardSigma}}{{{shards['sigma_R_mm']:.3f}}}",
-        rf"\newcommand{{\StatShardFitErrMin}}{{{np.nanmin(shard_error):.3f}}}",
-        rf"\newcommand{{\StatShardFitErrMax}}{{{np.nanmax(shard_error):.3f}}}",
+        rf"\newcommand{{\StatShardMean}}{{{shard_mean:.3f}}}",
+        rf"\newcommand{{\StatShardSigma}}{{{shard_sigma:.3f}}}",
+        rf"\newcommand{{\StatShardFitErrMin}}{{{np.nanmin([r['R50_fit_error_mm'] for r in shard_rows]):.3f}}}",
+        rf"\newcommand{{\StatShardFitErrMax}}{{{np.nanmax([r['R50_fit_error_mm'] for r in shard_rows]):.3f}}}",
         rf"\newcommand{{\StatShardChiMedian}}{{{np.nanmedian(shard_chi2):.2f}}}",
-        rf"\newcommand{{\StatNomMean}}{{{thinning['nominal_mean_R50_mm']:.3f}}}",
-        rf"\newcommand{{\StatNomRaw}}{{{thinning['nominal_sigma_R_raw_mm']:.3f}}}",
-        rf"\newcommand{{\StatNomCorrection}}{{{thinning['nominal_finite_pool_correction']:.3f}}}",
-        rf"\newcommand{{\StatNomCorrected}}{{{thinning['nominal_sigma_R_corrected_mm']:.3f}}}",
-        rf"\newcommand{{\StatWashMean}}{{{thinning['washed_mean_R50_mm']:.3f}}}",
-        rf"\newcommand{{\StatWashRaw}}{{{thinning['washed_sigma_R_raw_mm']:.3f}}}",
-        rf"\newcommand{{\StatWashCorrection}}{{{thinning['washed_finite_pool_correction']:.3f}}}",
-        rf"\newcommand{{\StatWashCorrected}}{{{thinning['washed_sigma_R_corrected_mm']:.3f}}}",
-        rf"\newcommand{{\StatNomChiMedian}}{{{np.nanmedian(nominal_chi2):.2f}}}",
-        rf"\newcommand{{\StatWashChiMedian}}{{{np.nanmedian(washed_chi2):.2f}}}",
-        rf"\newcommand{{\StatNomFailures}}{{{thinning['n_fail_nominal']}}}",
-        rf"\newcommand{{\StatWashFailures}}{{{thinning['n_fail_washed']}}}",
+        rf"\newcommand{{\StatNomMean}}{{{nominal['mean_R50_mm']:.3f}}}",
+        rf"\newcommand{{\StatNomRaw}}{{{nominal['raw_sigma_R_mm']:.3f}}}",
+        rf"\newcommand{{\StatNomCorrection}}{{{nominal['finite_pool_correction']:.3f}}}",
+        rf"\newcommand{{\StatNomCorrected}}{{{nominal['corrected_sigma_R_mm']:.3f}}}",
+        rf"\newcommand{{\StatWashMean}}{{{washed['mean_R50_mm']:.3f}}}",
+        rf"\newcommand{{\StatWashRaw}}{{{washed['raw_sigma_R_mm']:.3f}}}",
+        rf"\newcommand{{\StatWashCorrection}}{{{washed['finite_pool_correction']:.3f}}}",
+        rf"\newcommand{{\StatWashCorrected}}{{{washed['corrected_sigma_R_mm']:.3f}}}",
+        rf"\newcommand{{\StatNomChiMedian}}{{{np.nanmedian([tomllib.load(open(os.path.join(root, 'nominal', f'realization{i:04d}.toml'), 'rb'))['erfc_chi2_dof'] for i in nominal['indices']]):.2f}}}",
+        rf"\newcommand{{\StatWashChiMedian}}{{{np.nanmedian([tomllib.load(open(os.path.join(root, 'washed', f'realization{i:04d}.toml'), 'rb'))['erfc_chi2_dof'] for i in washed['indices']]):.2f}}}",
+        rf"\newcommand{{\StatNomFailures}}{{{nominal['n_fail']}}}",
+        rf"\newcommand{{\StatWashFailures}}{{{washed['n_fail']}}}",
     ]
     with open(macros, "w", encoding="utf-8") as stream:
         stream.write("\n".join(lines) + "\n")

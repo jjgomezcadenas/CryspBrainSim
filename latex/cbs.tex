@@ -625,7 +625,8 @@ and the finite-$N$ uncertainty are given in Appendix~\ref{app:thinning}.
 
 We illustrate and validate the complete procedure using the reference TBP
 scanner with BGO at \SI{195}{\kelvin}, a \SI{1}{\gray} acquisition beginning
-\SI{120}{s} after irradiation and lasting \SI{300}{s}. First, the ten
+\SI{120}{s} after irradiation and ending at \SI{300}{s}; the acquisition
+window is therefore \SI{180}{s}. First, the ten
 statistically independent \SI{1}{\gray} shards are reconstructed separately.
 The erfc fits give a mean endpoint of \StatShardMean~mm and a direct shard-to-shard
 spread $\sigma_R=\StatShardSigma$~mm. The individual fit uncertainties range
@@ -636,7 +637,7 @@ compatible with a Gaussian description, although ten points cannot establish
 normality. The relative sampling uncertainty of their standard deviation is
 $1/\sqrt{2(10-1)}=23.6\%$.
 
-We then pool the same shards and generate $N=200$ paired nominal and washed
+We then pool the same shards and generate $N=100$ paired nominal and washed
 realisations. The nominal distribution has mean \StatNomMean~mm and raw spread
 $\sigma_R^{\mathrm{thin}}=\StatNomRaw$~mm. The nominal finite-pool factor is
 $C_{\mathrm{pool}}=\StatNomCorrection$, giving the corrected
@@ -646,19 +647,23 @@ correction is \StatWashCorrection, and the corrected spread is
 \StatWashCorrected~mm. The median $\chi^2/\mathrm{dof}$ values are
 \StatNomChiMedian\ and \StatWashChiMedian\ for the nominal and washed fits,
 respectively; \StatNomFailures\ nominal and \StatWashFailures\ washed fits
-fail the quality requirements. With $N=200$, the relative sampling uncertainty
-on either standard deviation is $1/\sqrt{2(200-1)}=5.0\%$.
+fail the quality requirements. With $N=100$, the relative sampling uncertainty
+on either standard deviation is $1/\sqrt{2(100-1)}=7.1\%$. The
+$\chi^2/\mathrm{dof}$ values exceed unity systematically, so they are retained
+as fit diagnostics rather than interpreted as a literal goodness-of-fit test
+for statistically independent profile bins.
 
 \begin{figure}[htbp!]
   \centering
   \includegraphics[width=\textwidth]{figs/statistical_procedure_bgo.png}
-  \caption{Endpoint distributions for the reference TBP BGO scanner at
-  \SI{1}{\gray}, with a \SI{300}{s} acquisition beginning at $t_d=120$~s.
-  \emph{(a)} The ten independent-shard endpoints; tick marks show every value
+  \caption{Statistical procedure for the reference TBP BGO scanner at
+  \SI{1}{\gray}, with acquisition window $[120,300]$~s.
+  \emph{(a)} A representative independent-shard profile and bounded erfc fit.
+  \emph{(b)} The ten independent-shard endpoints; tick marks show every value
   and the curve uses their sample mean and standard deviation.
-  \emph{(b)} The $N=200$ nominal and washed fixed-pool thinning ensembles with
-  Gaussian curves determined from their raw means and spreads. The corrected
-  $\sigma_R$ values include Eq.~(\ref{eq:poolcorrection}).}
+  \emph{(c)} The $N=100$ washed fixed-pool thinning ensemble, with a Gaussian
+  curve determined from its raw mean and spread. Corrected $\sigma_R$ values
+  include Eq.~(\ref{eq:poolcorrection}).}
   \label{fig:statistical-procedure}
 \end{figure}
 
@@ -670,14 +675,14 @@ on either standard deviation is $1/\sqrt{2(200-1)}=5.0\%$.
              & Corrected $\sigma_R$ [mm] \\
     \midrule
     Independent shards & 10  & \StatShardSigma & \StatShardSigma \\
-    Nominal thinning   & 200 & \StatNomRaw     & \StatNomCorrected \\
-    Washed thinning    & 200 & \StatWashRaw    & \StatWashCorrected \\
+    Nominal thinning   & 100 & \StatNomRaw     & \StatNomCorrected \\
+    Washed thinning    & 100 & \StatWashRaw    & \StatWashCorrected \\
     \bottomrule
   \end{tabular}
   \caption{Direct and fixed-pool estimates for the reference statistical case.
   No finite-pool correction is applied to the ten independently generated
   shards. Their standard deviation has a 23.6\% relative sampling uncertainty,
-  compared with 5.0\% for each $N=200$ thinning ensemble.}
+  compared with 7.1\% for each $N=100$ thinning ensemble.}
   \label{tab:statistical-procedure}
 \end{table}
 
