@@ -75,7 +75,7 @@ def main():
     shard_chi2 = np.asarray([row["erfc_chi2_dof"] for row in shard_rows], dtype=float)
     representative = shard_rows[np.argsort(shard_chi2)[len(shard_rows) // 2]]
 
-    fig, axes = plt.subplots(1, 3, figsize=(15.2, 4.2), facecolor=SURFACE)
+    fig, axes = plt.subplots(1, 2, figsize=(10.4, 4.2), facecolor=SURFACE)
     for axis in axes:
         style(axis)
 
@@ -91,35 +91,20 @@ def main():
     axis.plot(z, edge, color=BLUE, lw=2, label="bounded erfc fit")
     axis.axvspan(*representative["fit_window_mm"], color=BLUE, alpha=0.08)
     axis.axvline(r50, color=RED, lw=1.5, ls="--")
-    axis.set_title("(a) Representative independent shard", loc="left", color=INK)
+    axis.set_title("(a) One independent 1-Gy simulation", loc="left", color=INK)
     axis.set_xlabel("depth [mm]", color=INK)
     axis.set_ylabel("reconstructed activity [a.u.]", color=INK)
     axis.legend(frameon=False, fontsize=8, labelcolor=INK)
 
-    # (b) With ten values, show every observation; the Gaussian is descriptive.
+    # (b) The washed production ensemble.
     axis = axes[1]
-    bins = np.linspace(r_shards.min() - 0.04, r_shards.max() + 0.04, 6)
-    axis.hist(r_shards, bins=bins, density=True, color=BLUE, alpha=0.30,
-              edgecolor=BLUE, linewidth=1.0)
-    x = np.linspace(bins[0], bins[-1], 300)
-    axis.plot(x, gaussian(x, shard_mean, shard_sigma), color=BLUE, lw=2,
-              label="Gaussian from sample mean and spread")
-    rug_height = 0.035 * axis.get_ylim()[1]
-    axis.vlines(r_shards, 0, rug_height, color=INK, lw=1.4)
-    axis.set_title("(b) Ten independent 1-Gy shards", loc="left", color=INK)
-    axis.set_xlabel("$R_{50}$ [mm]", color=INK)
-    axis.set_ylabel("density", color=INK)
-    axis.legend(frameon=False, fontsize=8, labelcolor=INK)
-
-    # (c) The washed production ensemble.
-    axis = axes[2]
-    bins = np.linspace(r_washed.min(), r_washed.max(), 22)
+    bins = np.linspace(r_washed.min(), r_washed.max(), 11)
     axis.hist(r_washed, bins=bins, density=True, histtype="stepfilled",
               color=RED, alpha=0.28, label="washed thinning")
     x = np.linspace(bins[0], bins[-1], 400)
     axis.plot(x, gaussian(x, washed["mean_R50_mm"], washed["raw_sigma_R_mm"]),
               color=RED, lw=1.8, label="Gaussian from raw spread")
-    axis.set_title("(c) Washed fixed-pool thinning, $N=100$", loc="left", color=INK)
+    axis.set_title("(b) Washed fixed-pool thinning, $N=100$", loc="left", color=INK)
     axis.set_xlabel("$R_{50}$ [mm]", color=INK)
     axis.set_ylabel("density", color=INK)
     axis.legend(frameon=False, fontsize=9, labelcolor=INK)

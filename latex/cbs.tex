@@ -373,7 +373,7 @@ the list of lines of response (LORs) produced by a PET scanner.
 MLEM~\cite{shepp_vardi} is used to reconstruct the activity image
 $A(x,y,z)$. \Rc\ is estimated through a depth-profile extraction, followed by an erfc fit.  
 
-To find $\sigma_R$, ten independent ``shards'' (each of \SI{1}{\gray}) are run and pooled into a single event sample; the thinning method (Sec.~\ref{sec:thinning}) is then executed over this pool to estimate $\sigma_R$.
+To find $\sigma_R$, ten independent \SI{1}{\gray} Monte Carlo samples are run and pooled into a single event sample; the thinning method (Sec.~\ref{sec:thinning}) is then executed over this pool to estimate $\sigma_R$.
 
 The calibration offset $\DR = \Roc - \Rc$ between the activity midpoint \Rc\ and
 the dose edge \Roc\ is fixed for a given setup and is determined beforehand (for
@@ -568,8 +568,8 @@ dominates the distal edge is therefore relatively preserved.
 The range precision $\sigma_R$ is the run-to-run spread of \Rc\ at a given
 dose and must therefore be estimated from an ensemble of acquisitions. We
 generate this ensemble by Bernoulli thinning of ten statistically independent
-Monte Carlo samples (``shards''), each corresponding to a complete
-\SI{1}{\gray} acquisition. The ten shards are pooled into a fixed master list,
+Monte Carlo samples, each corresponding to a complete \SI{1}{\gray}
+acquisition. The ten samples are pooled into a fixed master list,
 and each event $e$ is retained independently with probability
 %
 \begin{equation}
@@ -583,10 +583,10 @@ and each event $e$ is retained independently with probability
 \end{equation}
 %
 where $D$ is the target dose in Gy, $n=10$ is the number of pooled
-\SI{1}{\gray} shards, and $i(e)$ is the isotope label retained as Monte Carlo
+\SI{1}{\gray} samples, and $i(e)$ is the isotope label retained as Monte Carlo
 truth. This label is used only to construct the simulated aggregate signal; a
 PET measurement does not identify the isotope of an individual coincidence.
-The acquisition window is already imposed in each input shard.
+The acquisition window is already imposed in each input sample.
 
 For each realisation, a uniform random number $u_e$ is generated for every
 event and the event is retained when $u_e<q_e$. The nominal and washed samples
@@ -613,7 +613,7 @@ the measured spread by
 \end{equation}
 %
 For a common probability $q$, this becomes $1/\sqrt{1-q}$; hence nominal
-\SI{1}{\gray} thinning of the ten-shard pool has
+\SI{1}{\gray} thinning of the ten-sample pool has
 $C_{\mathrm{pool}}=1/\sqrt{0.9}=1.054$. The washed correction is calculated
 from the event-dependent probabilities in Eq.~(\ref{eq:keep}). The derivation,
 fit-quality requirements and distinction between the finite-pool correction
@@ -627,17 +627,15 @@ We illustrate and validate the complete procedure using the reference TBP
 scanner with BGO at \SI{195}{\kelvin}, a \SI{1}{\gray} acquisition beginning
 \SI{120}{s} after irradiation and ending at \SI{300}{s}; the acquisition
 window is therefore \SI{180}{s}. First, the ten
-statistically independent \SI{1}{\gray} shards are reconstructed separately.
-The erfc fits give a mean endpoint of \StatShardMean~mm and a direct shard-to-shard
+statistically independent \SI{1}{\gray} Monte Carlo samples are reconstructed separately.
+The erfc fits give a mean endpoint of \StatShardMean~mm and a direct sample-to-sample
 spread $\sigma_R=\StatShardSigma$~mm. The individual fit uncertainties range
 from \StatShardFitErrMin~mm to \StatShardFitErrMax~mm, and the median
-$\chi^2/\mathrm{dof}$ is \StatShardChiMedian. The ten endpoints are shown
-individually in Fig.~\ref{fig:statistical-procedure}; their distribution is
-compatible with a Gaussian description, although ten points cannot establish
-normality. The relative sampling uncertainty of their standard deviation is
+$\chi^2/\mathrm{dof}$ is \StatShardChiMedian. The relative sampling uncertainty
+of their standard deviation is
 $1/\sqrt{2(10-1)}=23.6\%$.
 
-We then pool the same shards and generate $N=100$ paired nominal and washed
+We then pool the same samples and generate $N=100$ paired nominal and washed
 realisations. The nominal distribution has mean \StatNomMean~mm and raw spread
 $\sigma_R^{\mathrm{thin}}=\StatNomRaw$~mm. The nominal finite-pool factor is
 $C_{\mathrm{pool}}=\StatNomCorrection$, giving the corrected
@@ -658,10 +656,8 @@ for statistically independent profile bins.
   \includegraphics[width=\textwidth]{figs/statistical_procedure_bgo.png}
   \caption{Statistical procedure for the reference TBP BGO scanner at
   \SI{1}{\gray}, with acquisition window $[120,300]$~s.
-  \emph{(a)} A representative independent-shard profile and bounded erfc fit.
-  \emph{(b)} The ten independent-shard endpoints; tick marks show every value
-  and the curve uses their sample mean and standard deviation.
-  \emph{(c)} The $N=100$ washed fixed-pool thinning ensemble, with a Gaussian
+  \emph{(a)} One independent \SI{1}{\gray} Monte Carlo sample and bounded erfc fit.
+  \emph{(b)} The $N=100$ washed fixed-pool thinning ensemble, with a Gaussian
   curve determined from its raw mean and spread. Corrected $\sigma_R$ values
   include Eq.~(\ref{eq:poolcorrection}).}
   \label{fig:statistical-procedure}
@@ -674,14 +670,14 @@ for statistically independent profile bins.
     Ensemble & Number of endpoints & Raw $\sigma_R$ [mm]
              & Corrected $\sigma_R$ [mm] \\
     \midrule
-    Independent shards & 10  & \StatShardSigma & \StatShardSigma \\
+    Independent simulations & 10  & \StatShardSigma & \StatShardSigma \\
     Nominal thinning   & 100 & \StatNomRaw     & \StatNomCorrected \\
     Washed thinning    & 100 & \StatWashRaw    & \StatWashCorrected \\
     \bottomrule
   \end{tabular}
   \caption{Direct and fixed-pool estimates for the reference statistical case.
   No finite-pool correction is applied to the ten independently generated
-  shards. Their standard deviation has a 23.6\% relative sampling uncertainty,
+  simulations. Their standard deviation has a 23.6\% relative sampling uncertainty,
   compared with 7.1\% for each $N=100$ thinning ensemble.}
   \label{tab:statistical-procedure}
 \end{table}
@@ -810,7 +806,7 @@ CRYSP scanners provide an alternative to in-beam systems that combines full-ring
 \subsection{Parent sample and Bernoulli thinning}
 
 Let the parent sample contain $M$ detected coincidences obtained by pooling
-$n$ independent shards. Each shard is generated with a different Monte Carlo
+$n$ independent Monte Carlo samples. Each sample is generated with a different Monte Carlo
 seed and represents the complete acquisition at the reference dose. Isotope
 production, physical radioactive decay, the acquisition window and detector
 response are therefore already represented in the parent events. For a target
@@ -908,7 +904,7 @@ deviations gives Eq.~(\ref{eq:poolcorrection}). When $q_e=q$ for all events,
   \label{eq:uniform-pool-correction}
 \end{equation}
 %
-For nominal \SI{1}{\gray} thinning of ten pooled \SI{1}{\gray} shards,
+For nominal \SI{1}{\gray} thinning of ten pooled \SI{1}{\gray} samples,
 $q=0.1$ and $C_{\mathrm{pool}}=1.054$. With washout,
 $q_e=0.1g_{i(e)}$ is smaller and varies between species, so the general sum in
 Eq.~(\ref{eq:poolcorrection}) is used. The washed correction can be smaller
@@ -919,7 +915,7 @@ count still degrades the endpoint precision.
 The variance ratio is exact for event counts. Its use for the reconstructed
 endpoint is tested directly in Sec.~\ref{sec:statistical-procedure}: the
 finite-pool-corrected thinning spread is compared with the spread of endpoints
-from the independently generated shards.
+from the independently generated simulations.
 
 \subsection{Finite-ensemble precision}
 
@@ -934,7 +930,7 @@ approximately
   \label{eq:sigma-sampling-error}
 \end{equation}
 %
-It is 23.6\% for the ten independent shards, 7.1\% for $N=100$, and 5.0\%
+It is 23.6\% for the ten independent simulations, 7.1\% for $N=100$, and 5.0\%
 for $N=200$. Increasing $N$ determines the conditional thinning distribution
 more precisely but does not create new parent Monte Carlo samples. The
 multiplicative $C_{\mathrm{pool}}$ restores the missing count variance; the
