@@ -36,6 +36,9 @@ const LEAF = argvalue("--leaf", "del120s_ac300s_1Gy", String)
 const REALIZATIONS = argvalue("--realizations", 200, value -> parse(Int, value))
 const DOSE_GY = argvalue("--dose", 1.0, value -> parse(Float64, value))
 const SEED_BASE = argvalue("--seed", 9_000_000, value -> parse(Int, value))
+const WASHED_ONLY = let index = findfirst(==("--washed-only"), ARGS)
+    index !== nothing
+end
 const MAX_FAILURE_FRACTION = 0.05
 const DEV = Metal.functional() ? MtlArray : identity
 
@@ -130,13 +133,9 @@ function main()
         washed_keep = uniform .< q_washed
         all(washed_keep .<= nominal_keep) || error("paired subset invariant failed")
 
-        nominal = reconstruct_endpoint(
-            ctx,
-            xs_all[:, nominal_keep],
-            xe_all[:, nominal_keep],
-            attenuation_all[nominal_keep];
-            device=DEV,
-        )
+        nominal = WASHED_ONLY ? nothing : reconstruct_endpoint(
+            ctx, xs_all[:, nominal_keep], xe_all[:, nominal_keep],
+            attenuation_all[nominal_keep]; device=DEV)
         washed = reconstruct_endpoint(
             ctx,
             xs_all[:, washed_keep],
@@ -144,14 +143,18 @@ function main()
             attenuation_all[washed_keep];
             device=DEV,
         )
-        push!(nominal_r50, nominal.r50_fit); push!(washed_r50, washed.r50_fit)
-        push!(nominal_error, nominal.z0_err); push!(washed_error, washed.z0_err)
-        push!(nominal_chi2, nominal.erfc_chi2_dof)
+        push!(nominal_r50, WASHED_ONLY ? NaN : nominal.r50_fit)
+        push!(washed_r50, washed.r50_fit)
+        push!(nominal_error, WASHED_ONLY ? NaN : nominal.z0_err)
+        push!(washed_error, washed.z0_err)
+        push!(nominal_chi2, WASHED_ONLY ? NaN : nominal.erfc_chi2_dof)
         push!(washed_chi2, washed.erfc_chi2_dof)
-        push!(nominal_counts, nominal.nev); push!(washed_counts, washed.nev)
+        push!(nominal_counts, WASHED_ONLY ? 0 : nominal.nev)
+        push!(washed_counts, washed.nev)
         realization % 10 == 0 && @printf("thinning %d/%d\n", realization, REALIZATIONS)
     end
-    nominal = fit_summary(nominal_r50)
+    nominal = WASHED_ONLY ?
+        (mean=NaN, sigma=NaN, failures=REALIZATIONS) : fit_summary(nominal_r50)
     washed = fit_summary(washed_r50)
 
     out = joinpath(config_out(ctx.scenario, ctx.topology, ctx.ring, ctx.crystal),
@@ -166,6 +169,7 @@ function main()
             "dose_Gy" => DOSE_GY,
             "realizations" => REALIZATIONS,
             "seed_base" => SEED_BASE,
+            "washed_only" => WASHED_ONLY,
             "fit_failure_fraction_limit" => MAX_FAILURE_FRACTION,
             "finite_N_relative_sigma_uncertainty" =>
                 1 / sqrt(2 * (REALIZATIONS - 1)),
@@ -207,7 +211,7 @@ function main()
             ),
         ))
     end
-    @printf("direct sigma_R %.4f mm; thinning raw/corrected %.4f/%.4f mm\n",
+    @printf("direct sigma_R %.4f mm; nominal thinning raw/corrected %.4f/%.4f mm\n",
             direct.sigma, nominal.sigma, correction_nominal * nominal.sigma)
     @printf("washed thinning raw/corrected %.4f/%.4f mm\n",
             washed.sigma, correction_washed * washed.sigma)

@@ -133,7 +133,7 @@ the fit's own error estimate, and the Grogg linear x-intercept on the same
 profile ([`fit_endpoint_grogg`](@ref)) — Poisson-weighted primary plus the
 paper-literal unweighted variant.
 """
-function reconstruct_endpoint(ctx, xs, xe, mult; device=identity)
+function reconstruct_endpoint(ctx, xs, xe, mult; device=identity, return_profile=false)
     p = ctx.params
     nev = size(xs, 2)
     sens = scaled_sensitivity(ctx.base, nev, p.n_sens)
@@ -149,11 +149,14 @@ function reconstruct_endpoint(ctx, xs, xe, mult; device=identity)
     # Grogg's full pipeline: 7 mm FWHM PET-resolution smoothing before the fit.
     fgs = fit_endpoint_grogg(z, prof; window=ctx.ref.window, weighted=true,
                              smooth_fwhm_mm=7.0)
-    return (nev=nev, r50_fit=fit.z0, z0_err=fit.z0_err,
+    result = (nev=nev, r50_fit=fit.z0, z0_err=fit.z0_err,
             erfc_chi2_dof=fit.chi2_dof, w=fit.w,
             r50_cross=windowed_crossing(z, prof, ctx.ref.window),
             rx_grogg=fg.x0, rx_grogg_err=fg.x0_err, rx_grogg_unw=fgu.x0,
             grogg_z_first=fg.z_first, grogg_z_last=fg.z_last, grogg_slope=fg.slope,
             rx_grogg_sm=fgs.x0, grogg_sm_z_first=fgs.z_first,
             grogg_sm_z_last=fgs.z_last, grogg_sm_slope=fgs.slope)
+    return return_profile ? merge(result, (profile_z_mm=z, profile=prof,
+                                           erfc_popt=fit.popt,
+                                           fit_window_mm=ctx.ref.window)) : result
 end

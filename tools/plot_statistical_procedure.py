@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Plot and export the paper's reference BGO statistical-procedure result."""
 
+import argparse
 import math
 import os
 import tomllib
@@ -25,6 +26,33 @@ def gaussian(x, mean, sigma):
     return np.exp(-0.5 * ((x - mean) / sigma) ** 2) / (
         sigma * math.sqrt(2 * math.pi)
     )
+
+
+def plot_shard(path):
+    with open(path, "rb") as stream:
+        result = tomllib.load(stream)
+    z = np.asarray(result["profile_z_mm"], dtype=float)
+    profile = np.asarray(result["profile"], dtype=float)
+    base, amplitude, r50, width = np.asarray(result["erfc_popt"], dtype=float)
+    edge = base + 0.5 * amplitude * np.vectorize(math.erfc)(
+        (z - r50) / (math.sqrt(2.0) * width)
+    )
+    fig, axis = plt.subplots(figsize=(6.4, 4.2), facecolor=SURFACE)
+    style(axis)
+    axis.plot(z, profile, "o", ms=3.5, color=INK, label="reconstructed profile")
+    axis.plot(z, edge, color=BLUE, lw=2.0, label="bounded erfc fit")
+    axis.axvspan(*result["fit_window_mm"], color=BLUE, alpha=0.08, label="fit window")
+    axis.axvline(r50, color=RED, lw=1.5, ls="--", label=rf"$R_{{50}}={r50:.3f}$ mm")
+    axis.set_xlabel("depth [mm]", color=INK)
+    axis.set_ylabel("reconstructed activity [a.u.]", color=INK)
+    axis.set_title(f"Shard {result['index']:03d}: $\\chi^2$/dof = {result['erfc_chi2_dof']:.2f}",
+                   loc="left", color=INK)
+    axis.legend(frameon=False, fontsize=8, labelcolor=INK)
+    fig.tight_layout()
+    figure = os.path.splitext(path)[0] + ".png"
+    fig.savefig(figure, dpi=220, facecolor=SURFACE)
+    plt.close(fig)
+    print(f"wrote {figure}")
 
 
 def main():
@@ -117,4 +145,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--shard", help="plot one completed shard TOML")
+    args = parser.parse_args()
+    plot_shard(args.shard) if args.shard else main()
