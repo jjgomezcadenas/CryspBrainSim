@@ -3,8 +3,8 @@
 # timing that set the per-isotope survival factor g_i (note Eq. 7). Central
 # values only for this first pass; the uncertainties in the table are recorded
 # for the later error-propagation study but not used yet. The single source for
-# both the truth-level reweight (tools/washout.py) and the detected-level
-# per-event thinning (drivers/washout_sigma_r.jl).
+# both the truth-level reweight (tools/washout.py) and the isotope-indexed,
+# window-integrated survival applied to labelled v2 LORs (drivers/sigma_r_v2.jl).
 
 [model]                        # spatially-uniform brain washout, one table for
                                # every isotope (species hook deferred)

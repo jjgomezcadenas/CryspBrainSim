@@ -599,11 +599,10 @@ time, both recorded per coincidence. The first factor drops decays occurring
 before the scan opens at delay $t_d$. The second keeps a fraction $D/n$ of the
 $n$-Gy pool, producing $D$~Gy of events and letting $\sigma_R(D)$ be mapped
 without new simulation, with $\sigma_R\propto 1/\sqrt{D}$. The third applies
-washout as a per-event loss through the survival $w$, which reduces to the
-species' own $g_i$ (Sec.~\ref{sec:washout}) where the emitting isotope is known,
-as it is in the production Monte Carlo. Setting the washout factor to unity gives
-the nominal case, and replacing it by a single species' abundance selects an
-``$i$-like'' sub-sample used to measure the per-species precision.
+washout as a per-event loss. Since the emitting isotope $i(e)$ is recorded for
+each event in the production Monte Carlo, the event is retained with the
+corresponding window-integrated survival probability $g_{i(e)}$
+(Sec.~\ref{sec:washout}). Setting this factor to unity gives the nominal case.
 
 The method rests on the thinning theorem for Poisson processes. Radioactive
 decay events follow Poisson statistics, and independent Bernoulli thinning of a

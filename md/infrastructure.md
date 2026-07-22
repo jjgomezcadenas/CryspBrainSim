@@ -33,9 +33,8 @@ whole chain:
 **Drivers** (`drivers/`): `one_shard.jl`, `ten_shards_dose.jl`, `ten_shards_tstart.jl`,
 `sigma_r_at_dose.jl`, `sigma_r_sweep_dose.jl` (`--all-events` reconstructs the uncorrected
 working-protocol selection → `sweep_all.toml`; the thin seeds pair with the trues run),
-`washout_sigma_r.jl` (isotope-washout σ_R: per-event thinning by the washout survival w(z₀,t_decay);
-`--thinned` pools for N-realization σ_R at `--dose`/`--tstart`, `--washed-only` and the σ_R-blowup +
-`min_washed_events` guards for the low-count corner).
+`sigma_r_v2.jl` (authoritative nominal, exact isotope-labelled washout and per-isotope σ_R), and
+`sigma_r_niter_v2.jl` (MLEM-iteration stability using the same v2 washout model).
 
 **Python tools** (`tools/`): `fit_activity_profile.py` (the fit lab — `--model erfc|sigmoid|both`,
 `--roi`, `--no-baseline`, `--no-pulls`; whole-plane erfc + free baseline is the default),

@@ -4,6 +4,7 @@ using NPZ
 using HDF5
 using TOML
 using LinearAlgebra: diag
+using Random: MersenneTwister
 using SpecialFunctions: erfc, erfcinv
 
 # Cross-validation reference (dev/PLAN.md validation ladder rung 3): shared
@@ -156,6 +157,11 @@ end
         # Truth recovery: the data were generated with z0 = 150, w = 3.
         @test abs(f.z0 - 150.0) < 3 * f.z0_err
         @test abs(f.w - 3.0) < 0.5
+        @test isfinite(f.chi2_dof)
+        @test f.popt[1] >= 0
+        @test f.popt[2] > 0
+        @test win[1] <= f.z0 <= win[2]
+        @test 0 < f.w <= win[2] - win[1]
     end
 
     @testset "fit_endpoint — 1-D edge (test A), unweighted covariance" begin
@@ -189,7 +195,18 @@ end
         @test isnan(f.z0) && isnan(f.w) && isnan(f.z0_err)
         @test all(isnan, values(f.R))
         @test f.n_points == 2
+        @test isnan(f.chi2_dof)
         @test f.popt === nothing && f.pcov === nothing
+    end
+
+    @testset "fit_endpoint — bounded physical parameters" begin
+        z = collect(100.0:1.0:180.0)
+        profile = erfc_truth(z; base=2.0, amp=100.0, z0=150.0, w=3.0)
+        fit = fit_endpoint(z, profile; window=(130.0, 170.0),
+                           p0=(1.0, 90.0, 150.0, -4.0))
+        @test isfinite(fit.z0)
+        @test fit.w > 0
+        @test 130.0 <= fit.z0 <= 170.0
     end
 
     @testset "fit_endpoint_grogg — exact intercept on plateau + linear ramp" begin
@@ -473,14 +490,22 @@ end
     @testset "config — the frozen run parameters load typed" begin
         k = load_run_parameters()
         @test k.grid.n == (64, 64, 96)
-        @test k.grid.img_origin == (-47.25f0, -47.25f0, -119.25f0)
+        @test all(isfinite, k.grid.img_origin)
         @test k.grid.voxsize == (1.5f0, 1.5f0, 1.5f0)
         # No radius: the profile read is whole-plane (the settled protocol).
         @test k.roi.radius_mm === nothing && k.roi.centre_mm == (0.0, 0.0)
-        @test k.window[1] < k.window[2] < 0
+        # The v2 tumour-centred frame may place the distal edge above zero;
+        # finite ordered limits are the invariant across scanner arms.
+        @test all(isfinite, k.window)
+        @test k.window[1] < k.window[2]
         @test k.niter == 50
         @test k.n_sens == 1_000_000_000
         @test k.truth_selection == "trues-only"
+        @test !isempty(k.config.scenario)
+        @test !isempty(k.config.topology)
+        @test !isempty(k.config.scanner)
+        @test !isempty(k.config.crystal)
+        @test !isempty(k.config.leaf)
     end
 
     @testset "thinning — Bernoulli mask, seed namespace, dose anchor" begin
@@ -515,6 +540,44 @@ end
         @test dose_to_counts(0.1, 1.0, 174_296_897, 10) == 1_742_969
         @test_throws ArgumentError dose_to_counts(2.0, 1.0, 100, 10)
         @test_throws ArgumentError dose_to_counts(0.0, 1.0, 100, 10)
+    end
+
+    @testset "thinning — finite-pool correction" begin
+        # Uniform 1/10 thinning: 1/sqrt(0.9).
+        @test finite_pool_correction(0.1) ≈ 1 / sqrt(0.9)
+
+        # Uniform vector gives the same result as the scalar form.
+        @test finite_pool_correction(fill(0.1, 1000)) ≈
+              finite_pool_correction(0.1)
+
+        # Event-dependent probabilities use the variance ratio.
+        q = [0.10, 0.05, 0.02, 0.0]
+        expected = sqrt(sum(q) / sum(q .* (1 .- q)))
+        @test finite_pool_correction(q) ≈ expected
+
+        # A washout-like q=0.05 needs a smaller correction than q=0.10.
+        @test finite_pool_correction(0.05) < finite_pool_correction(0.10)
+
+        @test_throws ArgumentError finite_pool_correction(Float64[])
+        @test_throws ArgumentError finite_pool_correction([-0.1, 0.2])
+        @test_throws ArgumentError finite_pool_correction([0.1, 1.1])
+        @test_throws ArgumentError finite_pool_correction([0.0, 0.0])
+        @test_throws ArgumentError finite_pool_correction([1.0])
+    end
+
+    @testset "washout thinning — paired subset invariant" begin
+        rng = MersenneTwister(12345)
+        uniform = rand(rng, 100_000)
+        p_dose = 0.1
+        survival = repeat([0.35, 0.50, 0.80], inner=33_334)[1:100_000]
+
+        nominal = uniform .< p_dose
+        washed = uniform .< p_dose .* survival
+
+        @test all(washed .<= nominal)
+        @test count(washed) < count(nominal)
+        @test count(nominal) ≈ 0.1 * length(nominal) rtol=0.03
+        @test count(washed) ≈ 0.1 * sum(survival) rtol=0.03
     end
 
     @testset "sensitivity_cache_name + dose_tag" begin

@@ -159,7 +159,7 @@ washout-**parameter** systematic band, MC over the Mizuno uncertainties, is **±
 below σ_R ≈ 0.11 mm, and the fast component's ~90% error barely propagates (spent for recorded
 ages). So within this model washout is a **benign calibrated constant**, not a systematic limit.
 
-**Detected level** (`drivers/washout_sigma_r.jl`, per-event thinning by w(z₀,t_decay) =
+**Detected level** (generation-1 driver archived at tag `legacy-gen1-analysis`, per-event thinning by w(z₀,t_decay) =
 Σ_i P(i|z₀,t_decay) g_i, all events). **Bias** transfers scanner-independently and calibrates
 away: ΔR₅₀^wo(t_start=0) ≈ +0.20–0.25 mm, matching truth +0.218; the shift shrinks toward zero as
 the delay pre-depletes ¹⁵O (CsI +0.25 at 60 s → ~0 by 300 s). Washout adds **no bias** the
@@ -187,7 +187,7 @@ cut → σ_R × ~1/√0.43 ≈ 1.5× (counting), independent of t_start and arm.
 penalty, **not** the ¹⁵O variance-drain that protects the *delayed start* — that drain removes early
 ¹⁵O; washout removes late decays roughly uniformly (the two were conflated in the first pass). At
 1 Gy this takes σ_R from ~0.11 to ~0.16 mm. Figure: `.../comparison/figures/washout_inflation.png`
-(`tools/plot_washout_thinned.py`); the superseded n=10 figures `washout_sigma_r.png` /
+(legacy plotter archived at tag `legacy-gen1-analysis`); the superseded n=10 figures `washout_sigma_r.png` /
 `washout_tstart.png` are retired.
 
 **R35 (r 350 mm, 50 cm AFOV) — same cost in a smaller bore (2026-07-11).** Repeated the thinned

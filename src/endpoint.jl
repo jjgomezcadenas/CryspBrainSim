@@ -63,7 +63,8 @@ function fit_endpoint(z::AbstractVector{<:Real}, profile::AbstractVector{<:Real}
     pf = Float64.(profile[sel])
     n = length(zf)
     nanres = (R=Dict(Float64(lv) => NaN for lv in levels),
-              z0=NaN, w=NaN, z0_err=NaN, n_points=n, popt=nothing, pcov=nothing)
+              z0=NaN, w=NaN, z0_err=NaN, n_points=n, chi2_dof=NaN,
+              popt=nothing, pcov=nothing)
     n < 4 && return nanres
 
     if p0 === nothing
@@ -78,20 +79,42 @@ function fit_endpoint(z::AbstractVector{<:Real}, profile::AbstractVector{<:Real}
         p0 = (base0, amp0, z0_0, w0)
     end
     p0v = collect(Float64, p0)
+    dz = n > 1 ? minimum(diff(zf)) : 1.0
+    window_width = zhi - zlo
+    width_min = max(0.1 * dz, eps(Float64))
+    width_max = window_width
+    lower = [0.0, 0.0, zlo, width_min]
+    upper = [Inf, Inf, zhi, width_max]
+
+    p0v[1] = max(p0v[1], 0.0)
+    p0v[2] = max(p0v[2], eps(Float64))
+    p0v[3] = clamp(p0v[3], zlo, zhi)
+    p0v[4] = clamp(abs(p0v[4]), width_min, width_max)
 
     try
         fit = weighted ?
             curve_fit(erfc_edge, zf, pf, PrecisionWeights(1 ./ max.(pf, 1.0)),
-                      p0v; maxIter=20_000) :
-            curve_fit(erfc_edge, zf, pf, p0v; maxIter=20_000)
+                      p0v; lower=lower, upper=upper, maxIter=20_000) :
+            curve_fit(erfc_edge, zf, pf, p0v;
+                      lower=lower, upper=upper, maxIter=20_000)
         fit.converged || return nanres
         base, amp, z0, w = coef(fit)
+        all(isfinite, (base, amp, z0, w)) || return nanres
+        base >= 0.0 || return nanres
+        amp > 0.0 || return nanres
+        zlo <= z0 <= zhi || return nanres
+        width_min <= w <= width_max || return nanres
         pcov = vcov(fit)
+        all(isfinite, pcov) || return nanres
         perr = sqrt.(max.(diag(pcov), 0.0))
+        all(isfinite, perr) || return nanres
+        residual = pf .- erfc_edge(zf, coef(fit))
+        chi2 = weighted ? sum(residual .^ 2 ./ max.(pf, 1.0)) : sum(residual .^ 2)
+        chi2_dof = n > 4 ? chi2 / (n - 4) : NaN
         R = Dict(Float64(lv) => z0 + sqrt(2.0) * w * erfcinv(2.0 * lv)
                  for lv in levels)
-        return (R=R, z0=z0, w=abs(w), z0_err=perr[3], n_points=n,
-                popt=coef(fit), pcov=pcov)
+        return (R=R, z0=z0, w=w, z0_err=perr[3], n_points=n,
+                chi2_dof=chi2_dof, popt=coef(fit), pcov=pcov)
     catch
         return nanres
     end

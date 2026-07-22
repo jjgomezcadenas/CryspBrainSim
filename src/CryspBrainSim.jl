@@ -35,7 +35,8 @@ export phantom_attenuation, attenuation_ellipsoid, centered_grid, build_mumap,
 export sensitivity_base, scaled_sensitivity, save_sensitivity,
        load_sensitivity, recocrysp_sha, sensitivity_cache_name
 export load_run_parameters
-export THINNING_SEED_BASE, dose_to_counts, thin_mask, thin_lm
+export THINNING_SEED_BASE, dose_to_counts, thin_mask, thin_lm,
+       finite_pool_correction
 export dose_tag, load_run_context, lor_attenuation, reconstruct_endpoint
 export crystal_label, CRYSTAL_X0_MM, out_root, scenario_out, truth_out,
        mumap_out, ring_out, sensitivity_out, config_out, validation_out

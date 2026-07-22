@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-plot_sigma_r_vs_niter.py — washed σ_R as a function of MLEM iterations, per
-scanner configuration and start time, from drivers/washout_niter_scan.jl.
+plot_sigma_r_vs_niter.py — washed σ_R as a function of MLEM iterations for
+isotope-labelled generation-2 samples, from drivers/sigma_r_niter_v2.jl.
 
 Tests whether the fixed 50-iteration operating point is what makes σ_R differ
 across geometries: if the σ_R(niter) curves have their minima at different niter
 (or cross), the frozen niter is imposing a config-dependent σ_R rather than the
 counts. Two rows — top: washed σ_R(niter) (precision), bottom: mean washed R50
 (niter) (the bias/convergence, so a low-σ_R low-niter point is not mistaken for
-optimal when the edge is still under-converged). Columns are the start times;
+optimal when the edge is still under-converged). Columns are the delay times;
 each curve carries the ±1/√(2(N−1)) band, the frozen niter is marked, and each
 σ_R curve's minimum is flagged.
 
-Reads each config's washout/sigma_r_vs_niter.toml. Add configs to CONFIGS.
+Reads each config's washout_v2/sigma_r_vs_niter_v2.toml. Add configs to CONFIGS.
 Writes out/<scenario>/<topology>/comparison/figures/sigma_r_vs_niter.png.
 Run:  python3 tools/plot_sigma_r_vs_niter.py
 """
@@ -41,15 +41,15 @@ CONFIGS = [
 
 def load(scanner, leaf):
     path = os.path.join(config_out(SCENARIO, TOPOLOGY, scanner, leaf),
-                        "washout", "sigma_r_vs_niter.toml")
+                        "washout_v2", "sigma_r_vs_niter_v2.toml")
     if not os.path.exists(path):
         return None
     d = tomllib.load(open(path, "rb"))
     niter = np.array(d["niter"], float)
     n = d["realizations"]
     frozen = d["frozen_niter"]
-    sig = {p["t_start_s"]: np.array(p["washed_sigma_R_mm"], float) for p in d["point"]}
-    r50 = {p["t_start_s"]: np.array(p["washed_mean_R50_mm"], float) for p in d["point"]}
+    sig = {p["t_del_s"]: np.array(p["washed_sigma_R_mm"], float) for p in d["point"]}
+    r50 = {p["t_del_s"]: np.array(p["washed_mean_R50_mm"], float) for p in d["point"]}
     return niter, n, frozen, sig, r50
 
 
@@ -80,7 +80,7 @@ def main():
                 ax.axvline(frozen_ref, color=MUTED, lw=1.0, ls=":")
         a_sig.text(frozen_ref, a_sig.get_ylim()[1], f" frozen={frozen_ref}",
                    color=MUTED, fontsize=9, va="top", ha="left")
-        a_sig.set_title(f"$t_{{start}}$ = {t:.0f} s", color=INK, fontsize=12, loc="left")
+        a_sig.set_title(f"$t_{{del}}$ = {t:.0f} s", color=INK, fontsize=12, loc="left")
         a_r50.set_xlabel("MLEM iterations", color=INK, fontsize=12)
     axes[0, 0].set_ylabel("washed $\\sigma_R$ at 1 Gy [mm]", color=INK, fontsize=13)
     axes[0, 0].set_ylim(0.0, None)

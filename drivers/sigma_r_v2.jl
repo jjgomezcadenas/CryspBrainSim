@@ -5,7 +5,7 @@
 #
 #   1. Washout σ_R (working protocol, all-events): nominal vs EXACT washed. v2
 #      carries the emitting isotope per LOR and the stamped per-isotope survival
-#      washout_g, so washout is the exact per-species Bernoulli keep of
+#      washout_g, so washout uses a per-species, window-integrated Bernoulli keep
 #      washout_brain.tex §5 — keep event e with probability p_dose · g_i[iso(e)],
 #      not the label-free marginalised posterior. Reports σ_R nominal/washed, the
 #      inflation, and the calibratable edge shift ΔR50 = mean(washed) − mean(nom).
@@ -40,7 +40,7 @@ using RecoCryspTools
 using Metal
 using Printf
 using Random: MersenneTwister
-using Statistics: mean, std
+using Statistics: mean, median, std
 using TOML
 
 const ROOT = joinpath(dirname(dirname(@__DIR__)), "PtCryspProds")
@@ -53,6 +53,9 @@ const LN2 = log(2.0)
 
 const REALIZATIONS = let i = findfirst(==("--realizations"), ARGS)
     i === nothing ? 100 : parse(Int, ARGS[i+1])
+end
+const MAX_FAILURE_FRACTION = let i = findfirst(==("--max-fit-failure-fraction"), ARGS)
+    i === nothing ? 0.05 : parse(Float64, ARGS[i+1])
 end
 const THIN_DOSE = let i = findfirst(==("--dose"), ARGS)
     i === nothing ? 1.0 : parse(Float64, ARGS[i+1])
@@ -79,6 +82,26 @@ gfac(λ, M, μ, tirr, t1, t2) =
 
 σ_of(v) = (ok = filter(isfinite, v); length(ok) > 1 ? std(ok) : NaN)
 nfail(v) = count(!isfinite, v)
+
+0.0 <= MAX_FAILURE_FRACTION < 1.0 ||
+    error("--max-fit-failure-fraction must lie in [0,1)")
+
+function require_stable_fits(label, endpoints)
+    failures = nfail(endpoints)
+    nfits = length(endpoints)
+    max_failures = floor(Int, MAX_FAILURE_FRACTION * nfits)
+    failures <= max_failures ||
+        error("$label: $failures/$nfits endpoint fits failed; at most " *
+              "$max_failures failures are allowed for N=$nfits " *
+              "($(100MAX_FAILURE_FRACTION)% limit)")
+    return failures
+end
+
+function finite_summary(values)
+    valid = sort(filter(isfinite, values))
+    isempty(valid) && return (median=NaN, minimum=NaN, maximum=NaN)
+    return (median=median(valid), minimum=first(valid), maximum=last(valid))
+end
 
 # One leaf: pool, verify washout_g, run nominal/washed/per-isotope realizations.
 function run_leaf(leaf)
@@ -128,21 +151,29 @@ function run_leaf(leaf)
     # (1+3) washout nominal vs exact washed — every realization carries the
     # erfc R50 and the Grogg x-intercept (weighted + unweighted), paired.
     est = Dict(k => Float64[] for k in
-               (:nom, :wsh, :nomg, :wshg, :nomgu, :wshgu, :nomgs, :wshgs,
+               (:nom, :wsh, :nom_chi2, :wsh_chi2,
+                :nomg, :wshg, :nomgu, :wshgu, :nomgs, :wshgs,
                 :nomg_zf, :nomg_zl, :nomg_sl, :wshg_zf, :wshg_zl, :wshg_sl,
                 :nomgs_zf, :nomgs_zl, :nomgs_sl, :wshgs_zf, :wshgs_zl, :wshgs_sl))
     t = @elapsed for z in 1:REALIZATIONS
-        rn = MersenneTwister(SEED_BASE + Int(t_del) * 1000 + z)
-        r = recon(inwin .& (rand(rn, Mtot) .< p_dose))
+        rng = MersenneTwister(SEED_BASE + Int(t_del) * 1000 + z)
+        uniform = rand(rng, Mtot)
+        nominal_keep = inwin .& (uniform .< p_dose)
+        washed_keep = inwin .& (uniform .< p_dose .* gvec)
+        all(washed_keep .<= nominal_keep) ||
+            error("$leaf: washed selection is not a subset of nominal")
+
+        r = recon(nominal_keep)
         push!(est[:nom], r.r50_fit); push!(est[:nomg], r.rx_grogg)
+        push!(est[:nom_chi2], r.erfc_chi2_dof)
         push!(est[:nomgu], r.rx_grogg_unw); push!(est[:nomgs], r.rx_grogg_sm)
         push!(est[:nomg_zf], r.grogg_z_first); push!(est[:nomg_zl], r.grogg_z_last)
         push!(est[:nomg_sl], r.grogg_slope)
         push!(est[:nomgs_zf], r.grogg_sm_z_first); push!(est[:nomgs_zl], r.grogg_sm_z_last)
         push!(est[:nomgs_sl], r.grogg_sm_slope)
-        rw = MersenneTwister(SEED_BASE + 500_000 + Int(t_del) * 1000 + z)
-        r = recon(inwin .& (rand(rw, Mtot) .< p_dose .* gvec))
+        r = recon(washed_keep)
         push!(est[:wsh], r.r50_fit); push!(est[:wshg], r.rx_grogg)
+        push!(est[:wsh_chi2], r.erfc_chi2_dof)
         push!(est[:wshgu], r.rx_grogg_unw); push!(est[:wshgs], r.rx_grogg_sm)
         push!(est[:wshg_zf], r.grogg_z_first); push!(est[:wshg_zl], r.grogg_z_last)
         push!(est[:wshg_sl], r.grogg_slope)
@@ -150,23 +181,33 @@ function run_leaf(leaf)
         push!(est[:wshgs_sl], r.grogg_sm_slope)
     end
     nom, wsh = est[:nom], est[:wsh]
-    σn, σw = σ_of(nom), σ_of(wsh)
+    nfail_nominal = require_stable_fits("$leaf nominal", nom)
+    nfail_washout = require_stable_fits("$leaf washout", wsh)
+    correction_nominal = finite_pool_correction(p_dose)
+    correction_washout = finite_pool_correction(p_dose .* gvec[inwin])
+    σn_raw, σw_raw = σ_of(nom), σ_of(wsh)
+    σn = correction_nominal * σn_raw
+    σw = correction_washout * σw_raw
     survival = sum(gvec[inwin]) / count(inwin)
     shift = mean(filter(isfinite, wsh)) - mean(filter(isfinite, nom))
     # the measured isotope mix behind Grogg's ¹⁵O-dominance premise
     o15win = (iso .== ISO_ID["O15"]) .& inwin
     fO15 = count(o15win) / count(inwin)
     fO15w = sum(gvec[o15win]) / sum(gvec[inwin])
-    @printf("   washout: nom σ_R %.3f | washed σ_R %.3f | infl %.2f | ΔR50 %+.3f | surv %.3f | fails n/w %d/%d | %.0fs\n",
-            σn, σw, σw / σn, shift, survival, nfail(nom), nfail(wsh), t)
+    @printf("   washout: nom σ_R %.3f→%.3f | washed σ_R %.3f→%.3f | infl %.2f | ΔR50 %+.3f | surv %.3f | fails n/w %d/%d | %.0fs\n",
+            σn_raw, σn, σw_raw, σw, σw / σn, shift, survival,
+            nfail(nom), nfail(wsh), t)
     @printf("   grogg-w: nom σ_R %.3f | washed σ_R %.3f | mean nom %8.3f | fails n/w %d/%d | O15 frac %.3f (washed %.3f)\n",
-            σ_of(est[:nomg]), σ_of(est[:wshg]), mean(filter(isfinite, est[:nomg])),
+            correction_nominal * σ_of(est[:nomg]),
+            correction_washout * σ_of(est[:wshg]), mean(filter(isfinite, est[:nomg])),
             nfail(est[:nomg]), nfail(est[:wshg]), fO15, fO15w)
     @printf("   grogg-u: nom σ_R %.3f | washed σ_R %.3f | mean nom %8.3f | fails n/w %d/%d\n",
-            σ_of(est[:nomgu]), σ_of(est[:wshgu]), mean(filter(isfinite, est[:nomgu])),
+            correction_nominal * σ_of(est[:nomgu]),
+            correction_washout * σ_of(est[:wshgu]), mean(filter(isfinite, est[:nomgu])),
             nfail(est[:nomgu]), nfail(est[:wshgu]))
     @printf("   grogg-7mm: nom σ_R %.3f | washed σ_R %.3f | mean nom %8.3f | fails n/w %d/%d\n",
-            σ_of(est[:nomgs]), σ_of(est[:wshgs]), mean(filter(isfinite, est[:nomgs])),
+            correction_nominal * σ_of(est[:nomgs]),
+            correction_washout * σ_of(est[:wshgs]), mean(filter(isfinite, est[:nomgs])),
             nfail(est[:nomgs]), nfail(est[:wshgs]))
 
     # (2) per-isotope: pure single-species sub-sample at natural abundance
@@ -179,21 +220,32 @@ function run_leaf(leaf)
             r, nv = reconv(sel .& (rand(ri, Mtot) .< p_dose))
             push!(r50, r); push!(nevs, nv)
         end
-        push!(iso_pts, (iso=name, σ=σ_of(r50), meanR=mean(filter(isfinite, r50)),
-                        nev=mean(nevs), nfail=nfail(r50)))
+        isotope_failures = require_stable_fits("$leaf isotope $name", r50)
+        σ_raw = σ_of(r50)
+        correction = finite_pool_correction(p_dose)
+        push!(iso_pts, (iso=name, σ_raw=σ_raw, σ=correction * σ_raw,
+                        correction=correction, meanR=mean(filter(isfinite, r50)),
+                        nev=mean(nevs), nfail=isotope_failures))
         @printf("   iso %-4s: nev %8.0f | σ_R %.3f | mean R50 %8.3f | fails %d | %.0fs\n",
                 name, mean(nevs), σ_of(r50), mean(filter(isfinite, r50)), nfail(r50), ti)
     end
 
     # Grogg summary per variant: σ, mean, fails, nominal and washed.
-    gsum(kn, kw) = (σn=σ_of(est[kn]), σw=σ_of(est[kw]),
+    gsum(kn, kw) = (σn_raw=σ_of(est[kn]), σw_raw=σ_of(est[kw]),
+                    σn=correction_nominal * σ_of(est[kn]),
+                    σw=correction_washout * σ_of(est[kw]),
                     Rn=mean(filter(isfinite, est[kn])),
                     Rw=mean(filter(isfinite, est[kw])),
                     fn=nfail(est[kn]), fw=nfail(est[kw]))
     return (leaf=leaf, t_del=t_del, t_ac=t_ac, t2=t2_eff, g=g, survival=survival,
-            crystal_label=ctx.crystal, σ_nom=σn, σ_wsh=σw, shift=shift,
+            crystal_label=ctx.crystal, σ_nom_raw=σn_raw, σ_wsh_raw=σw_raw,
+            σ_nom=σn, σ_wsh=σw,
+            correction_nominal=correction_nominal,
+            correction_washout=correction_washout, shift=shift,
             R_nom=mean(filter(isfinite, nom)), R_wsh=mean(filter(isfinite, wsh)),
-            nfail_n=nfail(nom), nfail_w=nfail(wsh), iso=iso_pts,
+            nfail_n=nfail_nominal, nfail_w=nfail_washout,
+            chi2_nominal=finite_summary(est[:nom_chi2]),
+            chi2_washout=finite_summary(est[:wsh_chi2]), iso=iso_pts,
             grogg_w=gsum(:nomg, :wshg), grogg_u=gsum(:nomgu, :wshgu),
             grogg_s=gsum(:nomgs, :wshgs),
             fO15=fO15, fO15_washed=fO15w, est=est)
@@ -214,15 +266,27 @@ function main()
             "generation" => "v2", "scanner" => RING, "crystal" => CFG.crystal,
             "dose_Gy" => THIN_DOSE, "realizations" => REALIZATIONS,
             "sigma_band" => 1 / sqrt(2 * (REALIZATIONS - 1)),
-            "method" => "exact per-species g_i keep on the pooled leaf",
+            "method" => "paired nominal and isotope-indexed window-integrated survival thinning with common uniforms",
             "point" => [Dict(
                 "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
                 "t2_s" => r.t2, "washout_survival" => r.survival,
+                "sigma_R_convention" => "finite-pool corrected",
+                "nominal_sigma_R_raw_mm" => r.σ_nom_raw,
+                "washed_sigma_R_raw_mm" => r.σ_wsh_raw,
                 "nominal_sigma_R_mm" => r.σ_nom, "washed_sigma_R_mm" => r.σ_wsh,
+                "nominal_finite_pool_correction" => r.correction_nominal,
+                "washed_finite_pool_correction" => r.correction_washout,
                 "inflation" => r.σ_wsh / r.σ_nom,
                 "delta_R50_washout_mm" => r.shift,
                 "nominal_R50_mean_mm" => r.R_nom, "washed_R50_mean_mm" => r.R_wsh,
-                "n_fail_nominal" => r.nfail_n, "n_fail_washed" => r.nfail_w)
+                "max_fit_failure_fraction" => MAX_FAILURE_FRACTION,
+                "n_fail_nominal" => r.nfail_n, "n_fail_washed" => r.nfail_w,
+                "nominal_erfc_chi2_dof_median" => r.chi2_nominal.median,
+                "nominal_erfc_chi2_dof_min" => r.chi2_nominal.minimum,
+                "nominal_erfc_chi2_dof_max" => r.chi2_nominal.maximum,
+                "washed_erfc_chi2_dof_median" => r.chi2_washout.median,
+                "washed_erfc_chi2_dof_min" => r.chi2_washout.minimum,
+                "washed_erfc_chi2_dof_max" => r.chi2_washout.maximum)
                 for r in results]))
     end
     if !isempty(ISOTOPES)
@@ -233,7 +297,10 @@ function main()
                 "method" => "pure per-species selection by the isotope column",
                 "point" => [Dict(
                     "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
-                    "isotope" => p.iso, "sigma_R_mm" => p.σ, "mean_R50_mm" => p.meanR,
+                    "isotope" => p.iso, "sigma_R_convention" => "finite-pool corrected",
+                    "sigma_R_raw_mm" => p.σ_raw, "sigma_R_mm" => p.σ,
+                    "finite_pool_correction" => p.correction,
+                    "mean_R50_mm" => p.meanR,
                     "mean_events" => p.nev, "n_fail" => p.nfail)
                     for r in results for p in r.iso]))
         end
@@ -251,17 +318,26 @@ function main()
                 "leaf" => r.leaf, "t_del_s" => r.t_del, "t_ac_s" => r.t_ac,
                 "t2_s" => r.t2, "o15_fraction" => r.fO15,
                 "o15_fraction_washed" => r.fO15_washed,
+                "sigma_R_convention" => "finite-pool corrected",
+                "nominal_finite_pool_correction" => r.correction_nominal,
+                "washed_finite_pool_correction" => r.correction_washout,
+                "erfc_nominal_sigma_R_raw_mm" => r.σ_nom_raw,
+                "erfc_washed_sigma_R_raw_mm" => r.σ_wsh_raw,
                 "erfc_nominal_sigma_R_mm" => r.σ_nom,
                 "erfc_washed_sigma_R_mm" => r.σ_wsh,
                 "erfc_nominal_R50_mean_mm" => r.R_nom,
                 "grogg_nominal_sigma_R_mm" => r.grogg_w.σn,
                 "grogg_washed_sigma_R_mm" => r.grogg_w.σw,
+                "grogg_nominal_sigma_R_raw_mm" => r.grogg_w.σn_raw,
+                "grogg_washed_sigma_R_raw_mm" => r.grogg_w.σw_raw,
                 "grogg_nominal_Rx_mean_mm" => r.grogg_w.Rn,
                 "grogg_washed_Rx_mean_mm" => r.grogg_w.Rw,
                 "grogg_n_fail_nominal" => r.grogg_w.fn,
                 "grogg_n_fail_washed" => r.grogg_w.fw,
                 "grogg_unw_nominal_sigma_R_mm" => r.grogg_u.σn,
                 "grogg_unw_washed_sigma_R_mm" => r.grogg_u.σw,
+                "grogg_unw_nominal_sigma_R_raw_mm" => r.grogg_u.σn_raw,
+                "grogg_unw_washed_sigma_R_raw_mm" => r.grogg_u.σw_raw,
                 "grogg_unw_nominal_Rx_mean_mm" => r.grogg_u.Rn,
                 "grogg_unw_washed_Rx_mean_mm" => r.grogg_u.Rw,
                 "grogg_unw_n_fail_nominal" => r.grogg_u.fn,
@@ -269,6 +345,8 @@ function main()
                 # Grogg's full pipeline: 7 mm FWHM smoothing before the fit
                 "grogg_sm7_nominal_sigma_R_mm" => r.grogg_s.σn,
                 "grogg_sm7_washed_sigma_R_mm" => r.grogg_s.σw,
+                "grogg_sm7_nominal_sigma_R_raw_mm" => r.grogg_s.σn_raw,
+                "grogg_sm7_washed_sigma_R_raw_mm" => r.grogg_s.σw_raw,
                 "grogg_sm7_nominal_Rx_mean_mm" => r.grogg_s.Rn,
                 "grogg_sm7_washed_Rx_mean_mm" => r.grogg_s.Rw,
                 "grogg_sm7_n_fail_nominal" => r.grogg_s.fn,
@@ -277,6 +355,8 @@ function main()
                 # index — the raw material for paired/mechanism analysis
                 "realizations_erfc_nominal_mm" => r.est[:nom],
                 "realizations_erfc_washed_mm" => r.est[:wsh],
+                "realizations_erfc_nominal_chi2_dof" => r.est[:nom_chi2],
+                "realizations_erfc_washed_chi2_dof" => r.est[:wsh_chi2],
                 "realizations_grogg_nominal_mm" => r.est[:nomg],
                 "realizations_grogg_washed_mm" => r.est[:wshg],
                 "realizations_grogg_unw_nominal_mm" => r.est[:nomgu],

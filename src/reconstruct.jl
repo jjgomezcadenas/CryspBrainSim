@@ -149,7 +149,8 @@ function reconstruct_endpoint(ctx, xs, xe, mult; device=identity)
     # Grogg's full pipeline: 7 mm FWHM PET-resolution smoothing before the fit.
     fgs = fit_endpoint_grogg(z, prof; window=ctx.ref.window, weighted=true,
                              smooth_fwhm_mm=7.0)
-    return (nev=nev, r50_fit=fit.z0, z0_err=fit.z0_err, w=fit.w,
+    return (nev=nev, r50_fit=fit.z0, z0_err=fit.z0_err,
+            erfc_chi2_dof=fit.chi2_dof, w=fit.w,
             r50_cross=windowed_crossing(z, prof, ctx.ref.window),
             rx_grogg=fg.x0, rx_grogg_err=fg.x0_err, rx_grogg_unw=fgu.x0,
             grogg_z_first=fg.z_first, grogg_z_last=fg.z_last, grogg_slope=fg.slope,

@@ -43,13 +43,9 @@ The two questions, answered:
 - **Truth level** (`tools/washout.py`): the per-isotope survival g_i is a closed-form scalar (note
   Eq. 7), cross-checked vs direct integration; reweight the five truth columns, refit Δ_R50; MC over
   the Mizuno uncertainties gives the ±0.02 mm band.
-- **Detected level** (`drivers/washout_sigma_r.jl --thinned`): per-event thinning of the pooled
-  master by w(z₀,t_decay) = Σ_i P(i|z₀,t_decay) g_i — the isotope-**marginalised** survival, built
-  from the truth profiles and decay laws. Uses only (z₀, t_decay), **already in the shards** — the
-  earlier belief that detected level "needs creation-time + isotope columns" was wrong; detection
-  is isotope-blind, so no new columns, no upstream, no Geant4. σ_R measured with the thinned method
-  (dose-adaptive 0.2–1 Gy to keep the count-starved washed corner in the stable-fit regime; 0.1 Gy
-  was verified to fail).
+- **Detected level** (`drivers/sigma_r_v2.jl`): Bernoulli thinning of the pooled v2 samples using
+  the isotope label stored with each LOR and its window-integrated effective survival factor g_i.
+  The generation-1 marginalised implementation is archived at tag `legacy-gen1-analysis`.
 
 ## Open — spatial non-uniformity (the one genuine bias route)
 
@@ -64,5 +60,5 @@ also downstream perfusion physics, not Geant4 (see washout-g4-formulation.md).
 
 - **Composite-erfc edge model** (per-isotope components) = the same per-isotope decomposition as the
   IW reweighting; still worth building (listed in [`pending.md`](pending.md)).
-- Per-arm ready configs `config/run_parameters_{bgo,csi}.toml` (`cp` to activate) were added this
-  round; the thinned σ_R machinery + failure guard in `washout_sigma_r.jl` are reusable.
+- Per-arm v2 configs select the active scanner; the common production and failure-guard path is
+  `drivers/sigma_r_v2.jl`.

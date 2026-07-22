@@ -76,3 +76,44 @@ compose with the class masks and column-select:
 """
 thin_lm(coinc::MCCoincidences, target_counts::Integer, realization_index::Integer) =
     thin_mask(length(coinc), target_counts, realization_index)
+
+"""
+    finite_pool_correction(probabilities) -> Float64
+
+Count-level correction from the conditional variance produced by repeated
+Bernoulli thinning of a fixed event pool to the variance of an independently
+generated Poisson acquisition.
+
+For event keep probabilities `q_e`,
+
+    Poisson variance      = sum(q_e)
+    conditional variance  = sum(q_e * (1 - q_e))
+
+and the standard-deviation correction is
+
+    sqrt(sum(q_e) / sum(q_e * (1 - q_e))).
+
+For a uniform probability `q`, this reduces to `1/sqrt(1-q)`.
+"""
+function finite_pool_correction(probabilities)
+    q = collect(Float64, probabilities)
+    isempty(q) && throw(ArgumentError("probabilities must not be empty"))
+    all(isfinite, q) ||
+        throw(ArgumentError("probabilities must be finite"))
+    all(value -> 0.0 <= value <= 1.0, q) ||
+        throw(ArgumentError("probabilities must lie in [0,1]"))
+
+    poisson_variance = sum(q)
+    conditional_variance = sum(value * (1.0 - value) for value in q)
+
+    poisson_variance > 0 ||
+        throw(ArgumentError("at least one probability must be positive"))
+    conditional_variance > 0 ||
+        throw(ArgumentError(
+            "conditional variance is zero; the pool cannot estimate a spread"
+        ))
+
+    return sqrt(poisson_variance / conditional_variance)
+end
+
+finite_pool_correction(q::Real) = finite_pool_correction((q,))

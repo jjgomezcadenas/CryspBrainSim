@@ -14,7 +14,8 @@ Thread-A "protection"/inversion wobbles are N-limited counting scatter, not an i
 
 ## Thread A — four-geometry washout σ_R comparison
 
-Extended the washout thinned firm-up (`drivers/washout_sigma_r.jl --thinned`, t_start 120/180 s,
+Extended the generation-1 washout thinned firm-up (archived at tag `legacy-gen1-analysis`,
+t_start 120/180 s,
 N=50, dose-adaptive, scaled to 1 Gy) to four scanners, **same radius family**:
 
 | config | r (mm) | AFOV (mm) | dose (BGO/CsI) |
@@ -24,8 +25,8 @@ N=50, dose-adaptive, scaled to 1 Gy) to four scanners, **same radius family**:
 | R35/35 | 350 | 350 | 0.5 / **1.0** |
 | CHS | 200 | (compact) | 0.3 / 0.5 |
 
-Figure: `out/…/comparison/figures/sigma_r_configs.png` (`tools/plot_sigma_r_configs.py`, washed
-only, two start times, extensible `CONFIGS` list). R35/35 needed its 1e9 sensitivity built first
+Historical generation-1 figure: `out/…/comparison/figures/sigma_r_configs.png`; its generator is
+archived at tag `legacy-gen1-analysis`. R35/35 needed its 1e9 sensitivity built first
 (`tools/make_sensitivity.jl`); the others had it.
 
 **The puzzle (the user's "nothing matters"):** washed σ_R across configs is ~flat **0.22–0.29 mm**
@@ -39,7 +40,8 @@ gives ~0.29 at 0.3/0.5/1.0 Gy). So the per-geometry constant `k = σ_R·√N` di
 
 - **Data artifact** — R35/35 CsI's 10 shards are internally identical and statistically identical
   to R35/50 CsI (same t_decay median ~171 s, frac(t≥180)=0.483). No bad shard.
-- **Reconstruction iteration count** — `drivers/washout_niter_scan.jl` (records R50 at every MLEM
+- **Reconstruction iteration count** — generation-1 scan archived at tag
+  `legacy-gen1-analysis`; the active replacement is `drivers/sigma_r_niter_v2.jl` (records R50 at every MLEM
   checkpoint from one pass) + `tools/plot_sigma_r_vs_niter.py` → `sigma_r_vs_niter.png`. On R35/50
   and R35/35 CsI: σ_R **rises monotonically from niter=10 and plateaus by ~50** (no interior
   minimum — the user's parabola idea is not what happens), the mean R50 (bias) has **converged by
@@ -70,7 +72,8 @@ closed downstream. Coarse downstream check: truth per-isotope erfc edge widths g
 ≈ C-11 **9.42 mm** (O-15 not broader) → suggested the range term is small, but the erfc-over-window
 is a poor proxy for the per-LOR variance (that was the wrong quantity — see below).
 
-**Decisive test — per-isotope σ_R (`drivers/sigma_r_per_isotope.jl`):** thin the pooled master by
+**Decisive generation-1 test — per-isotope σ_R (archived at tag
+`legacy-gen1-analysis`):** thin the pooled master by
 each isotope's posterior P(i | z0, t_decay) = r_i/Σr_j (the same per-event rates the washout weight
 marginalises), reconstruct N realizations, take σ_R. **Natural statistics, NOT count-matched** (the
 user's call): ¹⁵O enters with ~3× ¹¹C's counts, so counting alone predicts **σ_R(¹⁵O) ≈ 0.6·σ_R(¹¹C)**
@@ -88,7 +91,8 @@ difference is a lower bound); it only sees range that is actually in the annihil
   effects show up more clearly there.
 **DONE — ring 1 m CsI, N=100, 1 Gy** (O-15/C-11 only; N-13/O-14 fits blow up — posterior-selected
 edges outside the fit window / too few counts). Figure
-`…/comparison/figures/sigma_r_per_isotope.png` (`tools/plot_sigma_r_per_isotope.py`); data
+`…/comparison/figures/sigma_r_per_isotope.png` (legacy plotter archived at tag
+`legacy-gen1-analysis`); data
 `…/washout/sigma_r_per_isotope[_washed]_t{tstart}.toml`; combined = the ring-CsI washout nominal/washed.
 
 - **Nominal σ_R vs t_start (t=0/120/180/300):** O-15 0.134/0.159/0.205/0.253 (rises as it drains —
