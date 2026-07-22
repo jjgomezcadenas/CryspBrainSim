@@ -29,6 +29,7 @@
 \newcommand{\DR}{\ensuremath{\Delta R}}
 \newcommand{\GyRBE}{Gy\,(RBE)}
 \DeclareSIUnit\years{years}
+\input{statistical_procedure_results.tex}
 
 \title{A High-Sensitivity In-Room CRYSP Scanner for Distal-Edge Verification in Proton Therapy}
 \author{J.J. Gómez-Cadenas and the CRYSP collaboration}
@@ -544,6 +545,12 @@ re-weighting the mixture,
   \label{eq:mix}
 \end{equation}
 %
+The parent Monte Carlo sample already includes isotope-dependent radioactive
+decay. Biological washout is then applied as an additional survival
+probability. Its effective window-integrated value $g_i$ depends on the isotope
+because the common biological survival function is averaged over that
+isotope's radioactive-decay time distribution.
+
 The endpoint \Rc\ moves only insofar as the species occupy different depths.
 $^{15}$O, with the lowest production threshold, reaches deepest and dominates the
 distal edge, while $^{11}$C lies shallower. Every recorded nucleus is older than
@@ -558,74 +565,121 @@ dominates the distal edge is therefore relatively preserved.
 \section{Statistical treatment of the data: thinning}
 \label{sec:thinning}
 
-The range precision $\sigma_R$, the run-to-run spread of \Rc\ at a given dose, is
-a statistical quantity, so it must be estimated from an ensemble of acquisitions.
-Generating this ensemble directly is computationally expensive because each
-realisation requires a full Monte Carlo simulation and image reconstruction,
-while only a limited number of independent simulated samples are available.
-Repeated Bernoulli thinning of the pooled samples generates an ensemble
-conditional on that finite event pool; the same operation also applies the
-selected dose, acquisition-start time and washout model.
-
-Let there be $n$ statistically independent shards, each a complete acquisition at
-the reference dose ($1$~Gy) produced with an independent seed. Pool them into one
-master list of $M$ coincidences, physically $n$~Gy of events. A thinned
-realisation keeps each event $e$ independently with probability $q_e$: draw
-$u_e\sim\mathcal{U}[0,1)$ and keep $e$ if $u_e<q_e$. The kept subset is
-reconstructed exactly as a real acquisition, yielding one \Rc. Repeating with
-independent draws $N$ times gives $N$ endpoints, and
+The range precision $\sigma_R$ is the run-to-run spread of \Rc\ at a given
+dose and must therefore be estimated from an ensemble of acquisitions. We
+generate this ensemble by Bernoulli thinning of ten statistically independent
+Monte Carlo samples (``shards''), each corresponding to a complete
+\SI{1}{\gray} acquisition. The ten shards are pooled into a fixed master list,
+and each event $e$ is retained independently with probability
 %
 \begin{equation}
-  \sigma_R \;=\; \mathrm{std}\bigl(R_{50}^{(1)},\dots,R_{50}^{(N)}\bigr),
-  \qquad
-  \frac{\delta\sigma_R}{\sigma_R}\;\simeq\;\frac{1}{\sqrt{2(N-1)}}.
-  \label{eq:sigmaR}
-\end{equation}
-%
-Everything specific to a study lives in the keep-probability, which factorises
-into independent effects,
-%
-\begin{equation}
-  q_e \;=\; \underbrace{\mathbf{1}\!\left[t_{\mathrm{dec}}(e)\ge t_d\right]}
-              _{\text{acquisition start}}
-        \;\times\; \underbrace{D/n}_{\text{dose}}
-        \;\times\; \underbrace{w\bigl(z_0(e),t_{\mathrm{dec}}(e)\bigr)}
-              _{\text{washout}} ,
+  q_e = \frac{D}{n}\,s_e, \qquad
+  s_e =
+  \begin{cases}
+    1, & \text{without biological washout},\\
+    g_{i(e)}, & \text{with biological washout},
+  \end{cases}
   \label{eq:keep}
 \end{equation}
 %
-where $z_0(e)$ and $t_{\mathrm{dec}}(e)$ are the event's origin depth and decay
-time, both recorded per coincidence. The first factor drops decays occurring
-before the scan opens at delay $t_d$. The second keeps a fraction $D/n$ of the
-$n$-Gy pool, producing $D$~Gy of events and letting $\sigma_R(D)$ be mapped
-without new simulation, with $\sigma_R\propto 1/\sqrt{D}$. The third applies
-washout as a per-event loss. Since the emitting isotope $i(e)$ is recorded for
-each event in the production Monte Carlo, the event is retained with the
-corresponding window-integrated survival probability $g_{i(e)}$
-(Sec.~\ref{sec:washout}). Setting this factor to unity gives the nominal case.
+where $D$ is the target dose in Gy, $n=10$ is the number of pooled
+\SI{1}{\gray} shards, and $i(e)$ is the isotope label retained as Monte Carlo
+truth. This label is used only to construct the simulated aggregate signal; a
+PET measurement does not identify the isotope of an individual coincidence.
+The acquisition window is already imposed in each input shard.
 
-The method rests on the thinning theorem for Poisson processes. Radioactive
-decay events follow Poisson statistics, and independent Bernoulli thinning of a
-Poisson process produces another Poisson process with scaled intensity. When a
-realised finite event pool is held fixed, however, the number of retained events
-follows a binomial distribution. For a keep probability $q$, its conditional
-variance is smaller than the corresponding Poisson variance by a factor $1-q$.
-In the present study, the ten 1-Gy samples are pooled and thinned to 1~Gy, giving
-$q=0.1$. At the count level, the standard deviation obtained by thinning is
-therefore smaller by a factor $\sqrt{0.9}$, corresponding to an approximate
-correction $\sigma_R \rightarrow \sigma_R/\sqrt{0.9}=1.054\,\sigma_R$.
+For each realisation, a uniform random number $u_e$ is generated for every
+event and the event is retained when $u_e<q_e$. The nominal and washed samples
+use the same $u_e$, so that the latter is a subset of the former. Each retained
+list is reconstructed independently and fitted to obtain one \Rc. For $N$
+realisations,
+%
+\begin{equation}
+  \sigma_R^{\mathrm{thin}}
+  = \mathrm{std}\bigl(R_{50}^{(1)},\ldots,R_{50}^{(N)}\bigr).
+  \label{eq:sigmaR}
+\end{equation}
+%
+Because all realisations reuse a fixed parent pool, their conditional count
+variance is smaller than that of independent Poisson acquisitions. We correct
+the measured spread by
+%
+\begin{equation}
+ C_{\mathrm{pool}} =
+ \left[\frac{\sum_e q_e}{\sum_e q_e(1-q_e)}\right]^{1/2},
+ \qquad
+ \sigma_R=C_{\mathrm{pool}}\,\sigma_R^{\mathrm{thin}}.
+ \label{eq:poolcorrection}
+\end{equation}
+%
+For a common probability $q$, this becomes $1/\sqrt{1-q}$; hence nominal
+\SI{1}{\gray} thinning of the ten-shard pool has
+$C_{\mathrm{pool}}=1/\sqrt{0.9}=1.054$. The washed correction is calculated
+from the event-dependent probabilities in Eq.~(\ref{eq:keep}). The derivation,
+fit-quality requirements and distinction between the finite-pool correction
+and the finite-$N$ uncertainty are given in Appendix~\ref{app:thinning}.
 
-We validate the thinning procedure using the fitted \Rc\ values from the ten
-original, statistically independent 1-Gy samples. Their standard deviation
-provides a direct estimate of $\sigma_R$, with a relative uncertainty of
-approximately $1/\sqrt{2(10-1)}=24\%$. This estimate is consistent with the
-corrected thinning result and with the statistical uncertainties returned by
-the individual erfc fits. The larger ensemble of $N=100$ thinned realisations
-determines the conditional standard deviation more precisely, with a relative
-sampling uncertainty of $1/\sqrt{2(100-1)}=7.1\%$. The 24\% and 7.1\% values
-quantify the precision with which the two ensembles determine a standard
-deviation, whereas the 5.4\% correction accounts for the reduced count variance
-caused by thinning a fixed parent pool.
+
+\section{Statistical procedure}
+\label{sec:statistical-procedure}
+
+We illustrate and validate the complete procedure using the reference TBP
+scanner with BGO at \SI{195}{\kelvin}, a \SI{1}{\gray} acquisition beginning
+\SI{120}{s} after irradiation and lasting \SI{300}{s}. First, the ten
+statistically independent \SI{1}{\gray} shards are reconstructed separately.
+The erfc fits give a mean endpoint of \StatShardMean~mm and a direct shard-to-shard
+spread $\sigma_R=\StatShardSigma$~mm. The individual fit uncertainties range
+from \StatShardFitErrMin~mm to \StatShardFitErrMax~mm, and the median
+$\chi^2/\mathrm{dof}$ is \StatShardChiMedian. The ten endpoints are shown
+individually in Fig.~\ref{fig:statistical-procedure}; their distribution is
+compatible with a Gaussian description, although ten points cannot establish
+normality. The relative sampling uncertainty of their standard deviation is
+$1/\sqrt{2(10-1)}=23.6\%$.
+
+We then pool the same shards and generate $N=200$ paired nominal and washed
+realisations. The nominal distribution has mean \StatNomMean~mm and raw spread
+$\sigma_R^{\mathrm{thin}}=\StatNomRaw$~mm. The nominal finite-pool factor is
+$C_{\mathrm{pool}}=\StatNomCorrection$, giving the corrected
+$\sigma_R=\StatNomCorrected$~mm. With washout, the corresponding mean is
+\StatWashMean~mm, the raw spread is \StatWashRaw~mm, the event-dependent
+correction is \StatWashCorrection, and the corrected spread is
+\StatWashCorrected~mm. The median $\chi^2/\mathrm{dof}$ values are
+\StatNomChiMedian\ and \StatWashChiMedian\ for the nominal and washed fits,
+respectively; \StatNomFailures\ nominal and \StatWashFailures\ washed fits
+fail the quality requirements. With $N=200$, the relative sampling uncertainty
+on either standard deviation is $1/\sqrt{2(200-1)}=5.0\%$.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=\textwidth]{figs/statistical_procedure_bgo.png}
+  \caption{Endpoint distributions for the reference TBP BGO scanner at
+  \SI{1}{\gray}, with a \SI{300}{s} acquisition beginning at $t_d=120$~s.
+  \emph{(a)} The ten independent-shard endpoints; tick marks show every value
+  and the curve uses their sample mean and standard deviation.
+  \emph{(b)} The $N=200$ nominal and washed fixed-pool thinning ensembles with
+  Gaussian curves determined from their raw means and spreads. The corrected
+  $\sigma_R$ values include Eq.~(\ref{eq:poolcorrection}).}
+  \label{fig:statistical-procedure}
+\end{figure}
+
+\begin{table}[htbp!]
+  \centering
+  \begin{tabular}{lccc}
+    \toprule
+    Ensemble & Number of endpoints & Raw $\sigma_R$ [mm]
+             & Corrected $\sigma_R$ [mm] \\
+    \midrule
+    Independent shards & 10  & \StatShardSigma & \StatShardSigma \\
+    Nominal thinning   & 200 & \StatNomRaw     & \StatNomCorrected \\
+    Washed thinning    & 200 & \StatWashRaw    & \StatWashCorrected \\
+    \bottomrule
+  \end{tabular}
+  \caption{Direct and fixed-pool estimates for the reference statistical case.
+  No finite-pool correction is applied to the ten independently generated
+  shards. Their standard deviation has a 23.6\% relative sampling uncertainty,
+  compared with 5.0\% for each $N=200$ thinning ensemble.}
+  \label{tab:statistical-procedure}
+\end{table}
 
 
 
@@ -743,6 +797,164 @@ $\sigma_R$ is below \SI{300}{\micro\metre}, well below the \SI{1}{\milli\metre} 
 \label{sec:conclu}
 
 CRYSP scanners provide an alternative to in-beam systems that combines full-ring geometry and high sensitivity with good energy and spatial resolution at comparatively low detector cost. Their use affords short scans that minimise the impact of biological washout~\cite{Mizuno2003} and patient movement~\cite{Knopf2009}. The statistical uncertainty associated with the scanner response, radioactive decay and the modelled washout is much smaller than the target precision for distal-edge prediction. Several configurations are possible, depending on the application and the budget. Among the configurations studied, the BGO LAFOV combines greater anatomical coverage with lower $\sigma_R$, whereas the CsI CAFOV provides a lower-cost option for head and other well-localised tumours. These scanners could support systematic studies of the uncertainties affecting distal-edge prediction and, ultimately, clinical range verification.
+
+\appendix
+\section{Statistical basis and validation of the thinning method}
+\label{app:thinning}
+
+\subsection{Parent sample and Bernoulli thinning}
+
+Let the parent sample contain $M$ detected coincidences obtained by pooling
+$n$ independent shards. Each shard is generated with a different Monte Carlo
+seed and represents the complete acquisition at the reference dose. Isotope
+production, physical radioactive decay, the acquisition window and detector
+response are therefore already represented in the parent events. For a target
+dose $D$, event $e$ is retained when
+%
+\begin{equation}
+  X_e = \mathbf{1}(u_e<q_e), \qquad
+  u_e\sim\mathcal{U}[0,1), \qquad
+  q_e=\frac{D}{n}s_e .
+  \label{eq:appendix-keep}
+\end{equation}
+%
+The retained count is $K=\sum_e X_e$. Independent uniform draws are used for
+different realisations. Within one realisation, the same $u_e$ is used for the
+nominal selection ($s_e=1$) and the washed selection
+($s_e=g_{i(e)}\leq1$). Consequently every washed list is a subset of its
+nominal partner. This pairing removes avoidable Monte Carlo noise when their
+means or spreads are compared.
+
+\subsection{Physical decay and biological washout}
+
+The biological survival law $W(t)$ in Eq.~(\ref{eq:washout}) is common to all
+isotopes in the adopted uniform brain model. It is not an isotope-identification
+model. Starting from a produced nucleus of species $i$, the time dependence of
+the recorded signal contains both physical decay and biological survival,
+%
+\begin{equation}
+  A_i^{\mathrm{wo}}(t) \propto
+  \lambda_i^{\mathrm{phys}}
+  e^{-\lambda_i^{\mathrm{phys}}t} W(t),
+  \qquad
+  A_i^0(t) \propto
+  \lambda_i^{\mathrm{phys}}
+  e^{-\lambda_i^{\mathrm{phys}}t}.
+  \label{eq:decay-washout}
+\end{equation}
+%
+The simulated parent sample already contains the second of these time laws, so
+physical decay must not be applied again during thinning. The additional factor
+$g_i$ is the ratio of the signal integrated over irradiation and acquisition
+times with washout to the corresponding signal with physical decay alone,
+%
+\begin{equation}
+  g_i =
+  \frac{\displaystyle\int_{\mathrm{window}}
+        A_i^0(t)W(t)\,\mathrm{d}t}
+       {\displaystyle\int_{\mathrm{window}}
+        A_i^0(t)\,\mathrm{d}t},
+  \label{eq:gi-ratio}
+\end{equation}
+%
+with the irradiation-time integration understood; its closed form is
+Eq.~(\ref{eq:gfactor}). Thus biological clearance is common, while its
+effective window average differs between isotopes because their physical-decay
+time distributions differ. A shorter-lived isotope weights earlier times,
+when less clearance has occurred.
+
+The production Monte Carlo records the latent isotope label $i(e)$ for each
+coincidence. Assigning $s_e=g_{i(e)}$ uses that truth information to generate
+the expected summed PET signal. It does not imply that the scanner identifies
+the isotope: isotope labels are discarded by the reconstruction, which receives
+one combined list of retained LORs. A microscopic simulation storing the age of
+every nucleus could instead retain event $e$ with probability proportional to
+$W(t_e)$; the present method analytically averages this survival over the
+species-dependent physical-decay distribution.
+
+\subsection{Conditional and Poisson count variances}
+
+If the parent process were generated anew for every acquisition, independent
+thinning of a Poisson process would give a Poisson retained count. Conditional
+on the one realised parent pool used here, however, each $X_e$ is Bernoulli.
+For event-dependent probabilities,
+%
+\begin{align}
+  \mathrm{E}[K\mid\mathrm{pool}] &= \sum_e q_e, \\
+  \mathrm{Var}[K\mid\mathrm{pool}] &= \sum_e q_e(1-q_e).
+  \label{eq:conditional-counts}
+\end{align}
+%
+An independently generated Poisson acquisition with the same expected signal
+has
+%
+\begin{equation}
+  \mathrm{Var}_{\mathrm{Poisson}}[K]=\sum_e q_e.
+  \label{eq:poisson-counts}
+\end{equation}
+%
+The conditional ensemble therefore lacks the fluctuation that generated the
+finite parent pool. The ratio of the Poisson and conditional count standard
+deviations gives Eq.~(\ref{eq:poolcorrection}). When $q_e=q$ for all events,
+%
+\begin{equation}
+  C_{\mathrm{pool}} =
+  \sqrt{\frac{Mq}{Mq(1-q)}}=\frac{1}{\sqrt{1-q}}.
+  \label{eq:uniform-pool-correction}
+\end{equation}
+%
+For nominal \SI{1}{\gray} thinning of ten pooled \SI{1}{\gray} shards,
+$q=0.1$ and $C_{\mathrm{pool}}=1.054$. With washout,
+$q_e=0.1g_{i(e)}$ is smaller and varies between species, so the general sum in
+Eq.~(\ref{eq:poolcorrection}) is used. The washed correction can be smaller
+than 1.054 even though washout increases $\sigma_R$: the reduced $q_e$ makes
+reuse of any particular parent event less important, while the lower retained
+count still degrades the endpoint precision.
+
+The variance ratio is exact for event counts. Its use for the reconstructed
+endpoint is tested directly in Sec.~\ref{sec:statistical-procedure}: the
+finite-pool-corrected thinning spread is compared with the spread of endpoints
+from the independently generated shards.
+
+\subsection{Finite-ensemble precision}
+
+The finite-pool correction and the sampling uncertainty on a measured standard
+deviation answer different questions. For $N$ independent Gaussian endpoint
+values, the relative standard error of their sample standard deviation is
+approximately
+%
+\begin{equation}
+  \frac{\delta\sigma_R}{\sigma_R}
+  \simeq \frac{1}{\sqrt{2(N-1)}}.
+  \label{eq:sigma-sampling-error}
+\end{equation}
+%
+It is 23.6\% for the ten independent shards, 7.1\% for $N=100$, and 5.0\%
+for $N=200$. Increasing $N$ determines the conditional thinning distribution
+more precisely but does not create new parent Monte Carlo samples. The
+multiplicative $C_{\mathrm{pool}}$ restores the missing count variance; the
+quantity in Eq.~(\ref{eq:sigma-sampling-error}) describes how precisely the
+corrected spread is estimated from a finite number of endpoints.
+
+\subsection{Endpoint-fit quality}
+
+Each reconstructed depth profile is fitted with a free-baseline erfc model.
+The baseline and amplitude are constrained to be non-negative, \Rc\ is
+constrained to the predefined distal fit window, and the positive edge-width
+parameter is bounded by that window. Non-convergent fits, non-finite parameters
+or covariance matrices, and solutions outside these physical bounds are marked
+as failures. The $\chi^2/\mathrm{dof}$ of every accepted fit is retained as a
+diagnostic. For an ensemble of $N$ endpoints, the analysis is rejected if the
+number of failed fits exceeds
+%
+\begin{equation}
+  n_{\mathrm{fail,max}}=\left\lfloor0.05N\right\rfloor .
+  \label{eq:fit-failure-limit}
+\end{equation}
+%
+The endpoint distribution is inspected in addition to these per-fit checks;
+the Gaussian overlays in Fig.~\ref{fig:statistical-procedure} are descriptive
+and are not used to determine \Rc\ or $\sigma_R$.
 
 \bibliographystyle{unsrtnat}
 \bibliography{biblio}
