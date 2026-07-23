@@ -341,6 +341,56 @@ note as **§9 subsection** "Across the acquisition-delay axis" (Fig. 15). Output
 (full windows, no tag); figure `tools/plot_grogg_leaves_v2.py` → `comparison/figures/grogg_leaves_v2.png`.
 The washout + per-isotope results for these two operating points are on disk too (same TOMLs).
 
+## Statistical-procedure study: bounded fit, method validation, scanner + delay×duration — DONE (2026-07-23)
+
+Branch **`paper/statistical-procedure`** (not merged to main). A new restartable driver plus a
+**bounded erfc fit** re-measure σ_R rigorously and reveal the old numbers were inflated.
+
+**The bounded-fit finding (the headline).** `src/endpoint.jl` `fit_endpoint` was upgraded (another
+instance) to a **bounded** fit — parameter box constraints (base ≥ 0, amp > 0, z0 ∈ window, width
+∈ (0, window]), post-fit finiteness/validity guards, `chi2_dof` returned. `reconstruct_endpoint`
+gained `return_profile` + `erfc_chi2_dof`/`erfc_popt`/`fit_window_mm`/`profile_z_mm`/`profile`. The
+old **unbounded** fit let a few poorly-constrained fits scatter, **inflating σ_R by ~25–40%, worse at
+low counts**. Re-measured with the bounded fit (del120 washed): BGO ring 0.133→**0.101**, CsI ring
+0.226→**0.146**, BGO CAFOV 0.218→**0.127**, CsI CAFOV 0.241→**0.155**. The old fit also faked a BGO
+compact-bore *rise* (0.133→0.182→0.218) that the bounded fit flattens to a plateau (0.101→0.127→0.127)
+— the "rise" was fit-scatter growing as counts fell. **Consequence: the σ_R tables in the old
+`sigma_r_v2` results, `endpoint_precision.tex` §8, and the pre-rework `cbs.tex` are systematically
+high** (see pending.md).
+
+**Driver** `drivers/statistical_procedure_jobs.jl` (restartable; one durable TOML per reconstruction;
+`--stage shard|ensemble|combine`, `--mode nominal|washed`, `--config`, `--leaf`, `-t 1` one GPU MLEM
+at a time). Washed = exact per-species Bernoulli keep `p_dose·g_i[iso]`. `combine` reports raw and
+**finite-pool-corrected** σ_R: `C_pool = √(E[keep]/Var_cond) = √(1/(1−q̄))` — corrects the
+Bernoulli-thinning variance deficit vs a true Poisson acquisition (~1.05 nominal q=0.1, ~1.02 washed
+q≈0.05). Outputs under `…/<scanner>/<crystal>/statistical_procedure/<leaf>_D1p0Gy/{shards,nominal,washed,combined}/`.
+**`--tend T`** (added 2026-07-23, ported from `sigma_r_v2`) reconstructs a shorter window `[t1,T]`:
+filters the pool by `t_decay ≤ T`, **recomputes `washout_g` for `[t1,T]`** (gfac validated vs stamped
+to 1e-15), and **tags the output dir `_t<t1>_<T>`** so it never overwrites the full-window results.
+Full-window path is byte-identical (verified). All runs del120-family, 1 Gy, N=100.
+
+**Method validated.** BGO ring del120: direct 10-shard σ_R **0.063** (±24%, n=10) ≈ thinned
+finite-pool-corrected nominal **0.070** (±7%) — the thinning+correction reproduces independent-shard
+spread. Washout inflation washed/nominal = **1.44** = counting 1/√survival (textbook). So the whole
+thinning apparatus is cross-checked.
+
+**Washed σ_R grid (del120, [120,420], corrected, N=100):** BGO **0.101/0.127/0.127**, CsI
+**0.146/0.153/0.155** for TBP/LAFOV/CAFOV. BGO more precise everywhere (2.4× counts, ≈√ counting);
+its lead narrows from 45% (ring) to ~21% (compact); both ≤ 0.16 mm. Figure
+`tools/plot_statproc_washed_grid.py` → `comparison/figures/statproc_washed_grid.png`.
+
+**CsI-ring delay × duration (washed, corrected, N=100):** late start (fixed 300 s window)
+0.146/0.172/0.266 at start 120/180/300; very-short 120 s scan 0.184/0.217/0.324 at start 120/180/300.
+Later start drains ¹⁵O smoothly; halving the scan costs only ~25% (drops the older late decays).
+**Every realistic delay×duration stays < 0.35 mm on the conservative crystal.** Figure
+`tools/plot_statproc_delay_csi.py` → `comparison/figures/statproc_delay_csi.png`.
+
+**`cbs.tex` Results reworked (2026-07-23):** the three stale old-fit σ_R tables + the old short-scan
+figure are **removed**, replaced by the two plots above (Figs 10, 11) and one summary Table 5 (two
+panels: reference-protocol-by-size, CsI-by-delay), all bounded-fit numbers. Compiles clean.
+Committed on the branch (driver + all statistical_procedure results, commit `6c1979a`); the cbs.tex
+rework + `plot_statproc_delay_csi.py` + the last-point results are uncommitted at time of writing.
+
 ## Data on disk
 
 Products at `PtCryspProds/uniform_headep_sobp_1e8/` are now **generation v2** (self-describing:
@@ -353,3 +403,11 @@ legacy `out/` results + git history). Shared `truth/` bundle unchanged
 (`activity_profile_fast.csv` per-isotope columns `O15,C11,N13,C10,O14,total`; `depth_dose.csv`) —
 still in the native frame, so the v2 chain shifts it by `source_z_offset_mm`. Config
 `[configuration]` is parked on the ring BGO v2 arm.
+
+Also present: two extra detector operating points under the CAFOV scanners — **CsI(Tl)**
+(`crysp_r35_35cm_csi_2x0/csi_tl`) and **BGO 77 K** (`crysp_r40_35cm_bgo_2x0/bgo_77k`), used by the
+Grogg delay-axis extension. And the **statistical-procedure** outputs (branch
+`paper/statistical-procedure`): `…/<scanner>/<crystal>/statistical_procedure/<leaf>_D1p0Gy/` with
+`shards/` (BGO+CsI ring only), `nominal/` (BGO ring only), `washed/` (all), `combined/washed_N100.toml`
+— for six del120 arms (BGO+CsI × TBP/LAFOV/CAFOV), the CsI-ring late-start leaves del180/del300, and
+the CsI-ring `--tend` sub-windows `del120…_t120_240`, `del180…_t180_300`, `del300…_t300_420`.

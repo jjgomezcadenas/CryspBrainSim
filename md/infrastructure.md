@@ -79,3 +79,31 @@ irradiation-end clock, per-LOR isotope column, stamped `washout_g`, `del…` sce
   `run_parameters_{r35_35_csi,r35_50_csi,r40_35_bgo,r40_50_bgo}_v2.toml`. The 8 legacy off-centre
   configs are kept as archival provenance of the §1–7 results (their `fast_1Gy` products are gone;
   not re-runnable).
+
+## Grogg comparison + extra operating points — DONE (2026-07-17/18)
+
+- **Estimator** — `src/endpoint.jl`: `fit_endpoint_grogg` (linear distal x-intercept, last-distal-max
+  start, best RSS/dof range) + `gaussian_smooth` (7 mm PET-resolution smoothing). `reconstruct_endpoint`
+  returns R50 + raw/unweighted/7 mm-smoothed Grogg intercepts. `drivers/sigma_r_v2.jl` gained the
+  paired estimator deliverable + `--isotopes none` + `--tend` (short-scan sub-cut) + per-realization dump.
+- **Tools** — `tools/plot_grogg_v2.py`, `plot_grogg_leaves_v2.py`, `plot_washed_shortscan_afov.py`,
+  `make_ringcsi_firmup.py` (N=200 firm-up provenance file). Bib `grogg2013`.
+- **Configs** — `run_parameters_{r35_35_csi_tl,r40_35_bgo_77k}_v2.toml` (CsI(Tl) ambient, BGO 77 K).
+
+## Statistical-procedure driver + bounded fit — DONE (2026-07-23, branch `paper/statistical-procedure`)
+
+- **Bounded fit** — `src/endpoint.jl` `fit_endpoint` now box-constrains (base ≥ 0, amp > 0,
+  z0 ∈ window, width ∈ (0,window]) with post-fit validity guards and returns `chi2_dof`.
+  `reconstruct_endpoint` gained `return_profile` (+ `erfc_chi2_dof`/`erfc_popt`/`fit_window_mm`/
+  `profile_z_mm`/`profile`). Tightens σ_R ~25–40% vs the old unbounded fit (results.md).
+- **Driver** — `drivers/statistical_procedure_jobs.jl`: restartable, one durable TOML per
+  reconstruction; `--stage shard|ensemble|combine`, `--mode nominal|washed`, `--config`, `--leaf`,
+  `-t 1` (one GPU MLEM at a time). `combine` reports raw + finite-pool-corrected σ_R
+  (`C_pool=√(1/(1−q̄))`). **`--tend T`** sub-cuts to `[t1,T]` (t_decay filter + `washout_g` recompute
+  + `_t<t1>_<T>` output tag; full-window path byte-identical). Usage: `running_instructions.md`.
+  Older monolithic `drivers/statistical_procedure.jl` is superseded for production.
+- **Tools** — `tools/plot_statproc_washed_grid.py` (washed σ_R vs AFOV, BGO+CsI),
+  `plot_statproc_delay_csi.py` (CsI washed σ_R vs start delay, 300 s vs 120 s scan),
+  `plot_statistical_procedure.py` (per-shard profile+fit, run by the driver).
+- **Talk** — `latex/pet_pbt_talk.tex` (beamer deck for a medical-institute audience; figures in
+  `latex/figs/`; uncommitted).

@@ -1,9 +1,18 @@
 # Pending (smaller items, independent of the isotope-washout study)
 
-- **Ring-CsI del180 washed σ_R N=200 firm-up** — the v2 ring-CsI del180 washed point (0.199) dips
-  ~2σ below trend at N=100 (the small bores are smooth); N=200 halves the band (±7%→±5%) and would
-  either pull it into line or confirm it. Re-run `drivers/sigma_r_v2.jl --realizations 200` on the
-  ring-CsI v2 arm (md/results.md → "Generation-2 σ_R study").
+- **BIG: bounded fit supersedes the old σ_R numbers.** The bounded `fit_endpoint`
+  (results.md → "Statistical-procedure study") tightens σ_R ~25–40% vs the old unbounded fit, worse
+  at low counts. So **`endpoint_precision.tex` §8 (and everything quoting old `sigma_r_v2` σ_R)** is
+  systematically high and should be regenerated with the bounded fit / `statistical_procedure_jobs.jl`,
+  or explicitly caveated. `cbs.tex` Results is already reworked to bounded-fit numbers; the rest of the
+  notes are not.
+- **Merge branch `paper/statistical-procedure`** to main when ready (currently 6+ commits ahead;
+  cbs.tex rework + `plot_statproc_delay_csi.py` + last-point results still uncommitted on it).
+- **`cbs.tex` Fig 9 caption** (the "Statistical procedure" section, another instance's) says
+  acquisition window `[120,300] s`, but the statistical-procedure data is the full `[120,420] s`
+  del120 window — likely a stale number to correct.
+- ~~Ring-CsI del180 N=200 firm-up~~ **DONE** — N=200 pulled it to 0.221 (was 0.199 fluctuation);
+  superseded anyway by the bounded-fit statistical-procedure re-measure.
 - **CHS + R35: remaining nine shards per arm** — obsolete for v2 (the v2 R35/40 arms already ship
   10 shards); kept only for the legacy single-shard CHS/R35 extrapolations of §1–7.
 - **BGO all-events bore-radius sensitivity** — at matched dose the BGO all-events penalty grows
@@ -12,10 +21,11 @@
   all-events 1/√dose extrapolation sits 1.6σ below the ten-shard 1 Gy measurement (counting-only
   thinning caveat).
 
-- **`latex/cbs.tex`** (the living draft, separate from `endpoint_precision.tex`): revert eq:sigmaR
-  from R_p back to z0/R50 (keep the R_p accuracy paragraph), cite Zapien-Campos, fold in the
-  two-scanner numbers. NB: `cbs.tex` carries the user's own uncommitted edits — commit only on
-  explicit instruction.
+- **`latex/cbs.tex`** (the living draft, separate from `endpoint_precision.tex`): the **Results
+  section is reworked** (2026-07-23) around two bounded-fit plots + one summary table (results.md);
+  the old σ_R tables are gone. Remaining smaller items if wanted: eq:sigmaR wording, cite
+  Zapien-Campos. NB: `cbs.tex` carries other instances' uncommitted edits — commit only on explicit
+  instruction.
 - **Composite-erfc edge model** (2–3 isotope components, offsets/widths frozen from per-isotope
   truth profiles, free amplitudes + global shift); adopt only if σ and rung stability improve
   incl. at 0.1 Gy. Directly relevant to isotope washout — see [isotope-washout.md](isotope-washout.md).
