@@ -19,6 +19,12 @@ isotopes = ["O15", "C11", "N13", "C10", "O14"]
 T_half_s = [122.24, 1222.8, 597.9, 19.29, 70.62]
 
 [timing]                       # from sampling_budget_fast_meta.csv
-t_irr_s = 60.0                 # irradiation [0, t_irr]
-t1_s    = 120.0                # acquisition opens (= t_irr + t_del)
-t2_s    = 1320.0               # acquisition closes (= t1 + t_meas)
+# BEAM-OFF CLOCK: t1, t2 are measured from beam-off (t1 = delay, t2 = t1 + duration).
+# For a v2 leaf del<D>s_ac<A>s the window is [D, D+A]. Verified: del120 → t1=120, t2=420
+# reproduces the stamped washout_g (0.47/0.45/0.45/0.53/0.48); t1=180 does NOT match.
+# Do NOT "fix" t1 to t_irr+t_del — that is the beam-on clock and breaks the match.
+# The coded Phi keeps the (e^{a·t_irr}-1) build-up factor with this beam-off t1; consistent
+# across stamp, tools and cbs.tex Eq. 6, and it calibrates away for the edge.
+t_irr_s = 60.0                 # irradiation duration
+t1_s    = 120.0                # acquisition opens, delay after beam-off (legacy 20-min window)
+t2_s    = 1320.0               # acquisition closes, after beam-off (= t1 + t_meas)

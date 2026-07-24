@@ -15,6 +15,7 @@
 *.snm
 *.vrb
 /latex/*.pdf
+/latex/docs/*.pdf
 
 # Python
 __pycache__/

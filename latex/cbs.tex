@@ -161,7 +161,7 @@ To quantify the application of CRYSP scanners to PBT, we define a scenario that 
 
 Our objective here is to quantify the run-to-run standard deviation of \Rc\ ($\sigma_R$) due to known factors. These include: a) the impact of the PET itself (sensitivity, AFOV, resolution); b) the impact of radioactive decay, for different start-of-scan and total-scan times; and c) the impact of washout. Effects (a) and (b) together set the ``no-washout'' $\sigma_R$ reported below, while (c) quantifies the additional uncertainty due to washout.
 
-Notice that we do not attempt to quantify systematic uncertainties such as density variations, the fidelity of Monte Carlo modelling (cross sections in particular), and imperfect knowledge of the washout model. Previous studies estimate that these effects contribute range uncertainties of a few millimetres, even under favourable conditions~\cite{Espana2011,Knopf2009,Mizuno2003,Paganetti2012}. Instead, our goal is to determine whether the statistical contribution of the CRYSP scanner, $\sigma_R$, is small compared with these systematic uncertainties. If so, the scanner could be used to investigate these uncertainties under controlled experimental conditions and, eventually, for clinical range verification.
+Notice that we do not attempt to quantify most systematic uncertainties, such as density variations, the fidelity of Monte Carlo modelling (cross sections in particular), and patient positioning. Previous studies estimate that these effects contribute range uncertainties of a few millimetres, even under favourable conditions~\cite{Espana2011,Knopf2009,Mizuno2003,Paganetti2012}. Instead, our goal is to determine whether the statistical contribution of the CRYSP scanner, $\sigma_R$, is small compared with these systematic uncertainties. If so, the scanner could be used to investigate these uncertainties under controlled experimental conditions and, eventually, for clinical range verification. As a first step in that direction, Section~\ref{sec:systematics} quantifies one of them --- the uncertainty of the biological washout model --- with a blind procedure that mismodels the pseudo-data and leaves the calibration untouched.
 
 This paper is organised as follows. Section~\ref{sec:crysp} explains the CRYSP concept in some detail. Section~\ref{sec:setup} describes the study setup: the scanner configurations, the phantom, and the beam. Section~\ref{sec:estimator} defines the estimator used for distal edge quantification and its uncertainty. The modelling of the biological washout is presented in Section~\ref{sec:washout}, while Section~\ref{sec:thinning} discusses the
 statistical treatment of the data through the thinning method. 
@@ -765,6 +765,121 @@ $1/\sqrt{\text{survival}}$.
 \end{table}
 
 
+
+\FloatBarrier
+\section{Quantifying systematic uncertainties}
+\label{sec:systematics}
+
+The results of Sec.~\ref{sec:results} measure $\sigma_{\Rc}$, the first term of
+Eq.~(\ref{eq:sigma_budget}). We now begin to quantify the second, $\sigma_{\DR}$,
+which carries the uncertainty of the calibration that converts the fitted
+activity midpoint into the dose edge.
+
+The procedure is deliberately blind. Monte Carlo truth --- the isotope label and
+the production point stored with each coincidence --- is used only to
+\emph{generate} the perturbed pseudo-data. The analysis is the pipeline of
+Sec.~\ref{sec:estimator}, unchanged: whole-plane depth profile, bounded erfc fit,
+\Rc. No model parameter and no isotope label enters the fit. The calibration
+$\DR$ is computed once from the nominal model and held fixed, so that a
+mismodelled input appears exactly as it would on real data, as an uncorrected
+shift of the reconstructed endpoint,
+%
+\begin{equation}
+  b \;=\; \Rc(\text{displaced model}) - \Rc(\text{nominal model}) .
+  \label{eq:bias}
+\end{equation}
+%
+The dose edge \Roc\ does not move: the proton range is fixed by electronic
+stopping power, which neither the nuclear production channels nor the biological
+clearance affect at this level. The whole systematic therefore appears in \Rc.
+
+This section covers the biological washout model. The reaction cross sections,
+the other input entering $\DR$ through the shape of the activity profile, are
+not quantified here. Neither are tissue heterogeneity, anatomical change or
+patient positioning, all of which are absent by construction from a uniform
+phantom and are expected to dominate a clinical error budget.
+
+\subsection{Biological washout}
+\label{sec:sys-washout}
+
+The three-component model of Sec.~\ref{sec:washout} is a measurement: Mizuno et
+al.\ determined the weights $M_k$ and the biological half-lives
+$T_k^{\mathrm{bio}}$ in irradiated rabbit brain, with the uncertainties quoted in
+Table~\ref{tab:washout_brain}. The uncertainty on the washout correction is
+therefore the uncertainty on those parameters, and we introduce no alternative
+model form.
+
+Washout acts on the endpoint only by reweighting the isotope mixture
+(Eq.~\ref{eq:mix}): each $g_i$ multiplies its species' entire depth profile, so
+no single isotope's shape is distorted and \Rc\ moves only insofar as the species
+occupy different depths. At the reference protocol the survival factors are
+$g = 0.467$, $0.447$, $0.449$, $0.525$ and $0.482$ for $^{15}$O, $^{11}$C,
+$^{13}$N, $^{10}$C and $^{14}$O, and the central washout shift is
+$+0.051$~mm --- a fixed offset absorbed by the calibration.
+
+Two of the three components cannot contribute to $b$. The fast component has
+$T_f^{\mathrm{bio}} = \SI{2}{s}$ against an irradiation lasting
+$t_{\mathrm{irr}} = \SI{60}{s}$: some thirty biological half-lives elapse while
+the beam is still on, so it is spent before any acquisition begins, at any delay
+including zero. A fully spent component removes the same fraction of every
+species, which is a common factor on all $g_i$ and cancels identically in the
+mixture --- its $\sim\!90\%$ half-life uncertainty is therefore harmless. The
+slow component, with $\lambda_s^{\mathrm{bio}} = 6.8\times10^{-5}~\mathrm{s}^{-1}$,
+is nearly constant across the acquisition window and nearly cancels for the same
+reason. Only the medium component discriminates between species: its rate
+$5.0\times10^{-3}~\mathrm{s}^{-1}$ is comparable to that of $^{15}$O
+($5.7\times10^{-3}~\mathrm{s}^{-1}$) and an order of magnitude above that of
+$^{11}$C ($5.7\times10^{-4}~\mathrm{s}^{-1}$). Table~\ref{tab:sys_washout}
+confirms this directly: the two fast-component entries are zero to the quoted
+precision and the medium weight dominates the rest.
+
+\begin{table}[htbp!]
+  \centering
+  \begin{tabular}{lcc}
+    \toprule
+    \multicolumn{3}{c}{\emph{One parameter at a time}, $\pm1\sigma$} \\
+    \midrule
+    Parameter & $1\sigma$ & $b$ [mm] \\
+    \midrule
+    $M_f$              & $0.03$   & $-0.0000$ \\
+    $M_m$              & $0.03$   & $+0.0035$ \\
+    $M_s$              & $0.01$   & $-0.0010$ \\
+    $T_f^{\mathrm{bio}}$ & \SI{1.8}{s}    & $+0.0000$ \\
+    $T_m^{\mathrm{bio}}$ & \SI{18}{s}     & $-0.0015$ \\
+    $T_s^{\mathrm{bio}}$ & \SI{2200}{s}   & $-0.0005$ \\
+    \midrule
+    \multicolumn{2}{l}{Joint band, $10^3$ draws}        & $\pm0.0042$ \\
+    \midrule
+    \multicolumn{3}{c}{\emph{Coherent worst-case excursion}} \\
+    \midrule
+    \multicolumn{2}{l}{$1\sigma$} & $+0.0064$ \\
+    \multicolumn{2}{l}{$2\sigma$} & $+0.0129$ \\
+    \multicolumn{2}{l}{$3\sigma$} & $+0.0260$ \\
+    \multicolumn{2}{l}{$5\sigma$} & $+0.0427$ \\
+    \bottomrule
+  \end{tabular}
+  \caption{Endpoint bias $b$ (Eq.~\ref{eq:bias}) from the washout parameters, at
+    the reference protocol (\SI{300}{s} acquisition opening \SI{120}{s} after
+    beam-off). \emph{Top}: each parameter displaced by $\pm1\sigma$ in turn, and
+    the joint band obtained by drawing all six together. \emph{Bottom}: every
+    parameter displaced simultaneously by $n\sigma$ in the direction that moves
+    \Rc\ the same way, the conservative case in which the errors conspire.
+    Weights are displaced additively and renormalised; half-lives are displaced
+    multiplicatively, since they are positive quantities whose Gaussian errors
+    would otherwise reach negative values. Compare
+    $\sigma_{\Rc} = \SI{0.101}{\milli\metre}$ (Table~\ref{tab:sigmaR}).}
+  \label{tab:sys_washout}
+\end{table}
+
+The resulting bias is small. Drawing all six parameters within their
+uncertainties gives a band of $\pm0.004$~mm. Even the conservative case in which
+every parameter is displaced coherently in the same unfavourable direction gives
+$0.026$~mm at $3\sigma$ and $0.043$~mm at $5\sigma$ --- still below half of
+$\sigma_{\Rc} = \SI{0.101}{\milli\metre}$ for the reference BGO scanner, and more
+than an order of magnitude below the \SI{1}{mm} target. Within the model as
+measured, the washout parameters are not a limitation on distal-edge
+verification, and the short in-room acquisition is what keeps them so: the least
+well-determined component of the model is spent before the scan begins.
 
 \FloatBarrier
 \section{Conclusions}

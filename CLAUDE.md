@@ -48,3 +48,7 @@ the imported file below; read it before acting.
 - **Say "state plainly"** where you might reach for "honest / honestly" — describe the thing directly.
 - **Output in plain text or bold only.** Use **bold** for the emphasis you would otherwise carry
   with colour; no coloured text.
+- **No LaTeX in the terminal; write readable formulas.** When talking in the terminal, never use
+  LaTeX markup (no `\`, `$`, `_{}`, `^{}`, `\oplus`, `\sqrt`, etc.). Write formulas in plain readable
+  form: `sigma_R`, `R80 - R50`, `1/sqrt(dose)`, `g(15O)/g(11C)`, `e^(-lambda t)`. LaTeX belongs only
+  inside `.tex` files.

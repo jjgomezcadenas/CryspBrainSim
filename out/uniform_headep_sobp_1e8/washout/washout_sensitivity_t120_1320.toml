@@ -1,0 +1,83 @@
+
+[meta]
+window_t1_s = 120.0
+window_t2_s = 1320.0
+t_irr_s = 60.0
+fit_window_lo_mm = -34.30150224094518
+fit_window_hi_mm = 0.6984977590548169
+proximal_margin_mm = 20.0
+distal_margin_mm = 15.0
+n_mc = 1000
+mc_seed = 20260723
+config = "run_parameters.toml"
+frame = "native truth frame; all outputs are R50 differences"
+level = "truth (origins); no reconstruction"
+
+[central]
+g_ratio_O15_C11 = 1.1917246928921483
+f_O15 = 0.7205107772655905
+R50_physical_mm = -14.388353132102242
+R50_washed_mm = -14.185220520478085
+delta_R50_washout_mm = 0.20313261162415763
+
+[central.g_factor]
+O15 = 0.44774139042544325
+C11 = 0.3757087464042033
+N13 = 0.3858791271012184
+C10 = 0.5254206271763049
+O14 = 0.47558269848882007
+
+[one_at_a_time]
+
+[one_at_a_time.M_fast]
+sigma = 0.03
+dR50_up_mm = 3.5559022393272244e-09
+dR50_dn_mm = -2.9315216920622333e-10
+dR50_sym_mm = 1.924527204266724e-09
+g_ratio_up = 1.191724692892201
+f_O15_up = 0.7205107772655973
+
+[one_at_a_time.M_medium]
+sigma = 0.03
+dR50_up_mm = 0.013217160385201154
+dR50_dn_mm = -0.013809155294168818
+dR50_sym_mm = 0.013513157839684986
+g_ratio_up = 1.2065025747565825
+f_O15_up = 0.722666454013902
+
+[one_at_a_time.M_slow]
+sigma = 0.01
+dR50_up_mm = -0.003774825235803192
+dR50_dn_mm = 0.003947122084593246
+dR50_sym_mm = 0.003860973660198219
+g_ratio_up = 1.1875635432996692
+f_O15_up = 0.7198964662282551
+
+[one_at_a_time.T_fast]
+sigma = 1.8
+dR50_up_mm = 3.062052655877778e-08
+dR50_dn_mm = -3.614340826629814e-09
+dR50_sym_mm = 1.71174336927038e-08
+g_ratio_up = 1.191724733390853
+f_O15_up = 0.7205107824721496
+
+[one_at_a_time.T_medium]
+sigma = 18.0
+dR50_up_mm = 0.008008594362193477
+dR50_dn_mm = -0.011461106425720402
+dR50_sym_mm = 0.00973485039395694
+g_ratio_up = 1.2002146758416727
+f_O15_up = 0.7217866454497288
+
+[one_at_a_time.T_slow]
+sigma = 2200.0
+dR50_up_mm = -0.004628172787180418
+dR50_dn_mm = 0.007111962104415781
+dR50_sym_mm = 0.0058700674457980995
+g_ratio_up = 1.1867166815030274
+f_O15_up = 0.7197664990708305
+
+[combined]
+quadrature_mm = 0.01807588328177141
+joint_band_mm = 0.01888860382472673
+joint_mean_mm = -0.00011864176154997708

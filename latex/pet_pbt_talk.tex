@@ -66,9 +66,9 @@
           but makes the treatment sensitive to range errors.
         \item A few millimetres can mean tumour underdose or damage to a nearby
           critical organ.
-        \item For the 10\,cm nominal range shown here,
-          \hi{$3.5\%\times\text{range}\simeq3.5$\,mm} uncertainty arises from
-          the CT conversion alone.
+        \item For the 10\,cm nominal range shown here, the clinical distal
+          margin is \hi{$3.5\%\times\text{range}+1\,\mathrm{mm}
+          \simeq4.5\,\mathrm{mm}$}.
       \end{itemize}
     \end{column}
     \begin{column}{0.44\textwidth}
@@ -208,7 +208,8 @@
       \begin{itemize}
         \item A \hi{full closed ring} $\Rightarrow$ full coverage, high
           sensitivity, clean image.
-        \item Same room $\Rightarrow$ \hi{no co-registration}, short transfer.
+        \item Same couch $\Rightarrow$ a known rigid transform and a short
+          transfer, without separate-scanner repositioning.
         \item The $\sim$2-min delay is \hi{bought back} by sensitivity and a
           \hi{better scanner}.
       \end{itemize}
@@ -217,8 +218,8 @@
   \vspace{2mm}
   \begin{center}
     \fbox{\parbox{0.9\textwidth}{\centering
-      A \hi{high-sensitivity in-room ring} turns the delay from a liability into
-      an opportunity --- and lets us build the scanner we actually want.}}
+      A \hi{high-sensitivity in-room ring} combines short transfer time with
+      complete angular coverage and high sensitivity.}}
   \end{center}
 \end{frame}
 
@@ -230,11 +231,12 @@
     \begin{column}{0.6\textwidth}
       \begin{itemize}
         \item Scintillators \hi{CsI and BGO} gain dramatically in light yield
-          when cooled --- CsI reaches $\sim$100 photons/keV at 77 K, BGO $\sim$100 photons/keV.
+          when cooled --- at 77 K, CsI reaches $\sim$100 photons/keV and BGO
+          $\sim$29 photons/keV.
             \item In both cases, high yields translate into excellent energy resolution
               (6\% CsI, 10\% BGO),
               which in turn is essential for efficient scatter rejection.
-            \item Monolithic crystals + SiPMs, permit 3D position reconstruction using neural
+        \item Monolithic crystals + SiPMs permit 3D position reconstruction using neural
               networks with high accuracy and no parallax error. 
       \end{itemize}
   
@@ -286,49 +288,72 @@
   \includegraphics[width=0.88\textwidth,height=0.36\textheight,keepaspectratio]{fit_all_events_bgo.png}
 \end{frame}
 
-\begin{frame}{CRYSP can achieve high precision in distal edge determination}
+\begin{frame}{Statistical procedure: from simulations to range precision}
   \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.44\textwidth}
       \begin{itemize}
-        \item A single short in-room scan (1\,Gy) locates the distal edge to
-          \hi{$\sigma_R \approx 0.15$--$0.3$\,mm} --- well inside clinical
-          margins.
-        \item \hi{Both crystals perform very well}: BGO ahead on raw
-          sensitivity, CsI close behind at lower cost.
-        \item Biological washout costs only \hi{$\sim 1.5\times$} in precision,
-          with \hi{no range bias}.
-        \item Precision holds across scanner sizes and the realistic 2-min
-          acquisition delay.
+        \item Ten independent 1\,Gy simulations provide the parent event pool.
+        \item $N=100$ independently thinned realisations estimate the
+          run-to-run spread of the fitted activity midpoint, $R_{50}$.
+        \item A finite-pool correction restores the count variance of independent
+          acquisitions.
+        \item Reference BGO: \hi{0.070\,mm nominal} and
+          \hi{0.101\,mm with washout}.
       \end{itemize}
     \end{column}
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.56\textwidth}
       \centering
-      \includegraphics[width=\linewidth]{washed_shortscan_afov.png}\\
-      {\scriptsize\color{crGrey} $\sigma_R$ (short in-room scan, with washout)
-       vs.\ scanner size, CsI and BGO.}
+      \includegraphics[width=\linewidth]{statistical_procedure_bgo.png}\\
+      {\scriptsize\color{crGrey} Reference TBP BGO study: one shard and the
+       washed $N=100$ ensemble.}
     \end{column}
   \end{columns}
 \end{frame}
 
-%\begin{frame}{Robust across configuration and timing}
-%  \begin{columns}[T]
-%    \begin{column}{0.5\textwidth}
-%      \centering
-%      \includegraphics[width=\linewidth]{washed_bgo_vs_csi_v2.png}\\
-%      {\scriptsize\color{crGrey} BGO vs.\ CsI at three scanner sizes.}
-%    \end{column}
-%    \begin{column}{0.5\textwidth}
-%      \centering
-%      \includegraphics[width=\linewidth]{sigma_r_v2_csi.png}\\
-%      {\scriptsize\color{crGrey} Precision vs.\ acquisition delay (CsI).}
-%    \end{column}
-%  \end{columns}
-%  \vspace{1mm}
-%  \begin{center}
-%    {\color{crGrey}\small The measurement degrades gracefully with delay and
-%     scanner size --- and stays sub-mm.}
-%  \end{center}
-%\end{frame}
+\begin{frame}{Reference protocol: all scanner configurations are sub-mm}
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}
+        \item \hi{Protocol:} 1\,Gy, 300\,s acquisition, starting 120\,s after
+          beam-off; washout included.
+        \item BGO: \hi{0.101--0.127\,mm}; CsI: \hi{0.146--0.155\,mm}.
+        \item BGO is more precise through higher sensitivity; CsI remains a
+          competitive, lower-cost option.
+        \item These values are the \hi{statistical precision of the fitted
+          activity edge}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{statproc_washed_grid.png}\\
+      {\scriptsize\color{crGrey} Finite-pool-corrected $\sigma_R$ for the
+       reference protocol ($N=100$).}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Timing flexibility: the CsI stress case remains below 0.35 mm}
+  \begin{columns}[T]
+    \begin{column}{0.44\textwidth}
+      \begin{itemize}
+        \item CsI is the lower-cost, less precise crystal; BGO is more precise
+          at every configuration studied.
+        \item At a 300\,s start delay, $\sigma_R$ is 0.266\,mm for a 300\,s
+          scan and 0.324\,mm for a 120\,s scan.
+        \item Across all tested delays and scan durations,
+          \hi{$\sigma_R<0.35$\,mm}.
+        \item The scanner contribution is therefore well below the
+          1\,mm target.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \includegraphics[width=\linewidth]{statproc_delay_csi.png}\\
+      {\scriptsize\color{crGrey} CsI range precision vs.\ start delay, with
+       washout ($N=100$).}
+    \end{column}
+  \end{columns}
+\end{frame}
 
 % ===========================================================================
 \section{Summary}
@@ -339,11 +364,11 @@
       high-sensitivity probe 
     \item \hi{CRYSP in-room PET} exploits cryogenic CsI/BGO for excellent energy
       and spatial resolution at a \hi{competitive cost}.
-    \item On the brain --- the ideal first application --- \hi{both CsI and BGO}
-      locate the distal edge to \hi{$\sim 0.15$--$0.3$\,mm} per 1\,Gy scan,
-      washout included.
-    \item CsI offers a very good, low-cost, supply-secure option; BGO offers the
-      best raw performance.
+    \item For the reference protocol, the fitted activity edge has
+      \hi{0.101--0.155\,mm statistical precision} across all BGO and CsI
+      geometries; the tested CsI timing grid remains below 0.35\,mm.
+    \item CsI offers a very good, low-cost, supply-secure option; BGO offers
+      the best statistical precision.
   \end{itemize}
   \vspace{3mm}
 \end{frame}

@@ -1,0 +1,180 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+
+\newcommand{\iso}[2]{\textsuperscript{#1}#2}
+\newcommand{\Rc}{\ensuremath{R_{50}}}
+\newcommand{\Roc}{\ensuremath{R_{80}}}
+
+\begin{document}
+
+\begin{center}
+  {\large\textbf{Calibration systematics from cross sections and washout:}}\\[2pt]
+  {\large\textbf{plan}}
+\end{center}
+\medskip
+
+\noindent
+Plan for quantifying $\sigma_{\Delta R}$, the calibration term of
+$\sigma_{\Roc} = \sigma_{\Delta R} \oplus \sigma_{\Rc}$ (\texttt{cbs.tex}
+Eq.~8), from two sources: nuclear production cross sections and the Mizuno
+washout parameters. \texttt{cbs.tex} measures $\sigma_{\Rc}$ (0.101~mm BGO ring,
+0.146~mm CsI ring, washed, del120) and declines $\sigma_{\Delta R}$.
+
+\subsection*{1. Blind rule}
+
+Monte Carlo truth (\texttt{isotope}, \texttt{z0\_mm}, production energy) is used
+\emph{only} to build the perturbed pseudo-data. The analysis is the existing
+pipeline unchanged: whole-plane depth profile from the reconstructed image,
+bounded erfc fit, \Rc. No isotope label, no true production point, no
+perturbation parameter enters the analysis. Scan observables --- reconstructed
+position, energy, and decay time \texttt{t\_decay\_s} --- are admissible, but
+Stage~0 uses none beyond the profile.
+
+The calibration $\Delta R = \Roc - \Rc$ is computed once from the nominal Monte
+Carlo and held fixed. Nuclear production cross sections do not move \Roc\ (the
+dose edge is set by electronic stopping power), so the bias is
+
+\begin{equation}
+  b = \Rc(\text{perturbed}) - \Rc(\text{nominal}),
+\end{equation}
+
+read with the frozen calibration. This is the quantity to tabulate.
+
+\subsection*{2. What moves \Rc}
+
+Write the profile as a mixture of per-isotope depth shapes,
+\begin{equation}
+  P(z) = \sum_i w_i\,\hat P_i(z),
+  \qquad \textstyle\int \hat P_i = 1 .
+\end{equation}
+Uniform washout scales $w_i$ only. Cross sections scale $w_i$ (channel yields)
+and distort $\hat P_i(z)$ (energy dependence of $\sigma_i(E)$ near threshold).
+
+\paragraph{Mixture lever, calibrated.} Washout multiplies the mix by
+$g_i$ = 0.448 (\iso{15}{O}), 0.376 (\iso{11}{C}), raising the \iso{15}{O} window
+fraction from 0.82 to 0.844, and shifts the edge by the measured $+0.218$~mm.
+Hence
+\begin{equation}
+  \frac{\mathrm{d}\Rc}{\mathrm{d}f_{^{15}\mathrm{O}}} \simeq 9\text{--}10~\text{mm per unit fraction},
+\end{equation}
+consistent with the delayed-start calibration walk ($-2.9$~mm as \iso{15}{O}
+drains by $t_{\mathrm{start}} = 300$~s). \textbf{A 1\% error in the \iso{15}{O}
+fraction costs $\simeq 0.09$~mm}, comparable to $\sigma_{\Rc}$.
+
+\paragraph{Shape lever, not calibrated away.} A $z$-dependent distortion of one
+isotope's own production profile changes the shape of the distal fall-off. No
+scalar absorbs it. Structurally identical to the spatial-non-uniformity washout
+item (\texttt{md/isotope-washout.md}), which is the one known non-calibratable
+washout bias. Cross-section libraries disagree most near threshold and below
+$\sim$30~MeV; the distal few mm of activity is produced by protons in that
+energy range, and in a SOBP the distal fall-off is formed by the
+highest-energy layer alone. Expected to dominate; magnitude unmeasured.
+
+\subsection*{3. Perturbations}
+
+Each is a per-event weight on the existing pooled shards.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{llll}
+    \toprule
+    & Perturbation & Applied as & Machinery \\
+    \midrule
+    P1 & Mizuno parameters & $g_i(M_k,T_k)$, Bernoulli keep & exists \\
+    P2 & Cross-section yields & $r_i$ constant per isotope & exists ($g_i$ path) \\
+    P3 & Cross-section shape & $r_i(z_0)$ per event & new, small \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\noindent
+\textbf{P1.} Draw $(M_k, T_k)$ from the Mizuno uncertainties
+(\texttt{config/washout\_brain.toml}), recompute $g_i$, keep with probability
+$p_{\mathrm{dose}}\,g_i$. \texttt{tools/washout.py::mc\_band} already does this
+at truth level and returns $\pm 0.020$~mm --- for the old window and the old
+unbounded fit. Recompute at the reference protocol with the bounded fit.
+
+\noindent
+\textbf{P2.} Scale each channel yield by $r_i$ and keep with probability
+$\propto r_i$. Identical code path to $g_i$.
+
+\noindent
+\textbf{P3.} Weight by $r_i(z_0)$ using the stored annihilation depth. Two ways
+to set $r_i(z)$:
+\begin{enumerate}
+  \item[(a)] \emph{Parameterised.} Apply a shift or stretch to $\hat P_i(z)$ and
+    report sensitivity per mm of production-profile shift. Model-independent;
+    decouples what the method does from how bad the input is.
+  \item[(b)] \emph{Physical.} Fold a cross-section ratio $r_i(E)$ with the proton
+    fluence. In the distal region the residual-range relation gives $E(z)$
+    directly; over the rest of the fit window it is approximate.
+\end{enumerate}
+Start with (a); (b) only if a defensible $r_i(E)$ is in hand.
+
+\subsection*{4. Inputs}
+
+Available: per-LOR \texttt{isotope}, \texttt{z0\_mm}, \texttt{t\_decay\_s}
+(\texttt{dev/reference/SCHEMA.md}); per-isotope truth depth columns
+(\texttt{truth/activity\_profile\_fast.csv}); Mizuno uncertainties.
+
+\textbf{Gating item:} the per-channel cross-section spread for
+\iso{16}{O}$(p,x)$\iso{15}{O}, \iso{12}{C}$(p,pn)$\iso{11}{C},
+\iso{16}{O}$(p,x)$\iso{11}{C}, \iso{16}{O}$(p,x)$\iso{13}{N}. Source:
+Espa\~na et al.\ 2011 (already cited in \texttt{cbs.tex}), which compares
+datasets and their effect on predicted PET range. We cannot run FLUKA --- that
+is a second transport chain upstream of this repository. Using the published
+inter-dataset spread is the defensible substitute; claiming a FLUKA counterpart
+is not.
+
+\subsection*{5. Procedure --- Stage 0 (blind, no correction)}
+
+\begin{enumerate}
+  \item Fix the calibration from the nominal Monte Carlo at the reference
+    protocol (del120, 1~Gy).
+  \item For each perturbation P1--P3, and for a grid of its parameter, reweight
+    the pool, refit \Rc\ blind, record $b$.
+  \item Report $b$ per source and the combined band.
+\end{enumerate}
+
+Run at \textbf{origins level first} --- reweight the truth depth columns, refit,
+no reconstruction. Bias transfers scanner-independently (washout: truth
+$+0.218$~mm vs detected $+0.20$--$0.25$~mm), so this is nearly free and answers
+the physics question. Then confirm the total on one reconstructed arm (BGO ring)
+through \texttt{drivers/statistical\_procedure\_jobs.jl}.
+
+\subsection*{6. Later stages, conditional on Stage 0}
+
+\noindent
+\textbf{Stage 1.} If $b$ is large, ask how much a calibration constant absorbs
+--- i.e.\ how much of $b$ is a rigid shift versus a shape change.
+
+\noindent
+\textbf{Stage 2.} In-situ constraint from the time structure. $P(z,t)$
+decomposes by half-life; over the reference window \iso{15}{O} decays by 0.18
+while \iso{11}{C} decays by 0.84, a 4.6$\times$ contrast. Unfolding gives
+$w_i \hat P_i(z)$ from scan observables only, which is legal under the blind
+rule (\texttt{t\_decay\_s} is acquired). This converts both systematics from
+priors into measured quantities, at a statistical cost bounded below by the
+per-isotope $\sigma_{\Rc}$ already measured
+($k = \sigma\sqrt{N} \approx 236$ for \iso{15}{O}, 319 for \iso{11}{C}, ring).
+Cost: one MLEM reconstruction per time bin per realisation; the
+\texttt{--tend} window sub-cut already performs the required cut. Subsumes the
+deferred composite-erfc item (\texttt{md/pending.md}).
+
+\subsection*{7. Deliverables}
+
+A table of $b$ [mm] per perturbation at the reference protocol, origins level
+and one reconstructed arm; the combined $\sigma_{\Delta R}$ band from these two
+sources; and the sensitivity coefficients
+$\mathrm{d}\Rc/\mathrm{d}f_{^{15}\mathrm{O}}$ and $\mathrm{d}\Rc/\mathrm{d}(\text{profile shift})$.
+
+If it enters \texttt{cbs.tex}: two sources out of many, on a uniform phantom
+with no CT, no tissue heterogeneity, no anatomy, no positioning error.
+Heterogeneity is likely the largest real contributor and is absent by
+construction. Frame as demonstrating the method for isolating these
+systematics, not as a systematic budget.
+
+\end{document}

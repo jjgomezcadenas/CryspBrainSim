@@ -1,0 +1,81 @@
+
+[meta]
+t_irr_s = 60.0
+fit_window_lo_mm = -34.30150224094518
+fit_window_hi_mm = 0.6984977590548169
+proximal_margin_mm = 20.0
+distal_margin_mm = 15.0
+n_mc = 400
+mc_seed = 20260723
+config = "run_parameters.toml"
+frame = "native truth frame; all outputs are R50 differences"
+level = "truth (origins); no reconstruction"
+
+[result]
+window_t1_s = 60.0
+window_t2_s = 360.0
+g_ratio_O15_C11 = 1.0555793946166905
+f_O15 = 0.6982389994975714
+R50_physical_mm = -14.388353132102242
+R50_washed_mm = -14.325252660040091
+delta_R50_washout_mm = 0.06310047206215152
+quadrature_mm = 0.005548514861462262
+joint_band_mm = 0.005540018802508433
+joint_mean_mm = 0.00029515288892805635
+
+[result.g_factor]
+O15 = 0.5109795651211223
+C11 = 0.48407497126890475
+N13 = 0.48722425788250123
+C10 = 0.5919008552018776
+O14 = 0.5305160250906751
+
+[result.one_at_a_time]
+
+[result.one_at_a_time.M_fast]
+sigma = 0.03
+dR50_up_mm = 3.265206529867726e-05
+dR50_dn_mm = -3.262331990505629e-05
+dR50_sym_mm = 3.2637692601866775e-05
+g_ratio_up = 1.0556141559264949
+f_O15_up = 0.6982441480955283
+
+[result.one_at_a_time.M_medium]
+sigma = 0.03
+dR50_up_mm = 0.003935121907469252
+dR50_dn_mm = -0.0041923221162711855
+dR50_sym_mm = 0.004063722011870219
+g_ratio_up = 1.0592216988978933
+f_O15_up = 0.6988615648816137
+
+[result.one_at_a_time.M_slow]
+sigma = 0.01
+dR50_up_mm = -0.001148357783788967
+dR50_dn_mm = 0.0011940913165648936
+dR50_sym_mm = 0.0011712245501769303
+g_ratio_up = 1.0545191155682876
+f_O15_up = 0.6980574354332353
+
+[result.one_at_a_time.T_fast]
+sigma = 1.8
+dR50_up_mm = 0.0009449326181556472
+dR50_dn_mm = -0.00037711547388852296
+dR50_sym_mm = 0.0006610240460220851
+g_ratio_up = 1.0565597205566897
+f_O15_up = 0.6983884559776886
+
+[result.one_at_a_time.T_medium]
+sigma = 18.0
+dR50_up_mm = -0.0034411750375475947
+dR50_dn_mm = 0.0035279267807073467
+dR50_sym_mm = 0.0034845509091274707
+g_ratio_up = 1.0523614705322268
+f_O15_up = 0.6976940018413296
+
+[result.one_at_a_time.T_slow]
+sigma = 2200.0
+dR50_up_mm = -0.00044427368412414125
+dR50_dn_mm = 0.0006876284043499936
+dR50_sym_mm = 0.0005659510442370674
+g_ratio_up = 1.0551720336905348
+f_O15_up = 0.6981688151549047
