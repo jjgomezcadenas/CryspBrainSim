@@ -72,7 +72,7 @@ function load_run_context(; products_root::AbstractString, scenario::AbstractStr
     zoff = let a = shard_attrs(files[1])
         shard_generation(a) == "v2" ? Float64(a["source_z_offset_mm"]) : 0.0
     end
-    ref = characterize(scen; z_offset_mm=zoff)
+    ref = characterize(scen; budget=params.config.budget, z_offset_mm=zoff)
     base, meta = load_sensitivity(sens_cache)
     g = meta["grid"]
     (g["n"] == collect(params.grid.n) &&

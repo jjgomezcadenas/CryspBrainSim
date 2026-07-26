@@ -20,7 +20,8 @@ function load_run_parameters(path::AbstractString=joinpath(pkgdir(CryspBrainSim)
     c = k["configuration"]
     return (config=(scenario=String(c["scenario"]), topology=String(c["topology"]),
                     scanner=String(c["scanner"]), crystal=String(c["crystal"]),
-                    leaf=String(c["leaf"])),
+                    leaf=String(c["leaf"]),
+                    budget=String(get(c, "budget", "fast"))),
             grid=(n=Tuple(Int.(g["n"])),
                   img_origin=Tuple(Float32.(g["img_origin_mm"])),
                   voxsize=Tuple(Float32.(g["voxsize_mm"]))),

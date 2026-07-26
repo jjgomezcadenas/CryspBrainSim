@@ -14,6 +14,7 @@ topology = "closed"
 scanner = "crysp_ring_1m_bgo_2x0"
 crystal = "bgo_195k"        # BGO 195 K arm (products crystal name)
 leaf = "del120s_ac300s_1Gy"   # default single leaf; the v2 drivers loop del120/180/300
+budget = "d120s300"           # truth-bundle budget name (the dd scenario's reference protocol)
 
 [grid]                        # activity grid on the beam corridor, tumour-centred frame
 n = [64, 64, 96]
