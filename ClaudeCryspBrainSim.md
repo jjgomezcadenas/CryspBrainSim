@@ -78,6 +78,18 @@ delay×duration series (all < 0.35 mm). Method cross-checked: direct 10-shard σ
 corrected; washout inflation 1.44 = counting. `cbs.tex` Results reworked to two bounded-fit plots +
 one summary table. Detail: [`md/results.md`](md/results.md).
 
+**Data-driven source reruns — IN PROGRESS (branch `BGOv2`; `paper/statistical-procedure` merged
+2026-07-26):** the reference BGO ring re-analysed on scenario `uniform_headep_sobp_1e8_dd`, whose
+emitters are sampled from the **nominal fitted production cross sections** instead of Geant4's
+internal model (upstream record: ptcryspg4 `workshop/xsections_phases.md`, phase 3d; ×1.32 ¹¹C,
+×1.49 ¹³N vs native). Upstream master: 10 shards under
+`PtCryspProds/uniform_headep_sobp_1e8_dd/crysp_ring_1m_bgo_2x0/bgo_195k/`. Config
+`config/run_parameters_ring_bgo_dd.toml` (v2 blocks frozen; native sensitivity cache copied into
+the dd `out/` tree — scanner and grid unchanged); all outputs scenario-keyed under
+`out/uniform_headep_sobp_1e8_dd/`. Scope: statistical procedure (10 shard fits + washed thinning
+N=100 + combine) → dd σ_R and fitted edge vs native; redo cbs.tex fig. 6 right panel (activity)
+with the dd activity + a separate native-vs-dd activity comparison plot; redo figs. 8–9 (BGO).
+CsI and the rest of the grid stay native for now.
+
 **Smaller pending:** **regenerate `endpoint_precision.tex` §8 with the bounded fit** (old numbers
-~25–40% high), merge the `paper/statistical-procedure` branch, composite-erfc model —
-[`md/pending.md`](md/pending.md).
+~25–40% high), composite-erfc model — [`md/pending.md`](md/pending.md).
