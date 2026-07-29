@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Plot and export the paper's reference BGO statistical-procedure result."""
+"""Plot and export the reference BGO statistical-procedure result on the
+data-driven source (nominal fitted cross sections). Washed thinning only."""
 
 import argparse
 import math
@@ -15,7 +16,7 @@ import numpy as np
 from crysp_paths import config_out
 from fit_activity_profile import BLUE, INK, RED, SURFACE, style
 
-SCENARIO = "uniform_headep_sobp_1e8"
+SCENARIO = "uniform_headep_sobp_1e8_dd"
 TOPOLOGY = "closed"
 SCANNER = "crysp_ring_1m_bgo_2x0"
 CRYSTAL = "bgo_195k_2X0"
@@ -66,10 +67,8 @@ def main():
         if name.endswith(".toml")
     )
     shard_rows = [tomllib.load(open(path, "rb")) for path in shard_files]
-    nominal = tomllib.load(open(os.path.join(root, "combined", "nominal_N100.toml"), "rb"))
     washed = tomllib.load(open(os.path.join(root, "combined", "washed_N100.toml"), "rb"))
     r_shards = np.asarray([row["R50_mm"] for row in shard_rows], dtype=float)
-    r_nominal = np.asarray(nominal["R50_mm"], dtype=float)
     r_washed = np.asarray(washed["R50_mm"], dtype=float)
     shard_mean, shard_sigma = r_shards.mean(), r_shards.std(ddof=1)
     shard_chi2 = np.asarray([row["erfc_chi2_dof"] for row in shard_rows], dtype=float)
@@ -122,17 +121,11 @@ def main():
         rf"\newcommand{{\StatShardFitErrMin}}{{{np.nanmin([r['R50_fit_error_mm'] for r in shard_rows]):.3f}}}",
         rf"\newcommand{{\StatShardFitErrMax}}{{{np.nanmax([r['R50_fit_error_mm'] for r in shard_rows]):.3f}}}",
         rf"\newcommand{{\StatShardChiMedian}}{{{np.nanmedian(shard_chi2):.2f}}}",
-        rf"\newcommand{{\StatNomMean}}{{{nominal['mean_R50_mm']:.3f}}}",
-        rf"\newcommand{{\StatNomRaw}}{{{nominal['raw_sigma_R_mm']:.3f}}}",
-        rf"\newcommand{{\StatNomCorrection}}{{{nominal['finite_pool_correction']:.3f}}}",
-        rf"\newcommand{{\StatNomCorrected}}{{{nominal['corrected_sigma_R_mm']:.3f}}}",
         rf"\newcommand{{\StatWashMean}}{{{washed['mean_R50_mm']:.3f}}}",
         rf"\newcommand{{\StatWashRaw}}{{{washed['raw_sigma_R_mm']:.3f}}}",
         rf"\newcommand{{\StatWashCorrection}}{{{washed['finite_pool_correction']:.3f}}}",
         rf"\newcommand{{\StatWashCorrected}}{{{washed['corrected_sigma_R_mm']:.3f}}}",
-        rf"\newcommand{{\StatNomChiMedian}}{{{np.nanmedian([tomllib.load(open(os.path.join(root, 'nominal', f'realization{i:04d}.toml'), 'rb'))['erfc_chi2_dof'] for i in nominal['indices']]):.2f}}}",
         rf"\newcommand{{\StatWashChiMedian}}{{{np.nanmedian([tomllib.load(open(os.path.join(root, 'washed', f'realization{i:04d}.toml'), 'rb'))['erfc_chi2_dof'] for i in washed['indices']]):.2f}}}",
-        rf"\newcommand{{\StatNomFailures}}{{{nominal['n_fail']}}}",
         rf"\newcommand{{\StatWashFailures}}{{{washed['n_fail']}}}",
     ]
     with open(macros, "w", encoding="utf-8") as stream:
