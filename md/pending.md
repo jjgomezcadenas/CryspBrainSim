@@ -1,44 +1,39 @@
-# Pending (smaller items, independent of the isotope-washout study)
+# Pending (smaller items)
 
-- **BIG: bounded fit supersedes the old σ_R numbers.** The bounded `fit_endpoint`
-  (results.md → "Statistical-procedure study") tightens σ_R ~25–40% vs the old unbounded fit, worse
-  at low counts. So **`endpoint_precision.tex` §8 (and everything quoting old `sigma_r_v2` σ_R)** is
-  systematically high and should be regenerated with the bounded fit / `statistical_procedure_jobs.jl`,
-  or explicitly caveated. `cbs.tex` Results is already reworked to bounded-fit numbers; the rest of the
-  notes are not.
-- **Merge branch `paper/statistical-procedure`** to main when ready (currently 6+ commits ahead;
-  cbs.tex rework + `plot_statproc_delay_csi.py` + last-point results still uncommitted on it).
-- **`cbs.tex` Fig 9 caption** (the "Statistical procedure" section, another instance's) says
-  acquisition window `[120,300] s`, but the statistical-procedure data is the full `[120,420] s`
-  del120 window — likely a stale number to correct.
-- ~~Ring-CsI del180 N=200 firm-up~~ **DONE** — N=200 pulled it to 0.221 (was 0.199 fluctuation);
-  superseded anyway by the bounded-fit statistical-procedure re-measure.
-- **CHS + R35: remaining nine shards per arm** — obsolete for v2 (the v2 R35/40 arms already ship
-  10 shards); kept only for the legacy single-shard CHS/R35 extrapolations of §1–7.
-- **BGO all-events bore-radius sensitivity** — at matched dose the BGO all-events penalty grows
-  monotonically as the bore shrinks (ring < R35 < CHS) while trues match everywhere, with near-equal
-  event mix; understand the scatter background shape in compact geometries. Related: the ring BGO
-  all-events 1/√dose extrapolation sits 1.6σ below the ten-shard 1 Gy measurement (counting-only
-  thinning caveat).
+## Data-driven / BGO current work
 
-- **`latex/cbs.tex`** (the living draft, separate from `endpoint_precision.tex`): the **Results
-  section is reworked** (2026-07-23) around two bounded-fit plots + one summary table (results.md);
-  the old σ_R tables are gone. Remaining smaller items if wanted: eq:sigmaR wording, cite
-  Zapien-Campos. NB: `cbs.tex` carries other instances' uncommitted edits — commit only on explicit
-  instruction.
-- **Composite-erfc edge model** (2–3 isotope components, offsets/widths frozen from per-isotope
-  truth profiles, free amplitudes + global shift); adopt only if σ and rung stability improve
-  incl. at 0.1 Gy. Directly relevant to isotope washout — see [isotope-washout.md](isotope-washout.md).
+- **Finite-pool validation tension.** On the dd TBP reference (d120s300) the
+  nominal thinned finite-pool-corrected σ_R (0.084 mm) sits ~2.7σ above the
+  direct ten-shard spread (0.049 mm) — see [results.md](results.md). Flagged to
+  the paper; the likely resolution is more shards to pin the C_pool correction.
+- **CsI and the rest of the grid stay native.** The dd rerun covers BGO at TBP +
+  CAFOV only. Re-running CsI or the other bores on the dd source is deferred —
+  the detector study is BGO-only.
+- **Talk `latex/pet_pbt_talk.tex` is stale** — BGO+CsI result slides and a pre-dd
+  0.070/0.101 headline. Refresh to the dd BGO-only numbers (0.128 TBP / 0.142
+  CAFOV at d120s300) when the deck is next needed.
+- **Superseded LaTeX notes.** `latex/docs/endpoint_precision.tex`, `systematics.tex`,
+  and `x_sections_systematics.tex` describe the pre-dd BGO-vs-CsI era or propose
+  systematics now executed and folded into the paper. Retire or banner them when
+  convenient; their content lives in the paper (separate repo).
 
 ## Deferred / on-request
 
-- **Washout spatial non-uniformity / redistribution** — the only open IW item and the one route to a
-  genuine (non-calibratable) washout bias: a heterogeneous perfusion field, or cleared atoms decaying
-  elsewhere in the FOV. Both are a downstream perfusion/compartment transport model on the production
-  points (not Geant4, not the range estimator). Trigger: if the edge proves sensitive to the
-  clearance field. See [isotope-washout.md](isotope-washout.md), washout-g4-formulation.md.
-- **Scatter correction** — machinery exists (`recon_scatters.jl`, `scatter_profile.py`); not needed
-  at present precision (calibration systematics dominate ≫ 0.1 mm). The trigger for revisiting: a
-  window slope approaching the edge gradient on some future configuration.
-- **Geometry axis** (part b continued) — ring length (sensitivity), open geometries (angular
-  coverage); the analysis is configuration-blind, so each runs through the identical battery.
+- **Washout spatial non-uniformity / redistribution** — the only open
+  isotope-washout item and the one route to a genuine, non-calibratable washout
+  bias: a heterogeneous perfusion field, or cleared atoms decaying elsewhere in
+  the FOV. A downstream perfusion/compartment transport model on the production
+  points (not Geant4, not the range estimator). Trigger: if the edge proves
+  sensitive to the clearance field. See [isotope-washout.md](isotope-washout.md),
+  [washout-g4-formulation.md](washout-g4-formulation.md).
+- **Scatter correction** — machinery exists (`recon_scatters.jl`,
+  `scatter_profile.py`); not needed at present precision (calibration systematics
+  dominate ≫ 0.1 mm). Trigger: a window slope approaching the edge gradient on
+  some future configuration.
+- **Composite-erfc edge model** (2–3 isotope components, offsets/widths frozen
+  from per-isotope truth profiles, free amplitudes + global shift); adopt only if
+  σ and rung stability improve, including at 0.1 Gy. Relevant to isotope washout —
+  see [isotope-washout.md](isotope-washout.md).
+- **Geometry axis** — ring length (sensitivity), open geometries (angular
+  coverage); the analysis is configuration-blind, so each runs through the
+  identical battery.

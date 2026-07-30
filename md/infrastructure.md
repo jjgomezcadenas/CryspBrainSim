@@ -107,3 +107,29 @@ irradiation-end clock, per-LOR isotope column, stamped `washout_g`, `del…` sce
   `plot_statistical_procedure.py` (per-shard profile+fit, run by the driver).
 - **Talk** — `latex/pet_pbt_talk.tex` (beamer deck for a medical-institute audience; figures in
   `latex/figs/`; uncommitted).
+
+## Data-driven source (dd) reruns — BGO, TBP + CAFOV — DONE (2026-07-30, branch `BGOv2`)
+
+Consumes scenario `uniform_headep_sobp_1e8_dd` (emitters sampled from the nominal
+fitted production cross sections; [results.md](results.md)). BGO only.
+
+- **Configs** — `config/run_parameters_ring_bgo_dd.toml` (TBP, `crysp_ring_1m`) and
+  `config/run_parameters_r40_35_bgo_dd.toml` (CAFOV, `crysp_r40_35cm`). The v2
+  reconstruction blocks are frozen; the native sensitivity cache is copied into the
+  dd `out/` tree (scanner and grid unchanged). `src/config.jl` gained a `budget`
+  key, threaded to `characterize` in `src/reconstruct.jl`.
+- **Procedure** — the same `drivers/statistical_procedure_jobs.jl` (shard / washed
+  ensemble / combine, finite-pool correction) as the v2 study. The five protocols
+  are the full `del{120,180,300}` leaves plus two short-scan windows via `--tend`.
+  Gotcha: `--tend` is rejected on the `shard` stage, so the short-scan (s120)
+  protocols run ensemble+combine only.
+- **Tools** — `tools/plot_statistical_procedure.py` (reference fit + washed
+  ensemble; `--cafov` for the compact bore; also emits the finite-pool-validation
+  macros `latex/statistical_procedure_results.tex`), `tools/plot_statproc_delay_bgo.py`
+  (five-protocol sweep), `tools/plot_statproc_tbp_cafov.py` (TBP vs CAFOV +
+  `latex/sigma_r_bgo_table.tex`). Figures land in `latex/figs/`.
+- **CsI is dropped** for the dd study. The `*_csi*` configs and the
+  `plot_washed_bgo_vs_csi.py` / `plot_washed_v2_scanners.py [csi]` tools are kept
+  as v2 provenance, outside the current chain.
+- **Outputs** under `out/uniform_headep_sobp_1e8_dd/closed/<scanner>/bgo_195k_2X0/statistical_procedure/`
+  (`shards/`, `washed/`, `nominal/` for the reference, `combined/washed_N100.toml`).

@@ -2,13 +2,65 @@
 
 ## The finding in one paragraph
 
-Both representative scanners locate the distal edge with **σ_R ≈ 0.11 mm per 1 Gy run** at the
-working protocol (all events, no corrections); precision scales as 1/√dose (0.16–0.23 mm at
-0.1 Gy → the exploratory-dose case) and **survives a realistic in-room acquisition start** (still
-~0.11 mm at t_start = 180 s). The activity–dose offset is a per-scanner calibration constant
-measured to 0.01–0.04 mm/term; scatters bias it ≤ 0.04 mm (no correction needed at this level —
-other calibration terms dominate). Written up in `latex/endpoint_precision.tex` (8 pages, compiles
-clean via `tools/latex_compile.py endpoint_precision`).
+On the **data-driven source** (scenario `uniform_headep_sobp_1e8_dd`, emitters sampled from the
+nominal fitted production cross sections) the **BGO** scanner locates the distal edge to
+**σ_R = 0.128 mm at 1 Gy** at the reference protocol (TBP ring, 120 s delay + 300 s scan, washed,
+finite-pool-corrected, N=100) and stays **≤ 0.25 mm** across the compact CAFOV bore and all five
+acquisition protocols (next section). The calibration systematic — cross-section fit ±0.13 mm,
+transport envelope ±0.10 mm, tumour composition +0.04/+0.13 mm — is quantified on the ptcryspg4
+side and folded into the paper. The current numbers are the next section; everything after it is
+the pre-dd method lineage (Geant4-internal source, two crystals, several bores), whose absolute
+σ_R values are superseded by the dd measurement.
+
+## Data-driven source σ_R — BGO, TBP + CAFOV, five protocols — DONE (2026-07-30)
+
+Branch **`BGOv2`**. The reference source is `uniform_headep_sobp_1e8_dd`: emitters sampled in-flight
+from the **nominal fitted EXFOR production cross sections** instead of Geant4's internal model
+(upstream record ptcryspg4 `workshop/xsections_phases.md`; ×1.32 ¹¹C, ×1.49 ¹³N vs native). The dd
+fitted edge sits **−0.29 mm** from the native-source edge — a calibration constant absorbed by the
+per-scanner anchor. Detector study is **BGO only** (`bgo_195k_2X0`).
+
+**Two scanner sizes** on the dd source: **TBP** = `crysp_ring_1m` (1 m AFOV ring, the reference)
+and **CAFOV** = `crysp_r40_35cm` (35 cm compact). Washed σ_R at 1 Gy (bounded erfc fit,
+finite-pool-corrected, N=100), five protocols (delay/scan s):
+
+| protocol | delay/scan | σ_R TBP | σ_R CAFOV | R50 TBP/CAFOV [mm] |
+|---|---|---|---|---|
+| d120s300 | 120 / 300 | 0.128 | 0.142 | 10.68 / 10.86 |
+| d180s300 | 180 / 300 | 0.142 | 0.174 | 10.47 / 10.69 |
+| d300s300 | 300 / 300 | 0.198 | 0.249 | 10.11 / 10.25 |
+| d120s120 | 120 / 120 | 0.162 | 0.184 | 10.79 / 11.03 |
+| d180s120 | 180 / 120 | 0.196 | 0.224 | 10.63 / 10.85 |
+
+(auto-generated `latex/sigma_r_bgo_table.tex`.) TBP leads CAFOV by ~10–25% at every protocol; a
+later start drains ¹⁵O and widens σ_R; halving the scan (s120) costs a little more. All stay
+≤ 0.25 mm.
+
+**Reference point (TBP, d120s300, window [120,420] s)** from `latex/statistical_procedure_results.tex`:
+washed corrected **0.128 mm** (raw 0.125, C_pool 1.024), nominal corrected **0.084 mm** (raw 0.079,
+C_pool 1.054). Ten independent shards give a direct R50 spread of **0.049 mm**.
+
+**Finite-pool validation (open).** The nominal thinned corrected σ_R (0.084 mm) should match the
+direct ten-shard spread (0.049 mm); it sits **~2.7σ** high. Flagged for the paper — most likely the
+ten-shard spread is too coarse to pin the C_pool correction, and more shards would settle it.
+
+**Systematics** (ptcryspg4 side, folded into the paper): cross-section fit u_xs = ±0.13 mm,
+transport / physics-list envelope u_transport = ±0.10 mm, tumour-composition +0.04 mm (soft tissue)
+/ +0.13 mm (water) at d120s300.
+
+Figures in `latex/figs/`: `statistical_procedure_bgo.png` (representative fit + washed ensemble),
+`statistical_procedure_cafov.png`, `statproc_delay_bgo.png` (protocol sweep), `statproc_tbp_cafov.png`
+(TBP vs CAFOV). Tools `tools/plot_statistical_procedure.py`, `plot_statproc_delay_bgo.py`,
+`plot_statproc_tbp_cafov.py`. Configs `config/run_parameters_ring_bgo_dd.toml` (TBP) and
+`config/run_parameters_r40_35_bgo_dd.toml` (CAFOV). Outputs under
+`out/uniform_headep_sobp_1e8_dd/closed/<scanner>/bgo_195k_2X0/statistical_procedure/`.
+
+---
+
+**The sections below predate the data-driven source.** They are the method lineage — the
+Geant4-internal ("v2") source, cryogenic CsI alongside BGO, and several bore sizes — kept as the
+record of how the machinery was built and validated. Their absolute σ_R numbers are superseded by
+the dd measurement above.
 
 ## Endpoint study, part (a): distal-edge estimation — DONE (2026-07-08)
 

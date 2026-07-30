@@ -27,69 +27,49 @@ one curve per scanner geometry. This is the analysis end of the chain
 
 ## Status
 
-The build is complete; the physics studies are done through the acquisition-start axis, the
-isotope-washout loss study, and the generation-2 exact-washout + per-isotope study across six
-scanners. Details live in `md/` (see "Read first") — this is the one-paragraph state.
+The build is complete and the range-precision study is finished on the **data-driven source with
+the BGO detector**. Details live in `md/` (see "Read first") — this is the one-paragraph state.
 
-**Where we are:** both representative scanners (BGO 195 K, cryogenic CsI, same 2X0 ring) measure
-the distal edge with **σ_R ≈ 0.11 mm per 1 Gy run** at the working protocol; precision scales as
-1/√dose (→ 0.16–0.23 mm at the 0.1 Gy exploratory dose) and survives a realistic in-room
-acquisition start (~0.11 mm at t_start = 180 s). Written up in `latex/endpoint_precision.tex`
-(the two-scanner note, compiles clean). Two single-shard geometries are measured against the
-ring — the **compact head scanner (CHS**, r 200 mm) and **R35** (r 350 mm, AFOV 512 mm): on
-trues all three tie per dose despite the compact arms' 0.65× counts; on all-events the BGO
-penalty grows as the bore shrinks (ring < R35 < CHS) while CsI stays flat (see results.md). The
-whole-plane protocol now lives in the Julia chain too (`[roi]` carries no radius). Full numbers
-+ method: [`md/results.md`](md/results.md); the toolchain:
-[`md/infrastructure.md`](md/infrastructure.md).
+**Where we are — data-driven BGO σ_R, two scanner sizes, five protocols (DONE, branch `BGOv2`):**
+the analysis runs on scenario `uniform_headep_sobp_1e8_dd`, whose emitters are sampled from the
+**nominal fitted production cross sections** (a fit to EXFOR data) rather than Geant4's internal
+model (upstream ptcryspg4 `workshop/xsections_phases.md`; ×1.32 ¹¹C, ×1.49 ¹³N vs native; the dd
+fitted edge sits −0.29 mm from native). Two BGO scanners are measured — **TBP** (`crysp_ring_1m`,
+1 m AFOV, the reference) and **CAFOV** (`crysp_r40_35cm`, 35 cm) — across five acquisition protocols
+(delay/scan s): d120s300 d180s300 d300s300 d120s120 d180s120. Washed σ_R at 1 Gy, finite-pool-corrected,
+N=100:
 
-**Isotope washout (IW) — loss study DONE (both arms):** productions are physical-decay-only; IW is
-the missing simulation-to-patient physics. Washout-as-loss is a per-isotope survival scalar g_i, so
-the study runs fully downstream (zero upstream, no Geant4; detection is isotope-blind, the
-detected σ_R comes from per-event thinning by w(z₀,t_decay) — only columns already in the shards).
-Result: **no bias** — the edge shift (+0.22 mm) calibrates away, parameter systematic ±0.02 mm
-(≪ σ_R) — but a **~1.5× σ_R cost** (0.11 → ~0.16 mm at 1 Gy, roughly flat vs t_start, both arms),
-the ordinary penalty for a ~57% near-uniform count loss. Measured with the thinned method; the
-earlier "σ_R survives / free at t=0" was an n=10 artifact, now corrected. In the note as §7
-(`latex/endpoint_precision.tex`). **Only open IW item: spatial non-uniformity** — the one genuine
-bias route, needing a downstream perfusion-transport model (not pursued). Detail:
-[`md/isotope-washout.md`](md/isotope-washout.md),
-[`md/washout-g4-formulation.md`](md/washout-g4-formulation.md), `latex/washout_brain.tex`.
+| protocol | TBP | CAFOV |
+|---|---|---|
+| d120s300 | 0.128 | 0.142 |
+| d180s300 | 0.142 | 0.174 |
+| d300s300 | 0.198 | 0.249 |
+| d120s120 | 0.162 | 0.184 |
+| d180s120 | 0.196 | 0.224 |
 
-**Generation-2 (v2) σ_R study — DONE (six scanners):** upstream regenerated the products as v2
-(tumour-centred, irradiation-end clock, per-LOR isotope column, stamped Mizuno `washout_g`, fixed
-`del{120,180,300}` scenario leaves). Consumed downstream by `drivers/sigma_r_v2.jl` (N=100, 1 Gy):
-washout as the **exact per-species g_i keep** (isotope label present) and per-isotope σ_R from
-**pure** selection. Across CsI (ring/R35-50/R35-35) and BGO (ring/r40-50/r40-35, +cryostat): **no
-bias** (ΔR₅₀ ±0.08 mm), washout **~1.5×** cost (tracks counts, not bore), **BGO more precise** at
-every size-class (2.1× counts), and the **positron-range hypothesis definitively refuted** — ¹⁵O is
-more precise per count than ¹¹C, with BGO giving the first clean ¹¹C point. In the note as §8. Prep:
-`generation` guard + `shard_isotope` (products.jl), tumour-centring `z_offset` into `characterize`,
-recentred grid + sensitivities, flagship configs `run_parameters_{csi_v2,ring_bgo_v2}.toml`. Full
-numbers: [`md/results.md`](md/results.md); toolchain: [`md/infrastructure.md`](md/infrastructure.md).
+All ≤ 0.25 mm; TBP leads CAFOV by ~10–25%. The reference point (TBP, d120s300) is σ_R = 0.128 mm
+washed (0.084 nominal). Numbers + figures: [`md/results.md`](md/results.md); auto-generated tables
+`latex/sigma_r_bgo_table.tex` and `latex/statistical_procedure_results.tex`, figures `latex/figs/`;
+toolchain [`md/infrastructure.md`](md/infrastructure.md).
 
-**Statistical-procedure study + bounded fit — DONE (branch `paper/statistical-procedure`):** a new
-restartable driver (`drivers/statistical_procedure_jobs.jl`, shard/ensemble/combine, `--tend` window
-sub-cut, finite-pool correction) plus a **bounded** `fit_endpoint` re-measure σ_R rigorously. The
-headline: the old unbounded fit **inflated σ_R ~25–40%** (worse at low counts), so the old
-`sigma_r_v2` / `endpoint_precision.tex` tables are systematically high. Bounded-fit washed σ_R
-(del120, 1 Gy): BGO ring **0.10**, CsI ring **0.15**; grid across TBP/LAFOV/CAFOV and a CsI
-delay×duration series (all < 0.35 mm). Method cross-checked: direct 10-shard σ_R ≈ thinned
-corrected; washout inflation 1.44 = counting. `cbs.tex` Results reworked to two bounded-fit plots +
-one summary table. Detail: [`md/results.md`](md/results.md).
+**Systematics (ptcryspg4 side, folded into the paper):** cross-section fit u_xs = ±0.13 mm;
+transport / physics-list envelope u_transport = ±0.10 mm; tumour-composition +0.04 mm (soft tissue)
+/ +0.13 mm (water) at d120s300. These are the calibration systematic alongside the statistical σ_R.
 
-**Data-driven source reruns — IN PROGRESS (branch `BGOv2`; `paper/statistical-procedure` merged
-2026-07-26):** the reference BGO ring re-analysed on scenario `uniform_headep_sobp_1e8_dd`, whose
-emitters are sampled from the **nominal fitted production cross sections** instead of Geant4's
-internal model (upstream record: ptcryspg4 `workshop/xsections_phases.md`, phase 3d; ×1.32 ¹¹C,
-×1.49 ¹³N vs native). Upstream master: 10 shards under
-`PtCryspProds/uniform_headep_sobp_1e8_dd/crysp_ring_1m_bgo_2x0/bgo_195k/`. Config
-`config/run_parameters_ring_bgo_dd.toml` (v2 blocks frozen; native sensitivity cache copied into
-the dd `out/` tree — scanner and grid unchanged); all outputs scenario-keyed under
-`out/uniform_headep_sobp_1e8_dd/`. Scope: statistical procedure (10 shard fits + washed thinning
-N=100 + combine) → dd σ_R and fitted edge vs native; redo cbs.tex fig. 6 right panel (activity)
-with the dd activity + a separate native-vs-dd activity comparison plot; redo figs. 8–9 (BGO).
-CsI and the rest of the grid stay native for now.
+**Finite-pool validation (open thread):** the thinning correction C_pool = 1/√(1−q) should reproduce
+a true-Poisson spread; the numerical check on the dd TBP reference (nominal N=100 thinned, corrected
+0.084 mm, vs the direct ten-shard spread 0.049 mm) sits ~2.7σ high — flagged for the paper, likely
+the ten-shard estimate being too coarse to pin the correction.
 
-**Smaller pending:** **regenerate `endpoint_precision.tex` §8 with the bounded fit** (old numbers
-~25–40% high), composite-erfc model — [`md/pending.md`](md/pending.md).
+**How we got here (method lineage; absolute numbers superseded by the dd run above):** earlier
+campaigns on the Geant4-internal source ("generation v2": tumour-centred, per-LOR isotope column,
+Mizuno `washout_g`) built and validated the machinery — the whole-plane erfc endpoint (R50), the
+delayed-start axis, the isotope-washout loss study (no bias; ~1.5× σ_R cost for the ~57% count
+loss), the bounded-fit re-measure (the old unbounded fit ran ~25–40% high), and finite-pool-corrected
+thinning. Those studies also ran a **cryogenic CsI** arm and several bore sizes; the detector study
+is now **BGO-only**, so the CsI and multi-bore numbers are history. Record:
+[`md/results.md`](md/results.md), [`md/isotope-washout.md`](md/isotope-washout.md),
+[`md/sigma-r-investigation.md`](md/sigma-r-investigation.md).
+
+**The paper** (`cbs.tex`) now lives in a separate repository and has diverged from the local
+`latex/cbs.tex`; treat the copy here as obsolete.
