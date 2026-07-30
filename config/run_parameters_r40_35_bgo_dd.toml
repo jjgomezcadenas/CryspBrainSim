@@ -1,0 +1,42 @@
+# dd run parameters — BGO 195 K, CAFOV (r40, AFOV 35 cm), on the data-driven source.
+# The scenario uniform_headep_sobp_1e8_dd samples its emitters from the nominal fitted
+# production cross sections (ptcryspg4 workshop/xsections_phases.md, phase 3d); the native
+# counterpart is run_parameters_r40_35_bgo_v2.toml, and this is the CAFOV counterpart of
+# run_parameters_ring_bgo_dd.toml. Every reconstruction block (grid, window, niter,
+# sensitivity, selection) is the frozen v2 value, so sigma_R and fitted-edge differences from
+# the native results measure the source alone. The sensitivity cache is the native CAFOV one
+# copied into out/uniform_headep_sobp_1e8_dd/ — it depends only on the scanner and the grid.
+# Use with:  drivers/statistical_procedure_jobs.jl --config config/run_parameters_r40_35_bgo_dd.toml
+
+[configuration]
+scenario = "uniform_headep_sobp_1e8_dd"
+topology = "closed"
+scanner = "crysp_r40_35cm_bgo_2x0"
+crystal = "bgo_195k"        # BGO 195 K arm (products crystal name)
+leaf = "del120s_ac300s_1Gy"   # default single leaf; the v2 drivers loop del120/180/300
+budget = "d120s300"           # truth-bundle budget name (the dd scenario's reference protocol)
+
+[grid]                        # activity grid on the beam corridor, tumour-centred frame
+n = [64, 64, 96]
+img_origin_mm = [-47.25, -47.25, -93.666]   # z spans -93.666..+48.834 (legacy -119.25 + 25.584)
+voxsize_mm = [1.5, 1.5, 1.5]
+
+[roi]                         # whole transverse plane (no radius_mm key)
+centre_mm = [0.0, 0.0]
+
+[window]                      # fixed distal fit window = frozen v2 values (native-frame anchor)
+z_lo_mm = -10.868
+z_hi_mm = 24.132
+nominal_edge_mm = 9.132       # v2 world-frame activity-R50 anchor; the dd edge shift is measured
+proximal_margin_mm = 20.0
+distal_margin_mm = 15.0
+
+[mlem]
+niter = 50
+
+[sensitivity]
+n_sens = 1000000000
+chunk = 20000000
+
+[selection]
+truth = "trues-only"
