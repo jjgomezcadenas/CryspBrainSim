@@ -9,13 +9,6 @@
 - **CsI and the rest of the grid stay native.** The dd rerun covers BGO at TBP +
   CAFOV only. Re-running CsI or the other bores on the dd source is deferred —
   the detector study is BGO-only.
-- **Talk `latex/pet_pbt_talk.tex` is stale** — BGO+CsI result slides and a pre-dd
-  0.070/0.101 headline. Refresh to the dd BGO-only numbers (0.128 TBP / 0.142
-  CAFOV at d120s300) when the deck is next needed.
-- **Superseded LaTeX notes.** `latex/docs/endpoint_precision.tex`, `systematics.tex`,
-  and `x_sections_systematics.tex` describe the pre-dd BGO-vs-CsI era or propose
-  systematics now executed and folded into the paper. Retire or banner them when
-  convenient; their content lives in the paper (separate repo).
 
 ## Deferred / on-request
 

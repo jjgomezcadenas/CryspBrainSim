@@ -71,5 +71,5 @@ is now **BGO-only**, so the CsI and multi-bore numbers are history. Record:
 [`md/results.md`](md/results.md), [`md/isotope-washout.md`](md/isotope-washout.md),
 [`md/sigma-r-investigation.md`](md/sigma-r-investigation.md).
 
-**The paper** (`cbs.tex`) now lives in a separate repository and has diverged from the local
-`latex/cbs.tex`; treat the copy here as obsolete.
+**The paper** (`cbs.tex`) lives in a separate repository (`~/Papers/CryspBrain`); there is no local
+copy in this repo.

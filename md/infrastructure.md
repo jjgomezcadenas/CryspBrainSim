@@ -105,8 +105,6 @@ irradiation-end clock, per-LOR isotope column, stamped `washout_g`, `del…` sce
 - **Tools** — `tools/plot_statproc_washed_grid.py` (washed σ_R vs AFOV, BGO+CsI),
   `plot_statproc_delay_csi.py` (CsI washed σ_R vs start delay, 300 s vs 120 s scan),
   `plot_statistical_procedure.py` (per-shard profile+fit, run by the driver).
-- **Talk** — `latex/pet_pbt_talk.tex` (beamer deck for a medical-institute audience; figures in
-  `latex/figs/`; uncommitted).
 
 ## Data-driven source (dd) reruns — BGO, TBP + CAFOV — DONE (2026-07-30, branch `BGOv2`)
 
