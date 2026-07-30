@@ -199,8 +199,7 @@ and a shard-spread on the anchors need the remaining nine shards per arm from up
 Washout modelled as loss (perfusion/metabolism clears emitters before they decay) reduces — for a
 spatially-uniform brain — to a **per-isotope survival scalar** g_i (`latex/washout_brain.tex`
 Eq. 7), so the whole loss study runs downstream on the frozen source, **zero upstream** (method +
-G4/PTCrysp exchange: [`md/washout-g4-formulation.md`](washout-g4-formulation.md)). Written up as §7
-of `latex/endpoint_precision.tex` (Table 6). g_i is computed from the Mizuno brain 3-exponential
+G4/PTCrysp exchange: [`md/washout-g4-formulation.md`](washout-g4-formulation.md)). g_i is computed from the Mizuno brain 3-exponential
 (`config/washout_brain.toml`), cross-checked closed-form vs direct integration to 1e-6.
 
 **Truth level** (`tools/washout.py`): g_i = O15 0.448, C11 0.376, N13 0.386, C10 0.525, O14 0.476
@@ -407,8 +406,7 @@ low counts**. Re-measured with the bounded fit (del120 washed): BGO ring 0.133�
 0.226→**0.146**, BGO CAFOV 0.218→**0.127**, CsI CAFOV 0.241→**0.155**. The old fit also faked a BGO
 compact-bore *rise* (0.133→0.182→0.218) that the bounded fit flattens to a plateau (0.101→0.127→0.127)
 — the "rise" was fit-scatter growing as counts fell. **Consequence: the σ_R tables in the old
-`sigma_r_v2` results, `endpoint_precision.tex` §8, and the pre-rework `cbs.tex` are systematically
-high** (see pending.md).
+`sigma_r_v2` results and the earlier writeups are systematically high** (see pending.md).
 
 **Driver** `drivers/statistical_procedure_jobs.jl` (restartable; one durable TOML per reconstruction;
 `--stage shard|ensemble|combine`, `--mode nominal|washed`, `--config`, `--leaf`, `-t 1` one GPU MLEM
@@ -436,12 +434,6 @@ its lead narrows from 45% (ring) to ~21% (compact); both ≤ 0.16 mm. Figure
 Later start drains ¹⁵O smoothly; halving the scan costs only ~25% (drops the older late decays).
 **Every realistic delay×duration stays < 0.35 mm on the conservative crystal.** Figure
 `tools/plot_statproc_delay_csi.py` → `comparison/figures/statproc_delay_csi.png`.
-
-**`cbs.tex` Results reworked (2026-07-23):** the three stale old-fit σ_R tables + the old short-scan
-figure are **removed**, replaced by the two plots above (Figs 10, 11) and one summary Table 5 (two
-panels: reference-protocol-by-size, CsI-by-delay), all bounded-fit numbers. Compiles clean.
-Committed on the branch (driver + all statistical_procedure results, commit `6c1979a`); the cbs.tex
-rework + `plot_statproc_delay_csi.py` + the last-point results are uncommitted at time of writing.
 
 ## Data on disk
 
