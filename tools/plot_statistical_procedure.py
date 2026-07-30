@@ -56,9 +56,10 @@ def plot_shard(path):
     print(f"wrote {figure}")
 
 
-def main():
+def main(scanner=SCANNER, crystal=CRYSTAL, out_name="statistical_procedure_bgo.png",
+         write_macros=True, title_tag=""):
     root = os.path.join(
-        config_out(SCENARIO, TOPOLOGY, SCANNER, CRYSTAL),
+        config_out(SCENARIO, TOPOLOGY, scanner, crystal),
         "statistical_procedure", "del120s_ac300s_1Gy_D1p0Gy",
     )
     shard_files = sorted(
@@ -90,7 +91,7 @@ def main():
     axis.plot(z, edge, color=BLUE, lw=2, label="bounded erfc fit")
     axis.axvspan(*representative["fit_window_mm"], color=BLUE, alpha=0.08)
     axis.axvline(r50, color=RED, lw=1.5, ls="--")
-    axis.set_title("(a) One independent 1-Gy simulation", loc="left", color=INK)
+    axis.set_title(f"(a) One independent 1-Gy simulation{title_tag}", loc="left", color=INK)
     axis.set_xlabel("depth [mm]", color=INK)
     axis.set_ylabel("reconstructed activity [a.u.]", color=INK)
     axis.legend(frameon=False, fontsize=8, labelcolor=INK)
@@ -109,9 +110,12 @@ def main():
     axis.legend(frameon=False, fontsize=9, labelcolor=INK)
     fig.tight_layout()
 
-    figure = os.path.join(REPO, "latex", "figs", "statistical_procedure_bgo.png")
+    figure = os.path.join(REPO, "latex", "figs", out_name)
     fig.savefig(figure, dpi=220, facecolor=SURFACE)
     plt.close(fig)
+    print(f"wrote {figure}")
+    if not write_macros:
+        return
 
     macros = os.path.join(REPO, "latex", "statistical_procedure_results.tex")
     lines = [
@@ -130,12 +134,20 @@ def main():
     ]
     with open(macros, "w", encoding="utf-8") as stream:
         stream.write("\n".join(lines) + "\n")
-    print(f"wrote {figure}")
     print(f"wrote {macros}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--shard", help="plot one completed shard TOML")
+    parser.add_argument("--cafov", action="store_true",
+                        help="compact-AFOV BGO (crysp_r40_35cm); figure only, no macros")
     args = parser.parse_args()
-    plot_shard(args.shard) if args.shard else main()
+    if args.shard:
+        plot_shard(args.shard)
+    elif args.cafov:
+        main(scanner="crysp_r40_35cm_bgo_2x0", crystal="bgo_195k_2X0",
+             out_name="statistical_procedure_cafov.png", write_macros=False,
+             title_tag=" (CAFOV)")
+    else:
+        main()
